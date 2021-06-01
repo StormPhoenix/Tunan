@@ -1,8 +1,15 @@
 #include <iostream>
-#include <tunan/common.h>
-#include <tunan/math.h>
+
+// TODO for testing
+#include <tunan/scene/OptiXScene.h>
+
 int main() {
-    tunan::math::isNaN(1);
+    // TODO for testing
+    using namespace tunan;
+    OptiXScene scene;
+    scene.buildOptiXData();
+    scene.intersect();
+
     std::cout << "Hello, World!" << std::endl;
     return 0;
 }

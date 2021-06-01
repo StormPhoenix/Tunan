@@ -29,5 +29,19 @@
         }   \
     } while (false)
 
+#define CUDA_SYNC_CHECK() \
+do                                                                         \
+    {                                                                          \
+        cudaDeviceSynchronize();                                               \
+        cudaError_t error = cudaGetLastError();                                \
+        if( error != cudaSuccess )                                             \
+        {                                                                      \
+            std::stringstream ss;                                              \
+            ss << "CUDA error on synchronize with error '"                     \
+               << cudaGetErrorString( error )                                  \
+               << "' (" __FILE__ << ":" << __LINE__ << ")\n";                  \
+            throw std::runtime_error( ss.str().c_str() );                        \
+        }                                                                      \
+    } while( 0 )
 
 #endif //TUNAN_OPTIX_UTILS_H

@@ -5,4 +5,20 @@
 #ifndef TUNAN_OPTIX_RAY_H
 #define TUNAN_OPTIX_RAY_H
 
+#include <optix.h>
+
+struct RayParams {
+    OptixTraversableHandle traversable;
+
+    // TODO delete
+    int width;
+    int height;
+    uchar3 *image;
+};
+
+// TODO for testing
+struct RayGenData {
+    float r, g, b;
+};
+
 #endif //TUNAN_OPTIX_RAY_H

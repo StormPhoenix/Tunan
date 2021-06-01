@@ -22,15 +22,25 @@ namespace RENDER_NAMESPACE {
     typedef struct OptiXState {
         OptixDeviceContext optixContext;
         OptixModule optixModule = nullptr;
+        OptixPipeline optixPipeline;
+        OptixProgramGroup rayFindIntersectionGroup = 0;
+        OptixProgramGroup rayMissingGroup = 0;
+
+        OptixShaderBindingTable sbt;
+
+        CUstream cudaStream = nullptr;
     } OptiXState;
 
     class OptiXScene {
     public:
         void buildOptiXData();
 
+        void intersect();
+
     private:
         OptiXState state;
-        MemoryAllocator &allocator;
+        // TODO delete retrive
+//        MemoryAllocator &allocator;
         // Materials
         std::map<std::string, Material> namedMaterial;
         std::vector<Material> materials;

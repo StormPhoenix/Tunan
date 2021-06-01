@@ -36,6 +36,9 @@ if (CUDA_FOUND)
     #    add_definitions(-D CUDA_VERSION)
 endif (CUDA_FOUND)
 
+## TODO delete
+message(STATUS ${CUDA_LINK_LIBRARY})
+
 find_package(OptiX)
 if (OptiX_FOUND)
     set(OPTIX_INCLUDE_DIRECTORY ${OptiX_INCLUDE_DIR})
@@ -125,6 +128,9 @@ set(RENDER_MEDIA_SRCS
 set(RENDER_SCENE_SRCS
         include/tunan/common.h)
 
+set(RENDER_SRCS
+        main.cpp)
+
 ### Set cuda properties
 if (BUILD_GPU_ENABLED)
     set(RENDER_UTILS_SRCS
@@ -138,6 +144,7 @@ if (BUILD_GPU_ENABLED)
     set_source_files_properties(
             include/tunan/utils/TaggedPointer.h
             include/tunan/math.h
+            ${RENDER_SRCS}
             ${RENDER_SCENE_SRCS}
             ${RENDER_BASE_SRCS}
             ${RENDER_MEDIA_SRCS}
@@ -202,11 +209,6 @@ target_link_libraries(
         ${CUDA_LINK_LIBRARY}
 )
 
-set(RENDER_CPU_SRCS "")
-set(RENDER_GPU_SRCS "")
-set(RENDER_SRCS
-        main.cpp)
-
 add_executable(${PROJECT_NAME} ${RENDER_SRCS})
 target_link_libraries(
         ${PROJECT_NAME}
@@ -216,9 +218,12 @@ target_link_libraries(
         render_media_lib
         render_utils_lib
         render_material_lib
+        ${CUDA_LINK_LIBRARY}
 )
 target_include_directories(
         ${PROJECT_NAME}
         PRIVATE
+        ${OPTIX_INCLUDE_DIRECTORY}
+        ${CUDA_INCLUDE_DIRECTORY}
         ${PROJ_INCLUDE_DIR}
 )
