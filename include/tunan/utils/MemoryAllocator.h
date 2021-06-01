@@ -1,5 +1,5 @@
 //
-// Created by Graphics on 2021/5/31.
+// Created by StormPhoenix on 2021/5/31.
 //
 
 #ifndef TUNAN_MEMORYALLOCATOR_H
@@ -20,6 +20,9 @@ namespace RENDER_NAMESPACE {
 
             MemoryAllocator(MemoryResource *resource);
 
+            MemoryAllocator(const MemoryAllocator &allocator) :
+                    _resource(allocator._resource) {}
+
             void *allocate(size_t bytes, size_t alignBytes);
 
             template<class T>
@@ -30,18 +33,27 @@ namespace RENDER_NAMESPACE {
             template<class T, class... Args>
             T *newObject(Args &&... args) {
                 T *obj = allocateObjects<T>(1);
-                new((void *) obj) T(std::forward<Args>(args)...);
+                initialize<T>(obj, args...);
                 return obj;
             }
+
+            template<class T, class... Args>
+            void initialize(void *obj, Args &&... args) {
+                new(obj) T(std::forward<Args>(args)...);
+            }
+
+            template<class T>
+            void de_initialize(T *obj) {
+                obj->~T();
+            }
+
+            MemoryAllocator &operator=(const MemoryAllocator &allocator) = delete;
+
+            void deleteObject(void *p);
 
             void reset();
 
             ~MemoryAllocator();
-
-        private:
-            MemoryAllocator(const MemoryAllocator &arena) = delete;
-
-            MemoryAllocator &operator+(const MemoryAllocator &arena) = delete;
 
         private:
             MemoryResource *_resource;

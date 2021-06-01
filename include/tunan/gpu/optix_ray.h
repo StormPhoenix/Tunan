@@ -17,8 +17,12 @@ struct RayParams {
 };
 
 // TODO for testing
-struct RayGenData {
-    float r, g, b;
+struct RaygenData {
+    float r = 0.5;
+};
+
+struct ClosestHitData {
+    float r = 0.2;
 };
 
 #endif //TUNAN_OPTIX_RAY_H

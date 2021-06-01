@@ -125,6 +125,7 @@ set(RENDER_MEDIA_SRCS
         include/tunan/medium/Medium.h)
 
 set(RENDER_SCENE_SRCS
+        src/tunan/scene/scene_data.cpp
         include/tunan/common.h)
 
 set(RENDER_SRCS
@@ -151,18 +152,6 @@ if (BUILD_GPU_ENABLED)
             PROPERTIES LANGUAGE CUDA)
 endif ()
 
-add_library(render_base_lib
-        ${RENDER_BASE_SRCS})
-target_include_directories(render_base_lib
-        PRIVATE
-        ${PROJ_INCLUDE_DIR})
-
-add_library(render_media_lib
-        ${RENDER_MEDIA_SRCS})
-target_include_directories(render_media_lib
-        PRIVATE
-        ${PROJ_INCLUDE_DIR})
-
 add_library(render_utils_lib
         ${RENDER_UTILS_SRCS})
 target_include_directories(
@@ -176,6 +165,25 @@ target_link_libraries(
         PRIVATE
         ${CUDA_LINK_LIBRARY}
 )
+
+add_library(render_base_lib
+        ${RENDER_BASE_SRCS})
+target_include_directories(
+        render_base_lib
+        PRIVATE
+        ${PROJ_INCLUDE_DIR}
+)
+target_link_libraries(
+        render_base_lib
+        PRIVATE
+        render_utils_lib
+)
+
+add_library(render_media_lib
+        ${RENDER_MEDIA_SRCS})
+target_include_directories(render_media_lib
+        PRIVATE
+        ${PROJ_INCLUDE_DIR})
 
 add_library(render_material_lib
         ${RENDER_MATERIAL_SRCS})
@@ -206,6 +214,7 @@ add_dependencies(render_scene_lib render_utils_lib render_optix_ptxcode_lib)
 target_link_libraries(
         render_scene_lib
         PRIVATE
+        render_base_lib
         render_utils_lib
         render_optix_ptxcode_lib
         ${CUDA_LINK_LIBRARY}

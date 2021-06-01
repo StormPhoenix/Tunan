@@ -16,3 +16,11 @@ extern "C" __global__ void __raygen__findIntersection() {
 //    t.w = 0;
     params.image[launch_index.y * params.width + launch_index.x] = t;
 }
+
+extern "C" __global__ void __closesthit__scene() {
+
+}
+
+extern "C" __global__ void __anyhit__scene() {
+
+}

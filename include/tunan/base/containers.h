@@ -6,11 +6,14 @@
 #define TUNAN_CONTAINER_H
 
 #include <cassert>
+#include <tunan/utils/MemoryAllocator.h>
 #include <tunan/common.h>
 #include <initializer_list>
 
 namespace RENDER_NAMESPACE {
     namespace base {
+        using utils::MemoryAllocator;
+
         template<typename T, int N>
         class Array {
         public:
@@ -72,7 +75,7 @@ namespace RENDER_NAMESPACE {
 
             RENDER_CPU_GPU
             void fill(const T &val) {
-                for (int i = 0; i < N; i ++) {
+                for (int i = 0; i < N; i++) {
                     values[i] = val;
                 }
             }
@@ -153,7 +156,83 @@ namespace RENDER_NAMESPACE {
             }
         };
 
+        template<typename T>
+        class Vector {
+        public:
+            Vector(const MemoryAllocator &allocator) :
+                    allocator(allocator), nAllocated(0), used(0) {}
 
+            RENDER_CPU_GPU
+            const T &operator[](size_t index) const {
+                assert(index >= 0 && index < used);
+                return buffer[index];
+            }
+
+            RENDER_CPU_GPU
+            T &operator[](size_t index) {
+                assert(index >= 0 && index < used);
+                return buffer[index];
+            }
+
+            RENDER_CPU_GPU
+            T *data() {
+                return buffer;
+            }
+
+            RENDER_CPU_GPU
+            const T *data() const {
+                return buffer;
+            }
+
+            RENDER_CPU_GPU
+            size_t size() {
+                return used;
+            }
+
+            void push_back(T &val) {
+                if (used == nAllocated) {
+                    allocate(nAllocated == 0 ? 4 : 2 * nAllocated);
+                }
+                allocator.template initialize<T>(buffer + used, val);
+                used++;
+            }
+
+            void push_back(T &&val) {
+                if (used == nAllocated) {
+                    allocate(nAllocated == 0 ? 4 : 2 * nAllocated);
+                }
+                allocator.template initialize<T>(buffer + used, std::move(val));
+                used++;
+            }
+
+            void pop_back() {
+                if (used <= 0) {
+                    return;
+                }
+                allocator.template de_initialize<T>(buffer + used - 1);
+                used--;
+            }
+
+        private:
+            void allocate(size_t n) {
+                if (n <= nAllocated) {
+                    return;
+                }
+
+                T *newBuffer = allocator.template allocateObjects<T>(n);
+                for (int i = 0; i < used; i++) {
+                    allocator.template initialize<T>(newBuffer + i, std::move(buffer[i]));
+                }
+                buffer = newBuffer;
+                nAllocated = n;
+            }
+
+        private:
+            int nAllocated;
+            int used;
+            T *buffer = nullptr;
+            MemoryAllocator allocator;
+        };
     }
 }
 

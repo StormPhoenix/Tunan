@@ -3,6 +3,7 @@
 //
 
 #include <tunan/common.h>
+#include <tunan/base/containers.h>
 #include <tunan/scene/OptiXScene.h>
 #include <tunan/gpu/cuda_utils.h>
 #include <tunan/gpu/optix_utils.h>
@@ -21,22 +22,11 @@ extern const unsigned char OptixPtxCode[];
 }
 
 namespace RENDER_NAMESPACE {
-    // TODO delete
-    using namespace utils;
-    // TODO for testing
-    template<typename T>
-    struct SbtRecord {
-        __align__(OPTIX_SBT_RECORD_ALIGNMENT) char header[OPTIX_SBT_RECORD_HEADER_SIZE];
-        T data;
-    };
-    typedef SbtRecord<RayGenData> RayGenSbtRecord;
-    typedef SbtRecord<int> MissSbtRecord;
-
     static void optiXLogCallback(unsigned int level, const char *tag, const char *message, void *cbdata) {
         std::cout << "OptiX callback: " << tag << ": " << message << std::endl;
     }
 
-    void OptiXScene::buildOptiXData() {
+    void OptiXScene::buildOptiXData(const SceneData &sceneData) {
         // Initialize optix context
         OptixDeviceContext optixContext;
         {
@@ -94,8 +84,8 @@ namespace RENDER_NAMESPACE {
         }
         state.optixModule = optixModule;
 
-        // Create programs
         OptixProgramGroupOptions programGroupOptions = {};
+        // Raygen + missing program
         OptixProgramGroup raygenFindIntersectionGroup;
         OptixProgramGroup raygenMissingGroup;
         {
@@ -125,8 +115,23 @@ namespace RENDER_NAMESPACE {
                     log, &logSize,
                     &raygenMissingGroup), log);
         }
-        state.rayFindIntersectionGroup = raygenFindIntersectionGroup;
-        state.rayMissingGroup = raygenMissingGroup;
+        state.raygenFindIntersectionProgramGroup = raygenFindIntersectionGroup;
+        state.missProgramGroup = raygenMissingGroup;
+
+        // Closest hit program
+        OptixProgramGroup closestHitProgramGroup;
+        {
+            OptixProgramGroupDesc desc = {};
+            desc.kind = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
+            desc.hitgroup.moduleCH = state.optixModule;
+            desc.hitgroup.entryFunctionNameCH = "__closesthit__scene";
+            desc.hitgroup.moduleAH = optixModule;
+            desc.hitgroup.entryFunctionNameAH = "__anyhit__scene";
+            OPTIX_CHECK_LOG(optixProgramGroupCreate(
+                    state.optixContext, &desc, 1, &programGroupOptions,
+                    log, &logSize, &closestHitProgramGroup), log);
+        }
+        state.closestHitProgramGroup = closestHitProgramGroup;
 
         // Optix pipeline
         OptixPipeline pipeline = nullptr;
@@ -137,8 +142,8 @@ namespace RENDER_NAMESPACE {
             pipelineLinkOptions.debugLevel = OPTIX_COMPILE_DEBUG_LEVEL_FULL;
 
             OptixProgramGroup programGroups[] = {
-                    state.rayFindIntersectionGroup,
-                    state.rayMissingGroup
+                    state.raygenFindIntersectionProgramGroup,
+                    state.missProgramGroup
             };
 
             OPTIX_CHECK_LOG(optixPipelineCreate(
@@ -152,16 +157,17 @@ namespace RENDER_NAMESPACE {
         }
         state.optixPipeline = pipeline;
 
-        // Shader bingding table
-        // TODO for testing
+        // Shader binding table
         OptixShaderBindingTable sbt = {};
         {
+            // TODO for testing
+            // Raygen record + Missing record
             CUdeviceptr raygen_record;
-            const size_t raygen_record_size = sizeof(RayGenSbtRecord);
+            const size_t raygen_record_size = sizeof(RaygenRecord);
             CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &raygen_record ), raygen_record_size));
-            RayGenSbtRecord rg_sbt;
-            OPTIX_CHECK(optixSbtRecordPackHeader(state.rayFindIntersectionGroup, &rg_sbt));
-            rg_sbt.data = {0.462f, 0.725f, 0.f};
+            RaygenRecord rg_sbt;
+            OPTIX_CHECK(optixSbtRecordPackHeader(state.raygenFindIntersectionProgramGroup, &rg_sbt));
+            rg_sbt.data = {0.462f};
             CUDA_CHECK(cudaMemcpy(
                     reinterpret_cast<void *>( raygen_record ),
                     &rg_sbt,
@@ -169,11 +175,12 @@ namespace RENDER_NAMESPACE {
                     cudaMemcpyHostToDevice
             ));
 
+            // TODO for testing
             CUdeviceptr miss_record;
-            size_t miss_record_size = sizeof(MissSbtRecord);
+            size_t miss_record_size = sizeof(RaygenRecord);
             CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &miss_record ), miss_record_size));
-            RayGenSbtRecord ms_sbt;
-            OPTIX_CHECK(optixSbtRecordPackHeader(state.rayMissingGroup, &ms_sbt));
+            RaygenRecord ms_sbt;
+            OPTIX_CHECK(optixSbtRecordPackHeader(state.missProgramGroup, &ms_sbt));
             CUDA_CHECK(cudaMemcpy(
                     reinterpret_cast<void *>( miss_record ),
                     &ms_sbt,
@@ -183,9 +190,37 @@ namespace RENDER_NAMESPACE {
 
             sbt.raygenRecord = raygen_record;
             sbt.missRecordBase = miss_record;
-            sbt.missRecordStrideInBytes = sizeof(MissSbtRecord);
+            sbt.missRecordStrideInBytes = sizeof(RaygenRecord);
             sbt.missRecordCount = 1;
         }
+
+        // Build traversable handle
+        OptixTraversableHandle triangleGASHandler = createTriangleGAS(sceneData, state.closestHitProgramGroup);
+        int triangleOffset = 0;
+
+        // TODO self-define vector array
+        base::Vector<OptixInstance> iasInstances(allocator);
+
+        OptixInstance gasInstance = {};
+        if (triangleGASHandler != 0) {
+            gasInstance.traversableHandle = triangleGASHandler;
+            gasInstance.sbtOffset = triangleOffset;
+            iasInstances.push_back(gasInstance);
+        }
+
+        // Top level acceleration structure
+        OptixBuildInput buildInput = {};
+        buildInput.type = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
+        buildInput.instanceArray.instances = CUdeviceptr(iasInstances.data());
+        buildInput.instanceArray.numInstances = iasInstances.size();
+        std::vector<OptixBuildInput> buildInputs = {buildInput};
+
+        OptixTraversableHandle rootTraversable = buildBVH({buildInput});
+
+        // Set closest hit sbt
+        sbt.hitgroupRecordBase = CUdeviceptr(closestHitRecords.data());
+        sbt.hitgroupRecordStrideInBytes = sizeof(ClosestHitRecord);
+        sbt.hitgroupRecordCount = closestHitRecords.size();
         state.sbt = sbt;
     }
 
@@ -229,6 +264,121 @@ namespace RENDER_NAMESPACE {
                 cudaMemcpyDeviceToHost));
 
         // Write image
-        writeImage("test.png", params.width, params.height, 3, m_host_pixels.data());
+        utils::writeImage("test.png", params.width, params.height, 3, m_host_pixels.data());
+    }
+
+    OptixTraversableHandle OptiXScene::createTriangleGAS(const SceneData &data,
+                                                         OptixProgramGroup &closestHitPG) {
+        std::vector<TriangleMesh *> meshes;
+        std::vector<CUdeviceptr> devicePtrConversion;
+        std::vector<uint32_t> triangleBuildInputFlag;
+
+        size_t shapeCount = data.entities.size();
+        meshes.resize(shapeCount);
+        devicePtrConversion.resize(shapeCount);
+        triangleBuildInputFlag.resize(shapeCount);
+
+        // Create meshes
+        for (int i = 0; i < shapeCount; i++) {
+            meshes[i] = allocator.newObject<TriangleMesh>(data.entities[i]);
+        }
+
+        std::vector<OptixBuildInput> buildInputs;
+        buildInputs.resize(shapeCount);
+        // TODO memcpy to device
+        for (int i = 0; i < shapeCount; i++) {
+            TriangleMesh *mesh = meshes[i];
+            size_t nVertices = mesh->nVertices;
+
+            OptixBuildInput input = {};
+            input.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
+            // Vertices
+            input.triangleArray.vertexFormat = OPTIX_VERTEX_FORMAT_FLOAT3;
+            input.triangleArray.vertexStrideInBytes = sizeof(Point3F);
+            input.triangleArray.numVertices = nVertices;
+            devicePtrConversion[i] = CUdeviceptr(mesh->vertices);
+            input.triangleArray.vertexBuffers = &(devicePtrConversion[i]);
+
+            // Indices
+            input.triangleArray.indexFormat = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
+            input.triangleArray.indexStrideInBytes = 3 * sizeof(int);
+            input.triangleArray.numIndexTriplets = mesh->nTriangles;
+            input.triangleArray.indexBuffer = CUdeviceptr(mesh->indices);
+            triangleBuildInputFlag[i] = OPTIX_GEOMETRY_FLAG_NONE;
+            input.triangleArray.flags = &triangleBuildInputFlag[i];
+
+            // SBT
+            input.triangleArray.numSbtRecords = 1;
+            input.triangleArray.sbtIndexOffsetBuffer = CUdeviceptr(0);
+            input.triangleArray.sbtIndexOffsetSizeInBytes = 0;
+            input.triangleArray.sbtIndexOffsetStrideInBytes = 0;
+
+            buildInputs[i] = input;
+
+            // Set shader binding table data
+            ClosestHitRecord hitRecord;
+            OPTIX_CHECK(optixSbtRecordPackHeader(closestHitPG, &hitRecord));
+            // TODO for testing
+            hitRecord.data.r = 0.1;
+            closestHitRecords.push_back(hitRecord);
+        }
+
+        if (!buildInputs.empty()) {
+            return buildBVH(buildInputs);
+        } else {
+            return {};
+        }
+    }
+
+    OptixTraversableHandle OptiXScene::buildBVH(std::vector<OptixBuildInput> buildInputs) {
+        // Figure out memory requirements.
+        OptixAccelBuildOptions accelOptions = {};
+        accelOptions.buildFlags = (OPTIX_BUILD_FLAG_ALLOW_COMPACTION | OPTIX_BUILD_FLAG_PREFER_FAST_TRACE);
+        accelOptions.operation = OPTIX_BUILD_OPERATION_BUILD;
+
+        OptixAccelBufferSizes gasBufferSizes;
+        OPTIX_CHECK(optixAccelComputeMemoryUsage(state.optixContext, &accelOptions,
+                                                 buildInputs.data(), buildInputs.size(),
+                                                 &gasBufferSizes));
+
+//        uint64_t *compactedSizeBufferPtr = allocator.newObject<uint64_t>();
+        uint64_t *compactedSizeBufferPtr;
+        CUDA_CHECK(cudaMalloc(&compactedSizeBufferPtr, sizeof(uint64_t)));
+
+        OptixAccelEmitDesc emitProperty = {};
+        emitProperty.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
+        emitProperty.result = (CUdeviceptr) compactedSizeBufferPtr;
+
+        void *deviceTempBuffer;
+        CUDA_CHECK(cudaMalloc(&deviceTempBuffer, gasBufferSizes.tempSizeInBytes));
+        void *deviceOutputBuffer;
+        CUDA_CHECK(cudaMalloc(&deviceOutputBuffer, gasBufferSizes.outputSizeInBytes));
+
+        // Build.
+        OptixTraversableHandle traversableHandle{0};
+        OPTIX_CHECK(optixAccelBuild(
+                state.optixContext, state.cudaStream, &accelOptions, buildInputs.data(), buildInputs.size(),
+                CUdeviceptr(deviceTempBuffer), gasBufferSizes.tempSizeInBytes,
+                CUdeviceptr(deviceOutputBuffer), gasBufferSizes.outputSizeInBytes, &traversableHandle,
+                &emitProperty, 1));
+
+        CUDA_CHECK(cudaDeviceSynchronize());
+
+        buildBVHBytes += *compactedSizeBufferPtr;
+
+        // Compact
+        void *asBuffer;
+        CUDA_CHECK(cudaMalloc(&asBuffer, *compactedSizeBufferPtr));
+
+        OPTIX_CHECK(optixAccelCompact(state.optixContext, state.cudaStream, traversableHandle,
+                                      CUdeviceptr(asBuffer), *compactedSizeBufferPtr,
+                                      &traversableHandle));
+        CUDA_CHECK(cudaDeviceSynchronize());
+
+        CUDA_CHECK(cudaFree(deviceTempBuffer));
+        CUDA_CHECK(cudaFree(deviceOutputBuffer));
+        CUDA_CHECK(cudaFree(compactedSizeBufferPtr));
+
+        return traversableHandle;
     }
 }

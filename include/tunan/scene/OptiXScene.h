@@ -1,13 +1,16 @@
 //
-// Created by Graphics on 2021/5/31.
+// Created by StormPhoenix on 2021/5/31.
 //
 
 #ifndef TUNAN_OPTIXSCENE_H
 #define TUNAN_OPTIXSCENE_H
 
 #include <tunan/common.h>
+#include <tunan/base/containers.h>
+#include <tunan/scene/scene_data.h>
 #include <tunan/material/Material.h>
 #include <tunan/utils/MemoryAllocator.h>
+#include <tunan/gpu/optix_ray.h>
 
 #include <optix.h>
 
@@ -20,31 +23,55 @@ namespace RENDER_NAMESPACE {
     using utils::MemoryAllocator;
 
     typedef struct OptiXState {
-        OptixDeviceContext optixContext;
         OptixModule optixModule = nullptr;
         OptixPipeline optixPipeline;
-        OptixProgramGroup rayFindIntersectionGroup = 0;
-        OptixProgramGroup rayMissingGroup = 0;
-
+        OptixProgramGroup raygenFindIntersectionProgramGroup = 0;
+        // TODO rename
+        OptixProgramGroup missProgramGroup = 0;
+        OptixProgramGroup closestHitProgramGroup = 0;
         OptixShaderBindingTable sbt;
 
+        OptixDeviceContext optixContext;
         CUstream cudaStream = nullptr;
     } OptiXState;
 
-    class OptiXScene {
-    public:
-        void buildOptiXData();
+    template<typename T>
+    struct __align__(OPTIX_SBT_RECORD_ALIGNMENT) SbtRecord {
+    __align__(OPTIX_SBT_RECORD_ALIGNMENT)
+    char header[OPTIX_SBT_RECORD_HEADER_SIZE];
+    T data;
+};
 
-        void intersect();
+typedef SbtRecord <RaygenData> RaygenRecord;
+// TODO delete for testing
+typedef SbtRecord <ClosestHitData> ClosestHitRecord;
+// TODO
+//    struct ClosestHitRecord;
 
-    private:
-        OptiXState state;
-        // TODO delete retrive
-//        MemoryAllocator &allocator;
-        // Materials
-        std::map<std::string, Material> namedMaterial;
-        std::vector<Material> materials;
-    };
+class OptiXScene {
+public:
+    OptiXScene(MemoryAllocator &allocator) :
+            allocator(allocator),
+            closestHitRecords(allocator) {}
+
+    void buildOptiXData(const SceneData &sceneData);
+
+    void intersect();
+
+private:
+    OptixTraversableHandle createTriangleGAS(const SceneData &data, OptixProgramGroup &closestHitPG);
+
+    OptixTraversableHandle buildBVH(std::vector<OptixBuildInput> buildInputs);
+
+private:
+    OptiXState state;
+    // Memory allocator
+    MemoryAllocator &allocator;
+    uint64_t buildBVHBytes = 0;
+    // Closest hit SBT records
+    base::Vector <ClosestHitRecord> closestHitRecords;
+};
+
 }
 
 #endif //TUNAN_OPTIXSCENE_H

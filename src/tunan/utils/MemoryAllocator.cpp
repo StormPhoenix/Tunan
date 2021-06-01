@@ -1,5 +1,5 @@
 //
-// Created by Graphics on 2021/5/31.
+// Created by StormPhoenix on 2021/5/31.
 //
 
 #ifndef RENDER_CACHE_LINE_SIZE
@@ -59,6 +59,10 @@ namespace RENDER_NAMESPACE {
         void MemoryAllocator::reset() {
             _availableBlocks.splice(_availableBlocks.begin(), _usedBlocks);
             _blockOffset = 0;
+        }
+
+        void MemoryAllocator::deleteObject(void *p) {
+            // TODO do nothing
         }
 
         MemoryAllocator::~MemoryAllocator() {
