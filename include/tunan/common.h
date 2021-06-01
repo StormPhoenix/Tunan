@@ -6,13 +6,18 @@
 #define TUNAN_COMMON_H
 
 #ifdef __RENDER_GPU_MODE__
-#include <cuda.h>
 #define GLM_FORCE_CUDA
 #define RENDER_CPU_GPU __host__ __device__
 #define RENDER_GPU __device__
 #else
 #define RENDER_CPU_GPU
 #define RENDER_GPU
+#endif
+
+#if defined(_RENDER_DATA_DOUBLE_)
+using Float = double;
+#else
+using Float = float;
 #endif
 
 #define CHECK(exp) assert(exp)

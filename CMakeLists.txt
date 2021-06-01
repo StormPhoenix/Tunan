@@ -29,15 +29,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMake/)
 find_package(CUDA)
 if (CUDA_FOUND)
     enable_language(CUDA)
-    set(CUDA_LINK_LIBRARY ${CUDA_LIBRARIES})
+    set(CUDA_LINK_LIBRARY ${CUDA_LIBRARIES} ${CUDA_CUDA_LIBRARY})
     set(CUDA_INCLUDE_DIRECTORY ${CUDA_INCLUDE_DIRS})
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_61，code=sm_61;)
     message(STATUS "Found CUDA: ${CUDA_VERSION_MAJOR}.${CUDA_VERSION_MINOR}")
     #    add_definitions(-D CUDA_VERSION)
 endif (CUDA_FOUND)
-
-## TODO delete
-message(STATUS ${CUDA_LINK_LIBRARY})
 
 find_package(OptiX)
 if (OptiX_FOUND)
@@ -113,6 +110,8 @@ set(RENDER_BASE_SRCS
         include/tunan/base/mediums.h)
 
 set(RENDER_UTILS_SRCS
+        src/tunan/utils/image_utils.cpp
+        src/tunan/utils/file_utils.cpp
         src/tunan/utils/MemoryAllocator.cpp
         src/tunan/utils/memory/CPUResource.cpp
         include/tunan/utils/type_utils.h
@@ -202,9 +201,12 @@ target_include_directories(
         ${CUDA_INCLUDE_DIRECTORY}
 )
 
+add_dependencies(render_scene_lib render_utils_lib render_optix_ptxcode_lib)
+
 target_link_libraries(
         render_scene_lib
         PRIVATE
+        render_utils_lib
         render_optix_ptxcode_lib
         ${CUDA_LINK_LIBRARY}
 )
@@ -213,12 +215,11 @@ add_executable(${PROJECT_NAME} ${RENDER_SRCS})
 target_link_libraries(
         ${PROJECT_NAME}
         PRIVATE
+        render_utils_lib
         render_scene_lib
         render_base_lib
         render_media_lib
-        render_utils_lib
         render_material_lib
-        ${CUDA_LINK_LIBRARY}
 )
 target_include_directories(
         ${PROJECT_NAME}

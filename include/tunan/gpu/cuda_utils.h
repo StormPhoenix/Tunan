@@ -7,7 +7,6 @@
 
 #include <tunan/common.h>
 #include <cuda.h>
-#include <driver_types.h>
 #include <cuda_runtime_api.h>
 
 #ifdef __RENDER_GPU_MODE__

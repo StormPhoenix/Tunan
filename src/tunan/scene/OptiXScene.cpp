@@ -7,9 +7,11 @@
 #include <tunan/gpu/cuda_utils.h>
 #include <tunan/gpu/optix_utils.h>
 #include <tunan/gpu/optix_ray.h>
+#include <tunan/utils/image_utils.h>
 
 #include <sstream>
 
+#include <cuda.h>
 #include <optix.h>
 #include <optix_function_table_definition.h>
 #include <optix_stubs.h>
@@ -19,7 +21,8 @@ extern const unsigned char OptixPtxCode[];
 }
 
 namespace RENDER_NAMESPACE {
-
+    // TODO delete
+    using namespace utils;
     // TODO for testing
     template<typename T>
     struct SbtRecord {
@@ -38,9 +41,8 @@ namespace RENDER_NAMESPACE {
         OptixDeviceContext optixContext;
         {
             // Initialize current cuda context
-            // TODO no lib link ...
+            CUDA_CHECK(cudaFree(0));
             CUcontext cudaContext = 0;
-//            CUcontext cudaContext;
 //            CU_CHECK(cuCtxGetCurrent(&cudaContext));
 //            CHECK(cudaContext != nullptr);
 
@@ -189,36 +191,44 @@ namespace RENDER_NAMESPACE {
 
     void OptiXScene::intersect() {
         // TODO for test
-        {
-            int width = 400;
-            int height = 400;
+        int width = 400;
+        int height = 400;
 
-            uchar3 *m_device_pixels = nullptr;
-            CUDA_CHECK(cudaFree(reinterpret_cast<void *>( m_device_pixels )));
-            CUDA_CHECK(cudaMalloc(
-                    reinterpret_cast<void **>( &m_device_pixels ),
-                    width * height * sizeof(uchar3)
-            ));
+        uchar3 *m_device_pixels = nullptr;
+        CUDA_CHECK(cudaFree(reinterpret_cast<void *>( m_device_pixels )));
+        CUDA_CHECK(cudaMalloc(
+                reinterpret_cast<void **>( &m_device_pixels ),
+                width * height * sizeof(uchar3)
+        ));
 
-            CUDA_CHECK(cudaStreamCreate(&(state.cudaStream)));
-            RayParams params;
-            params.image = m_device_pixels;
-            params.width = width;
-            params.height = height;
+        CUDA_CHECK(cudaStreamCreate(&(state.cudaStream)));
+        RayParams params;
+        params.image = m_device_pixels;
+        params.width = width;
+        params.height = height;
 
-            CUdeviceptr d_param;
-            CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &d_param ), sizeof(RayParams)));
-            CUDA_CHECK(cudaMemcpy(
-                    reinterpret_cast<void *>( d_param ),
-                    &params, sizeof(params),
-                    cudaMemcpyHostToDevice
-            ));
+        CUdeviceptr d_param;
+        CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &d_param ), sizeof(RayParams)));
+        CUDA_CHECK(cudaMemcpy(
+                reinterpret_cast<void *>( d_param ),
+                &params, sizeof(params),
+                cudaMemcpyHostToDevice
+        ));
 
-            OPTIX_CHECK(optixLaunch(state.optixPipeline,
-                                    state.cudaStream,
-                                    d_param, sizeof(RayParams), &state.sbt, width, height, /*depth=*/1));
+        OPTIX_CHECK(optixLaunch(state.optixPipeline,
+                                state.cudaStream,
+                                d_param, sizeof(RayParams), &state.sbt, width, height, /*depth=*/1));
+        CUDA_SYNC_CHECK();
 
-            CUDA_SYNC_CHECK();
-        }
+        std::vector<uchar3> m_host_pixels;
+        m_host_pixels.reserve(width * height);
+        CUDA_CHECK(cudaMemcpy(
+                static_cast<void *>(m_host_pixels.data()),
+                params.image,
+                params.width * params.height * sizeof(uchar3),
+                cudaMemcpyDeviceToHost));
+
+        // Write image
+        writeImage("test.png", params.width, params.height, 3, m_host_pixels.data());
     }
 }

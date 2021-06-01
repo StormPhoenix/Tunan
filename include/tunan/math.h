@@ -7,6 +7,10 @@
 
 #include <tunan/common.h>
 
+#ifdef __RENDER_GPU_MODE__
+#include <cuda.h>
+#endif
+
 #include <ext/glm/glm.hpp>
 #include <ext/glm/gtc/matrix_transform.hpp>
 #include <ext/glm/gtc/matrix_inverse.hpp>
@@ -33,14 +37,12 @@ using Matrix4f = glm::mat4x4;
 using Matrix3f = glm::mat3x3;
 
 #if defined(_RENDER_DATA_DOUBLE_)
-using Float = double;
 using Vector4F = Vector4d;
 using Vector3F = Vector3d;
 using Vector2F = Vector2d;
 using Matrix4F = Matrix4d;
 using Matrix3F = Matrix3d;
 #else
-using Float = float;
 using Vector4F = Vector4f;
 using Vector3F = Vector3f;
 using Vector2F = Vector2f;
