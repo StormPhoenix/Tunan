@@ -133,6 +133,7 @@ set(RENDER_SCENE_SRCS
         src/tunan/scene/Ray.cpp
         src/tunan/scene/Camera.cpp
         src/tunan/scene/scene_data.cpp
+        src/tunan/scene/importers.cpp
         include/tunan/common.h)
 
 set(RENDER_SRCS

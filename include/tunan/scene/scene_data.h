@@ -8,6 +8,7 @@
 #include <tunan/material/Material.h>
 #include <tunan/math.h>
 #include <tunan/common.h>
+#include <tunan/base/transform.h>
 
 #include <string>
 #include <vector>
@@ -30,6 +31,35 @@ namespace RENDER_NAMESPACE {
     typedef struct SceneData {
         // Entities
         std::vector<ShapeEntity> entities;
+
+        // Film params
+        // TODO check variable meaning
+        std::string filmType;
+        std::string filename = "render";
+        int width = 300;
+        int height = 300;
+        std::string fileFormat = "png";
+        std::string pixelFormat = "";
+        float gamma = 2;
+        bool banner = false;
+        std::string rfilter = "";
+
+        // Camera params
+        // TODO check variable meaning
+        std::string type = "perspective";
+        float fov = 45.0f;
+        base::Transform cameraToWorld;
+
+        // Integrator params
+        // TODO check variable meaning
+        std::string integratorType = "path";
+        int maxDepth = 12;
+        int sampleNum = 100;
+        int delta = 1;
+        bool strictNormals = false;
+        int photonCount = 1024;
+        float initialRadius = 0.03;
+        float radiusDecay = 0.3;
 
         // Materials
         std::map<std::string, Material> namedMaterial;
