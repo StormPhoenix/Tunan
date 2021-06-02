@@ -8,7 +8,9 @@
 #include <tunan/common.h>
 
 #ifdef __RENDER_GPU_MODE__
+
 #include <cuda.h>
+
 #endif
 
 #include <ext/glm/glm.hpp>
@@ -76,6 +78,52 @@ using Point4I = Vector4i;
 
 namespace RENDER_NAMESPACE {
     namespace math {
+
+#ifdef __RENDER_GPU_MODE__
+
+#define Infinity std::numeric_limits<Float>::infinity()
+#define Epsilon std::numeric_limits<Float>::epsilon() * 0.5f
+#define MaxFloat std::numeric_limits<Float>::max()
+
+#define doubleOneMinusEpsilon 0x1.fffffffffffffp-1
+#define floatOneMinusEpsilon float(0x1.fffffep-1)
+
+#if defined(_RENDER_DATA_DOUBLE_)
+#define OneMinusEpsilon doubleOneMinusEpsilon
+#else
+#define OneMinusEpsilon floatOneMinusEpsilon
+#endif // _RENDER_DATA_DOUBLE_
+
+#else
+
+        static constexpr Float Infinity = std::numeric_limits<Float>::infinity();
+        static constexpr Float Epsilon = std::numeric_limits<Float>::epsilon() * 0.5;
+        static constexpr Float MaxFloat = std::numeric_limits<Float>::max();
+
+        static constexpr double doubleOneMinusEpsilon = 0x1.fffffffffffffp-1;
+        static constexpr float floatOneMinusEpsilon = 0x1.fffffep-1;
+
+#if defined(_RENDER_DATA_DOUBLE_)
+        static constexpr double OneMinusEpsilon = doubleOneMinusEpsilon;
+#else
+        static constexpr float OneMinusEpsilon = floatOneMinusEpsilon;
+#endif // _RENDER_DATA_DOUBLE_
+
+#endif // __RENDER_GPU_MODE__
+
+#ifdef __RENDER_GPU_MODE__
+#define Pi Float(3.14159265358979323846)
+#define Inv_Pi Float(0.31830988618379067154)
+#define Inv_2Pi Float(0.15915494309189533577)
+#define Inv_4Pi Float(0.07957747154594766788)
+#else
+        constexpr Float Pi = 3.14159265358979323846;
+        constexpr Float Inv_Pi = 0.31830988618379067154;
+        constexpr Float Inv_2Pi = 0.15915494309189533577;
+        constexpr Float Inv_4Pi = 0.07957747154594766788;
+#endif // __RENDER_GPU_MODE__
+
+
         template<typename T>
         inline RENDER_CPU_GPU typename std::enable_if_t<std::is_floating_point<T>::value, bool> isNaN(T val) {
 #ifdef __RENDER_GPU_MODE__

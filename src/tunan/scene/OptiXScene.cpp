@@ -242,7 +242,7 @@ namespace RENDER_NAMESPACE {
         params.width = width;
         params.height = height;
 
-        CUdeviceptr d_param;
+        void *d_param;
         CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &d_param ), sizeof(RayParams)));
         CUDA_CHECK(cudaMemcpy(
                 reinterpret_cast<void *>( d_param ),
@@ -252,7 +252,7 @@ namespace RENDER_NAMESPACE {
 
         OPTIX_CHECK(optixLaunch(state.optixPipeline,
                                 state.cudaStream,
-                                d_param, sizeof(RayParams), &state.sbt, width, height, /*depth=*/1));
+                                CUdeviceptr(d_param), sizeof(RayParams), &state.sbt, width, height, /*depth=*/1));
         CUDA_SYNC_CHECK();
 
         std::vector<uchar3> m_host_pixels;
@@ -265,6 +265,7 @@ namespace RENDER_NAMESPACE {
 
         // Write image
         utils::writeImage("test.png", params.width, params.height, 3, m_host_pixels.data());
+        CUDA_CHECK(cudaFree(d_param));
     }
 
     OptixTraversableHandle OptiXScene::createTriangleGAS(const SceneData &data,

@@ -105,6 +105,7 @@ endif (BUILD_GPU_ENABLED)
 
 set(RENDER_BASE_SRCS
         src/tunan/base/interactions.cpp
+        src/tunan/base/transform.cpp
         include/tunan/base/spectrum.h
         include/tunan/base/containers.h
         include/tunan/base/mediums.h)
@@ -117,6 +118,10 @@ set(RENDER_UTILS_SRCS
         include/tunan/utils/type_utils.h
         include/tunan/utils/TaggedPointer.h)
 
+set(RENDER_SAMPLER_SRCS
+        include/tunan/sampler/rng.h
+        src/tunan/sampler/samplers.cpp)
+
 set(RENDER_MATERIAL_SRCS
         src/tunan/material/Lambertian.cpp
         src/tunan/material/Material.cpp)
@@ -125,6 +130,8 @@ set(RENDER_MEDIA_SRCS
         include/tunan/medium/Medium.h)
 
 set(RENDER_SCENE_SRCS
+        src/tunan/scene/Ray.cpp
+        src/tunan/scene/Camera.cpp
         src/tunan/scene/scene_data.cpp
         include/tunan/common.h)
 
@@ -149,6 +156,7 @@ if (BUILD_GPU_ENABLED)
             ${RENDER_BASE_SRCS}
             ${RENDER_MEDIA_SRCS}
             ${RENDER_MATERIAL_SRCS}
+            ${RENDER_SAMPLER_SRCS}
             PROPERTIES LANGUAGE CUDA)
 endif ()
 
@@ -198,6 +206,13 @@ target_link_libraries(
         render_base_lib
         render_utils_lib
 )
+
+add_library(render_sampler_lib
+        ${RENDER_SAMPLER_SRCS})
+target_include_directories(render_sampler_lib
+        PRIVATE
+        ${PROJ_INCLUDE_DIR}
+        ${CUDA_INCLUDE_DIRECTORY})
 
 add_library(render_scene_lib
         ${RENDER_SCENE_SRCS})
