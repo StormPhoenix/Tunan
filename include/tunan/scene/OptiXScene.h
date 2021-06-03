@@ -53,6 +53,8 @@ class OptiXScene {
 public:
     OptiXScene(SceneData &sceneData, MemoryAllocator &allocator);
 
+    void OptiXScene2(SceneData &sceneData, MemoryAllocator &allocator);
+
     void buildOptiXData(const SceneData &sceneData);
 
     void intersect();

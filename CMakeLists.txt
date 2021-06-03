@@ -228,10 +228,6 @@ target_include_directories(
         ${CUDA_INCLUDE_DIRECTORY}
 )
 
-target_compile_options(render_scene_lib
-        INTERFACE
-        "-g,-lineinfo")
-
 add_dependencies(render_scene_lib render_utils_lib render_optix_ptxcode_lib)
 
 target_link_libraries(

@@ -6,14 +6,18 @@
 #define TUNAN_IMPORTERS_H
 
 #include <tunan/common.h>
-#include <tunan/scene/scene_data.h>
-#include <tunan/utils/MemoryAllocator.h>
 
 #include <string>
 
 namespace RENDER_NAMESPACE {
+    class SceneData;
+
+    namespace utils {
+        class MemoryAllocator;
+    }
+
     namespace importer {
-        using namespace utils;
+        using utils::MemoryAllocator;
 
         class MitsubaSceneImporter {
         public:

@@ -20,13 +20,19 @@ namespace RENDER_NAMESPACE {
     typedef struct ShapeEntity {
         ShapeEntity() = default;
 
-        // Triangles
-        std::vector<Point3F> vertices;
-        std::vector<Normal3F> normals;
-        std::vector<Point2F> texcoords;
-        std::vector<int> vertexIndices;
-        std::vector<int> normalIndices;
-        std::vector<int> texcoordIndices;
+        int nVertices = 0;
+        Point3F *vertices = nullptr;
+
+        int nNormals = 0;
+        Normal3F *normals = nullptr;
+
+        int nTexcoords = 0;
+        Point2F *texcoords = nullptr;
+
+        int nTriangles = 0;
+        int *vertexIndices = nullptr;
+        int *normalIndices = nullptr;
+        int *texcoordIndices = nullptr;
 
         bool faceNormal = false;
         base::Transform toWorld;
@@ -71,6 +77,7 @@ namespace RENDER_NAMESPACE {
 
         // Materials
         std::map<std::string, Material> namedMaterial;
+
         std::vector<Material> materials;
     } SceneData;
 

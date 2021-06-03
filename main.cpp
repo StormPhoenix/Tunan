@@ -26,6 +26,7 @@ int main() {
     // TODO for testing
     using namespace tunan;
     using namespace tunan::importer;
+    using namespace tunan::utils;
 
     MemoryResource *resource = new CUDAResource();
     MemoryAllocator allocator(resource);
@@ -37,8 +38,9 @@ int main() {
     SceneData sceneData;
     importer.importScene(sceneDirectory, sceneData, allocator);
     OptiXScene scene(sceneData, allocator);
-    scene.intersect();
-
+//    scene.intersect();
+    // TODO think about resource deallocation
+//    delete resource;
     std::cout << "Hello, World!" << std::endl;
     return 0;
 }

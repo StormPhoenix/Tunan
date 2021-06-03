@@ -6,6 +6,8 @@
 #include <tunan/base/transform.h>
 #include <tunan/base/spectrum.h>
 #include <tunan/utils/model_loader.h>
+#include <tunan/utils/MemoryAllocator.h>
+#include <tunan/scene/scene_data.h>
 
 #include <ext/pugixml/pugixml.hpp>
 
@@ -14,6 +16,8 @@
 
 namespace RENDER_NAMESPACE {
     namespace importer {
+        using utils::MemoryAllocator;
+
 #define GET_PARSE_INFO_VALUE_FUNC_DECLARE(Type, TypeUpperCase) \
     Type get##TypeUpperCase##Value(const std::string name, const Type defaultValue);                                                               \
 
@@ -315,16 +319,19 @@ namespace RENDER_NAMESPACE {
             sceneData.radiusDecay = info.getFloatValue("alpha", sceneData.radiusDecay);
         }
 
-        void createRectangleShape(XmlParseInfo &info, SceneData &sceneData) {
+        void createRectangleShape(XmlParseInfo &info, SceneData &sceneData, MemoryAllocator &allocator) {
             sceneData.entities.push_back(ShapeEntity());
             ShapeEntity &entity = sceneData.entities.back();
             entity.toWorld = info.getTransformValue("toWorld", Transform());
 
             const int nVertices = 4;
+            const int nNormals = nVertices;
+            const int nTexcoords = nVertices;
             const int nTriangles = 2;
 
             // Vertices
-            entity.vertices.resize(nVertices);
+            entity.nVertices = nVertices;
+            entity.vertices = allocator.allocateObjects<Point3F>(nVertices);
             {
                 entity.vertices[0] = Point3F(-1, -1, 0);
                 entity.vertices[1] = Point3F(1, -1, 0);
@@ -333,8 +340,9 @@ namespace RENDER_NAMESPACE {
             }
 
             // Normals
+            entity.nNormals = nNormals;
+            entity.normals = allocator.allocateObjects<Normal3F>(nNormals);
             Normal3F normal(0, 0, 1);
-            entity.normals.resize(nVertices);
             {
                 entity.normals[0] = normal;
                 entity.normals[1] = normal;
@@ -343,7 +351,8 @@ namespace RENDER_NAMESPACE {
             }
 
             // UVs
-            entity.texcoords.resize(nVertices);
+            entity.nTexcoords = nTexcoords;
+            entity.texcoords = allocator.allocateObjects<Point2F>(nTexcoords);
             {
                 entity.texcoords[0] = Point2F(0, 0);
                 entity.texcoords[1] = Point2F(1, 0);
@@ -352,24 +361,38 @@ namespace RENDER_NAMESPACE {
             }
 
             // Indices
-            entity.vertexIndices.resize(nTriangles * 3);
-            entity.normalIndices.resize(nTriangles * 3);
-            entity.texcoordIndices.resize(nTriangles * 3);
+            entity.nTriangles = nTriangles;
+            entity.vertexIndices = allocator.allocateObjects<int>(nTriangles * 3);
+            entity.normalIndices = allocator.allocateObjects<int>(nTriangles * 3);
+            entity.texcoordIndices = allocator.allocateObjects<int>(nTriangles * 3);
             {
                 entity.vertexIndices[0] = 0;
+                entity.normalIndices[0] = 0;
+                entity.texcoordIndices[0] = 0;
+
                 entity.vertexIndices[1] = 1;
+                entity.normalIndices[1] = 1;
+                entity.texcoordIndices[1] = 1;
+
                 entity.vertexIndices[2] = 2;
+                entity.normalIndices[2] = 2;
+                entity.texcoordIndices[2] = 2;
 
                 entity.vertexIndices[3] = 2;
-                entity.vertexIndices[4] = 3;
-                entity.vertexIndices[5] = 0;
+                entity.normalIndices[3] = 2;
+                entity.texcoordIndices[3] = 2;
 
-                entity.normalIndices = entity.vertexIndices;
-                entity.texcoordIndices = entity.vertexIndices;
+                entity.vertexIndices[4] = 3;
+                entity.normalIndices[4] = 3;
+                entity.texcoordIndices[4] = 3;
+
+                entity.vertexIndices[5] = 0;
+                entity.normalIndices[5] = 0;
+                entity.texcoordIndices[5] = 0;
             }
         }
 
-        static void createCubeShape(XmlParseInfo &info, SceneData &sceneData) {
+        static void createCubeShape(XmlParseInfo &info, SceneData &sceneData, MemoryAllocator &allocator) {
             sceneData.entities.push_back(ShapeEntity());
             ShapeEntity &entity = sceneData.entities.back();
             entity.toWorld = info.getTransformValue("toWorld", Transform());
@@ -378,7 +401,8 @@ namespace RENDER_NAMESPACE {
             const int nTriangles = 12;
 
             // Vertices
-            entity.vertices.resize(nVertices);
+            entity.nVertices = nVertices;
+            entity.vertices = allocator.allocateObjects<Point3F>(nVertices);
             {
                 entity.vertices[0] = Point3F(1, -1, -1);
                 entity.vertices[1] = Point3F(1, -1, 1);
@@ -391,7 +415,8 @@ namespace RENDER_NAMESPACE {
             }
 
             // Vertex indices
-            entity.vertexIndices.resize(nTriangles * 3);
+            entity.nTriangles = nTriangles;
+            entity.vertexIndices = allocator.allocateObjects<int>(nTriangles * 3);
             {
                 entity.vertexIndices[0] = 7;
                 entity.vertexIndices[1] = 2;
@@ -443,8 +468,9 @@ namespace RENDER_NAMESPACE {
             }
 
             // Normals and normal indices
-            entity.normals.resize(nTriangles * 3);
-            entity.normalIndices.resize(nTriangles * 3);
+            entity.nNormals = nTriangles * 3;
+            entity.normals = allocator.allocateObjects<Normal3F>(nTriangles * 3);
+            entity.normalIndices = allocator.allocateObjects<int>(nTriangles * 3);
             for (int i = 0; i < nTriangles; i++) {
                 int index = i * 3;
                 Point3F v1 = entity.vertices[entity.vertexIndices[index]];
@@ -459,8 +485,9 @@ namespace RENDER_NAMESPACE {
             }
 
             // UVs
-            entity.texcoords.resize(1);
-            entity.texcoordIndices.resize(nTriangles * 3);
+            entity.nTexcoords = 1;
+            entity.texcoords = allocator.allocateObjects<Point2F>(1);
+            entity.texcoordIndices = allocator.allocateObjects<int>(nTriangles * 3);
             {
                 entity.texcoords[0] = Point2F(0.0f, 0.0f);
                 for (int i = 0; i < nTriangles; i++) {
@@ -472,7 +499,7 @@ namespace RENDER_NAMESPACE {
             }
         }
 
-        static void createObjMeshes(XmlParseInfo &info, SceneData &sceneData) {
+        static void createObjMeshes(XmlParseInfo &info, SceneData &sceneData, MemoryAllocator &allocator) {
             sceneData.entities.push_back(ShapeEntity());
             ShapeEntity &entity = sceneData.entities.back();
             entity.toWorld = info.getTransformValue("toWorld", Transform());
@@ -485,21 +512,22 @@ namespace RENDER_NAMESPACE {
             std::string filename = info.getStringValue("filename", "");
             ASSERT(filename != "", "Obj filename can't be empty. ");
 
-            bool good = utils::load_obj(sceneData.sceneDirectory + filename, entity);
+            bool good = utils::load_obj(sceneData.sceneDirectory + filename, entity, allocator);
             ASSERT(good, "Load *.obj model failed: " + filename);
             std::cout << "\tLoading mesh: " << filename << std::endl;
             return;
         }
 
-        static void handleTagShape(pugi::xml_node &node, XmlParseInfo &parseInfo, SceneData &sceneData) {
+        static void handleTagShape(pugi::xml_node &node, XmlParseInfo &parseInfo,
+                                   SceneData &sceneData, MemoryAllocator &allocator) {
             std::string type = node.attribute("type").value();
 
             if (type == "rectangle") {
-                createRectangleShape(parseInfo, sceneData);
+                createRectangleShape(parseInfo, sceneData, allocator);
             } else if (type == "cube") {
-                createCubeShape(parseInfo, sceneData);
+                createCubeShape(parseInfo, sceneData, allocator);
             } else if (type == "obj") {
-                createObjMeshes(parseInfo, sceneData);
+                createObjMeshes(parseInfo, sceneData, allocator);
             } else {
                 ASSERT(false, "Only support rectangle shape for now");
             }
@@ -538,8 +566,8 @@ namespace RENDER_NAMESPACE {
         }
 
         static void
-        handleXmlNode(pugi::xml_node &node, XmlParseInfo &parseInfo,
-                      XmlParseInfo &parentParseInfo, SceneData &sceneData) {
+        handleXmlNode(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parentParseInfo,
+                      SceneData &sceneData, MemoryAllocator &allocator) {
             TagType tagType = nodeTypeMap[node.name()];
             switch (tagType) {
 //                case Tag_Mode:
@@ -584,7 +612,7 @@ namespace RENDER_NAMESPACE {
 //                    handleTagBSDF(node, parseInfo, parentParseInfo);
 //                    break;
                 case Tag_Shape:
-                    handleTagShape(node, parseInfo, sceneData);
+                    handleTagShape(node, parseInfo, sceneData, allocator);
                     break;
 //                case Tag_Ref:
 //                    handleTagRef(node, parentParseInfo);
@@ -609,13 +637,13 @@ namespace RENDER_NAMESPACE {
             }
         }
 
-        void parseXml(pugi::xml_node &node, XmlParseInfo &parent, SceneData &scene) {
+        void parseXml(pugi::xml_node &node, XmlParseInfo &parent, SceneData &scene, MemoryAllocator &allocator) {
             XmlParseInfo info;
             std::map<std::string, XmlAttrVal> attrContainer;
             for (pugi::xml_node &child : node.children()) {
-                parseXml(child, info, scene);
+                parseXml(child, info, scene, allocator);
             }
-            handleXmlNode(node, info, parent, scene);
+            handleXmlNode(node, info, parent, scene, allocator);
         }
 
         void MitsubaSceneImporter::importScene(std::string sceneDirectory, SceneData &sceneData,
@@ -631,7 +659,7 @@ namespace RENDER_NAMESPACE {
                         + " (at " + getOffset(ret.offset, xml_file) + ")");
 
             XmlParseInfo parseInfo;
-            parseXml(*xml_doc.begin(), parseInfo, sceneData);
+            parseXml(*xml_doc.begin(), parseInfo, sceneData, allocator);
             std::cout << "\tReading scene data finished ." << std::endl;
 
             // TODO add lights
