@@ -68,8 +68,7 @@ namespace RENDER_NAMESPACE {
             return proxyCall(sample2DFunc);
         }
 
-        RENDER_CPU_GPU
-        Vector2F diskUniformSampling(Sampler sampler, Float radius) {
+        RENDER_CPU_GPU Vector2F diskUniformSampling(Sampler sampler, Float radius) {
             // sampleY = r / Radius
             // sampleX = theta / (2 * PI)
             Float sampleY = sampler.sample1D();
@@ -80,6 +79,5 @@ namespace RENDER_NAMESPACE {
 
             return Vector2F(r * std::cos(theta), r * std::sin(theta));
         }
-
     }
 }

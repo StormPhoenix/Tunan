@@ -4,6 +4,7 @@
 
 #include <tunan/common.h>
 #include <tunan/base/containers.h>
+#include <tunan/scene/Camera.h>
 #include <tunan/scene/OptiXScene.h>
 #include <tunan/gpu/cuda_utils.h>
 #include <tunan/gpu/optix_utils.h>
@@ -24,6 +25,24 @@ extern const unsigned char OptixPtxCode[];
 namespace RENDER_NAMESPACE {
     static void optiXLogCallback(unsigned int level, const char *tag, const char *message, void *cbdata) {
         std::cout << "OptiX callback: " << tag << ": " << message << std::endl;
+    }
+
+    OptiXScene::OptiXScene(SceneData &sceneData, MemoryAllocator &allocator) :
+            allocator(allocator), closestHitRecords(allocator) {
+        filmWidth = sceneData.width;
+        filmHeight = sceneData.height;
+        state.params.camera = allocator.newObject<Camera>(sceneData.cameraToWorld, sceneData.fov,
+                                                          filmWidth, filmHeight);
+
+        // Output image buffer
+        uchar3 *deviceOutputBuffer = nullptr;
+        {
+            CUDA_CHECK(cudaFree(reinterpret_cast<void *>( deviceOutputBuffer )));
+            CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &deviceOutputBuffer ),
+                                  sceneData.width * sceneData.height * sizeof(uchar3)));
+        }
+        state.params.outputImage = deviceOutputBuffer;
+        buildOptiXData(sceneData);
     }
 
     void OptiXScene::buildOptiXData(const SceneData &sceneData) {
@@ -222,50 +241,35 @@ namespace RENDER_NAMESPACE {
         sbt.hitgroupRecordStrideInBytes = sizeof(ClosestHitRecord);
         sbt.hitgroupRecordCount = closestHitRecords.size();
         state.sbt = sbt;
+        state.params.traversable = rootTraversable;
     }
 
     void OptiXScene::intersect() {
-        // TODO for test
-        int width = 400;
-        int height = 400;
-
-        uchar3 *m_device_pixels = nullptr;
-        CUDA_CHECK(cudaFree(reinterpret_cast<void *>( m_device_pixels )));
-        CUDA_CHECK(cudaMalloc(
-                reinterpret_cast<void **>( &m_device_pixels ),
-                width * height * sizeof(uchar3)
-        ));
-
-        CUDA_CHECK(cudaStreamCreate(&(state.cudaStream)));
-        RayParams params;
-        params.image = m_device_pixels;
-        params.width = width;
-        params.height = height;
-
-        void *d_param;
-        CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &d_param ), sizeof(RayParams)));
+        // TODO delete
+//        CUDA_CHECK(cudaStreamCreate(&(state.cudaStream)));
+        void *deviceParams;
+        CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &deviceParams ), sizeof(RayParams)));
         CUDA_CHECK(cudaMemcpy(
-                reinterpret_cast<void *>( d_param ),
-                &params, sizeof(params),
+                reinterpret_cast<void *>( deviceParams ),
+                &(state.params), sizeof(state.params),
                 cudaMemcpyHostToDevice
         ));
 
         OPTIX_CHECK(optixLaunch(state.optixPipeline,
                                 state.cudaStream,
-                                CUdeviceptr(d_param), sizeof(RayParams), &state.sbt, width, height, /*depth=*/1));
+                                CUdeviceptr(deviceParams), sizeof(RayParams), &state.sbt, filmWidth,
+                                filmHeight, /*depth=*/1));
         CUDA_SYNC_CHECK();
 
-        std::vector<uchar3> m_host_pixels;
-        m_host_pixels.reserve(width * height);
-        CUDA_CHECK(cudaMemcpy(
-                static_cast<void *>(m_host_pixels.data()),
-                params.image,
-                params.width * params.height * sizeof(uchar3),
-                cudaMemcpyDeviceToHost));
+        // TODO for testing
+        std::vector<uchar3> hostImageBuffer;
+        hostImageBuffer.reserve(filmWidth * filmHeight);
+        CUDA_CHECK(cudaMemcpy(static_cast<void *>(hostImageBuffer.data()), state.params.outputImage,
+                              filmWidth * filmHeight * sizeof(uchar3), cudaMemcpyDeviceToHost));
 
         // Write image
-        utils::writeImage("test.png", params.width, params.height, 3, m_host_pixels.data());
-        CUDA_CHECK(cudaFree(d_param));
+        utils::writeImage("test.png", filmWidth, filmHeight, 3, hostImageBuffer.data());
+        CUDA_CHECK(cudaFree(deviceParams));
     }
 
     OptixTraversableHandle OptiXScene::createTriangleGAS(const SceneData &data,
@@ -331,7 +335,7 @@ namespace RENDER_NAMESPACE {
         }
     }
 
-    OptixTraversableHandle OptiXScene::buildBVH(std::vector<OptixBuildInput> buildInputs) {
+    OptixTraversableHandle OptiXScene::buildBVH(const std::vector<OptixBuildInput> &buildInputs) {
         // Figure out memory requirements.
         OptixAccelBuildOptions accelOptions = {};
         accelOptions.buildFlags = (OPTIX_BUILD_FLAG_ALLOW_COMPACTION | OPTIX_BUILD_FLAG_PREFER_FAST_TRACE);
@@ -341,14 +345,11 @@ namespace RENDER_NAMESPACE {
         OPTIX_CHECK(optixAccelComputeMemoryUsage(state.optixContext, &accelOptions,
                                                  buildInputs.data(), buildInputs.size(),
                                                  &gasBufferSizes));
+        uint64_t *compactedSizeBufferPtr = allocator.newObject<uint64_t>();
 
-//        uint64_t *compactedSizeBufferPtr = allocator.newObject<uint64_t>();
-        uint64_t *compactedSizeBufferPtr;
-        CUDA_CHECK(cudaMalloc(&compactedSizeBufferPtr, sizeof(uint64_t)));
-
-        OptixAccelEmitDesc emitProperty = {};
-        emitProperty.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
-        emitProperty.result = (CUdeviceptr) compactedSizeBufferPtr;
+        OptixAccelEmitDesc emitDesc = {};
+        emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
+        emitDesc.result = (CUdeviceptr) compactedSizeBufferPtr;
 
         void *deviceTempBuffer;
         CUDA_CHECK(cudaMalloc(&deviceTempBuffer, gasBufferSizes.tempSizeInBytes));
@@ -361,11 +362,15 @@ namespace RENDER_NAMESPACE {
                 state.optixContext, state.cudaStream, &accelOptions, buildInputs.data(), buildInputs.size(),
                 CUdeviceptr(deviceTempBuffer), gasBufferSizes.tempSizeInBytes,
                 CUdeviceptr(deviceOutputBuffer), gasBufferSizes.outputSizeInBytes, &traversableHandle,
-                &emitProperty, 1));
+                &emitDesc, 1));
+//        cudaError css = cudaStreamSynchronize(0);
+//        cudaError error = cudaGetLastError();
+//        std::cout << std::string(cudaGetErrorString(error)) << std::endl;
+        CUDA_CHECK(cudaStreamSynchronize(0));
 
-        CUDA_CHECK(cudaDeviceSynchronize());
-
-        buildBVHBytes += *compactedSizeBufferPtr;
+        // TODO illegal operation
+//        buildBVHBytes += *compactedSizeBufferPtr;
+        buildBVHBytes += *((uint64_t *) (emitDesc.result));
 
         // Compact
         void *asBuffer;

@@ -23,6 +23,7 @@ namespace RENDER_NAMESPACE {
     using utils::MemoryAllocator;
 
     typedef struct OptiXState {
+        RayParams params;
         OptixModule optixModule = nullptr;
         OptixPipeline optixPipeline;
         OptixProgramGroup raygenFindIntersectionProgramGroup = 0;
@@ -32,7 +33,7 @@ namespace RENDER_NAMESPACE {
         OptixShaderBindingTable sbt;
 
         OptixDeviceContext optixContext;
-        CUstream cudaStream = nullptr;
+        CUstream cudaStream = 0;
     } OptiXState;
 
     template<typename T>
@@ -42,7 +43,7 @@ namespace RENDER_NAMESPACE {
     T data;
 };
 
-typedef SbtRecord <RaygenData> RaygenRecord;
+typedef SbtRecord <RayGenData> RaygenRecord;
 // TODO delete for testing
 typedef SbtRecord <ClosestHitData> ClosestHitRecord;
 // TODO
@@ -50,9 +51,7 @@ typedef SbtRecord <ClosestHitData> ClosestHitRecord;
 
 class OptiXScene {
 public:
-    OptiXScene(MemoryAllocator &allocator) :
-            allocator(allocator),
-            closestHitRecords(allocator) {}
+    OptiXScene(SceneData &sceneData, MemoryAllocator &allocator);
 
     void buildOptiXData(const SceneData &sceneData);
 
@@ -61,9 +60,10 @@ public:
 private:
     OptixTraversableHandle createTriangleGAS(const SceneData &data, OptixProgramGroup &closestHitPG);
 
-    OptixTraversableHandle buildBVH(std::vector<OptixBuildInput> buildInputs);
+    OptixTraversableHandle buildBVH(const std::vector<OptixBuildInput> &buildInputs);
 
 private:
+    int filmWidth, filmHeight;
     OptiXState state;
     // Memory allocator
     MemoryAllocator &allocator;

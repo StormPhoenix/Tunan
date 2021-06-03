@@ -6,23 +6,23 @@
 #define TUNAN_OPTIX_RAY_H
 
 #include <optix.h>
+#include <tunan/scene/Camera.h>
 
-struct RayParams {
-    OptixTraversableHandle traversable;
-
-    // TODO delete
-    int width;
-    int height;
-    uchar3 *image;
-};
+namespace RENDER_NAMESPACE {
+    struct RayParams {
+        Camera *camera;
+        uchar3 *outputImage;
+        OptixTraversableHandle traversable;
+    };
 
 // TODO for testing
-struct RaygenData {
-    float r = 0.5;
-};
+    struct RayGenData {
+        float r = 0.5;
+    };
 
-struct ClosestHitData {
-    float r = 0.2;
-};
+    struct ClosestHitData {
+        float r = 0.2;
+    };
+}
 
 #endif //TUNAN_OPTIX_RAY_H

@@ -46,6 +46,7 @@ namespace RENDER_NAMESPACE {
         };
 
         using utils::TaggedPointer;
+
         class Sampler : public TaggedPointer<IndependentSampler> {
         public:
             using TaggedPointer::TaggedPointer;
@@ -61,7 +62,7 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU inline Vector2F sample2D();
         };
 
-        inline RENDER_CPU_GPU Vector2F diskUniformSampling(Sampler sampler, Float radius = 1.);
+        RENDER_CPU_GPU Vector2F diskUniformSampling(Sampler sampler, Float radius = 1.);
     }
 }
 

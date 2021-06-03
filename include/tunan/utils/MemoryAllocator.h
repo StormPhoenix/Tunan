@@ -21,7 +21,7 @@ namespace RENDER_NAMESPACE {
             MemoryAllocator(MemoryResource *resource);
 
             MemoryAllocator(const MemoryAllocator &allocator) :
-                    _resource(allocator._resource) {}
+                    MemoryAllocator(allocator._resource) {}
 
             void *allocate(size_t bytes, size_t alignBytes);
 

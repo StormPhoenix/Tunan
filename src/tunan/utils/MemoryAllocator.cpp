@@ -4,7 +4,7 @@
 
 #ifndef RENDER_CACHE_LINE_SIZE
 // Cache line size
-#define RENDER_CACHE_LINE_SIZE 64
+#define RENDER_CACHE_LINE_SIZE 128
 #endif
 
 #include <tunan/utils/MemoryAllocator.h>
@@ -13,19 +13,23 @@
 namespace RENDER_NAMESPACE {
     namespace utils {
         MemoryAllocator::MemoryAllocator()
-                : _defaultBlockSize(262144), _currentBlock(nullptr),
+                : _defaultBlockSize(1024 * 1024), _currentBlock(nullptr),
                   _blockOffset(0), _allocatedBlockSize(0) {
             _resource = new CPUResource();
         }
 
         MemoryAllocator::MemoryAllocator(MemoryResource *resource)
-                : _defaultBlockSize(262144), _currentBlock(nullptr),
+                : _defaultBlockSize(1024 * 1024), _currentBlock(nullptr),
                   _blockOffset(0),_allocatedBlockSize(0),
                   _resource(resource) {}
 
         void *MemoryAllocator::allocate(size_t bytes, size_t alignBytes) {
+            if ((_blockOffset % alignBytes) != 0) {
+                _blockOffset += (alignBytes - (_blockOffset % alignBytes));
+            }
+
             // Aligned
-            bytes = (bytes + alignBytes - 1) & (~(alignBytes - 1));
+//            bytes = (bytes + alignBytes - 1) & (~(alignBytes - 1));
             if (_blockOffset + bytes > _allocatedBlockSize) {
                 if (_currentBlock != nullptr) {
                     _usedBlocks.push_back(std::make_pair(_allocatedBlockSize, _currentBlock));

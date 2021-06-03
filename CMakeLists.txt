@@ -135,6 +135,7 @@ set(RENDER_SCENE_SRCS
         src/tunan/scene/Camera.cpp
         src/tunan/scene/scene_data.cpp
         src/tunan/scene/importers.cpp
+        include/ext/pugixml/pugixml.cpp
         include/tunan/common.h)
 
 set(RENDER_SRCS
@@ -227,6 +228,10 @@ target_include_directories(
         ${CUDA_INCLUDE_DIRECTORY}
 )
 
+target_compile_options(render_scene_lib
+        INTERFACE
+        "-g,-lineinfo")
+
 add_dependencies(render_scene_lib render_utils_lib render_optix_ptxcode_lib)
 
 target_link_libraries(
@@ -242,6 +247,7 @@ add_executable(${PROJECT_NAME} ${RENDER_SRCS})
 target_link_libraries(
         ${PROJECT_NAME}
         PRIVATE
+        render_sampler_lib
         render_utils_lib
         render_scene_lib
         render_base_lib

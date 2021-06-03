@@ -18,6 +18,7 @@ namespace RENDER_NAMESPACE {
 
     class Camera {
     public:
+        RENDER_CPU_GPU
         Camera(Transform cameraToWorld, Float hFov,
                int resolutionWidth, int resolutionHeight,
                Float nearClip = 1.0, Float farClip = 10000);
@@ -34,6 +35,16 @@ namespace RENDER_NAMESPACE {
         RENDER_CPU_GPU
         const Vector3F &getFront() const {
             return _front;
+        }
+
+        RENDER_CPU_GPU
+        int getWidth() const {
+            return _resolutionWidth;
+        }
+
+        RENDER_CPU_GPU
+        int getHeight() const {
+            return _resolutionHeight;
         }
 
     private:
