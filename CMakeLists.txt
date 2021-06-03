@@ -111,6 +111,7 @@ set(RENDER_BASE_SRCS
         include/tunan/base/mediums.h)
 
 set(RENDER_UTILS_SRCS
+        src/tunan/utils/model_loader.cpp
         src/tunan/utils/image_utils.cpp
         src/tunan/utils/file_utils.cpp
         src/tunan/utils/MemoryAllocator.cpp
@@ -152,6 +153,7 @@ if (BUILD_GPU_ENABLED)
     set_source_files_properties(
             include/tunan/utils/TaggedPointer.h
             include/tunan/math.h
+            src/tunan/utils/model_loader.cpp
             ${RENDER_SRCS}
             ${RENDER_SCENE_SRCS}
             ${RENDER_BASE_SRCS}

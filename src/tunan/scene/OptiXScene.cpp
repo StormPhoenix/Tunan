@@ -304,7 +304,7 @@ namespace RENDER_NAMESPACE {
             input.triangleArray.indexFormat = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
             input.triangleArray.indexStrideInBytes = 3 * sizeof(int);
             input.triangleArray.numIndexTriplets = mesh->nTriangles;
-            input.triangleArray.indexBuffer = CUdeviceptr(mesh->indices);
+            input.triangleArray.indexBuffer = CUdeviceptr(mesh->vertexIndices);
             triangleBuildInputFlag[i] = OPTIX_GEOMETRY_FLAG_NONE;
             input.triangleArray.flags = &triangleBuildInputFlag[i];
 

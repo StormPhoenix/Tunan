@@ -7,13 +7,15 @@
 
 namespace RENDER_NAMESPACE {
     TriangleMesh::TriangleMesh(const ShapeEntity &entity) {
-        ASSERT(entity.indices.size() % 3 == 0, "TriangleMesh error: tirangles should align to 3. ");
+        ASSERT(entity.vertexIndices.size() % 3 == 0, "TriangleMesh error: tirangles should align to 3. ");
         // CUDA memory copy from host to device
         nVertices = entity.vertices.size();
-        nTriangles = entity.indices.size() / 3;
+        nTriangles = entity.vertexIndices.size() / 3;
+
+        // Vertices
         vertices = entity.vertices.data();
-        normals = entity.normals.data();
-        uvs = entity.uvs.data();
-        indices = entity.indices.data();
+
+        // Vertex indices
+        vertexIndices = entity.vertexIndices.data();
     }
 }

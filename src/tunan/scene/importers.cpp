@@ -5,6 +5,7 @@
 #include <tunan/scene/importers.h>
 #include <tunan/base/transform.h>
 #include <tunan/base/spectrum.h>
+#include <tunan/utils/model_loader.h>
 
 #include <ext/pugixml/pugixml.hpp>
 
@@ -314,6 +315,228 @@ namespace RENDER_NAMESPACE {
             sceneData.radiusDecay = info.getFloatValue("alpha", sceneData.radiusDecay);
         }
 
+        void createRectangleShape(XmlParseInfo &info, SceneData &sceneData) {
+            sceneData.entities.push_back(ShapeEntity());
+            ShapeEntity &entity = sceneData.entities.back();
+            entity.toWorld = info.getTransformValue("toWorld", Transform());
+
+            const int nVertices = 4;
+            const int nTriangles = 2;
+
+            // Vertices
+            entity.vertices.resize(nVertices);
+            {
+                entity.vertices[0] = Point3F(-1, -1, 0);
+                entity.vertices[1] = Point3F(1, -1, 0);
+                entity.vertices[2] = Point3F(1, 1, 0);
+                entity.vertices[3] = Point3F(-1, 1, 0);
+            }
+
+            // Normals
+            Normal3F normal(0, 0, 1);
+            entity.normals.resize(nVertices);
+            {
+                entity.normals[0] = normal;
+                entity.normals[1] = normal;
+                entity.normals[2] = normal;
+                entity.normals[3] = normal;
+            }
+
+            // UVs
+            entity.texcoords.resize(nVertices);
+            {
+                entity.texcoords[0] = Point2F(0, 0);
+                entity.texcoords[1] = Point2F(1, 0);
+                entity.texcoords[2] = Point2F(1, 1);
+                entity.texcoords[3] = Point2F(0, 1);
+            }
+
+            // Indices
+            entity.vertexIndices.resize(nTriangles * 3);
+            entity.normalIndices.resize(nTriangles * 3);
+            entity.texcoordIndices.resize(nTriangles * 3);
+            {
+                entity.vertexIndices[0] = 0;
+                entity.vertexIndices[1] = 1;
+                entity.vertexIndices[2] = 2;
+
+                entity.vertexIndices[3] = 2;
+                entity.vertexIndices[4] = 3;
+                entity.vertexIndices[5] = 0;
+
+                entity.normalIndices = entity.vertexIndices;
+                entity.texcoordIndices = entity.vertexIndices;
+            }
+        }
+
+        static void createCubeShape(XmlParseInfo &info, SceneData &sceneData) {
+            sceneData.entities.push_back(ShapeEntity());
+            ShapeEntity &entity = sceneData.entities.back();
+            entity.toWorld = info.getTransformValue("toWorld", Transform());
+
+            const int nVertices = 8;
+            const int nTriangles = 12;
+
+            // Vertices
+            entity.vertices.resize(nVertices);
+            {
+                entity.vertices[0] = Point3F(1, -1, -1);
+                entity.vertices[1] = Point3F(1, -1, 1);
+                entity.vertices[2] = Point3F(-1, -1, 1);
+                entity.vertices[3] = Point3F(-1, -1, -1);
+                entity.vertices[4] = Point3F(1, 1, -1);
+                entity.vertices[5] = Point3F(-1, 1, -1);
+                entity.vertices[6] = Point3F(-1, 1, 1);
+                entity.vertices[7] = Point3F(1, 1, 1);
+            }
+
+            // Vertex indices
+            entity.vertexIndices.resize(nTriangles * 3);
+            {
+                entity.vertexIndices[0] = 7;
+                entity.vertexIndices[1] = 2;
+                entity.vertexIndices[2] = 1;
+
+                entity.vertexIndices[3] = 7;
+                entity.vertexIndices[4] = 6;
+                entity.vertexIndices[5] = 2;
+
+                entity.vertexIndices[6] = 4;
+                entity.vertexIndices[7] = 1;
+                entity.vertexIndices[8] = 0;
+
+                entity.vertexIndices[9] = 4;
+                entity.vertexIndices[10] = 7;
+                entity.vertexIndices[11] = 1;
+
+                entity.vertexIndices[12] = 5;
+                entity.vertexIndices[13] = 0;
+                entity.vertexIndices[14] = 3;
+
+                entity.vertexIndices[15] = 5;
+                entity.vertexIndices[16] = 4;
+                entity.vertexIndices[17] = 0;
+
+                entity.vertexIndices[18] = 6;
+                entity.vertexIndices[19] = 3;
+                entity.vertexIndices[20] = 2;
+
+                entity.vertexIndices[21] = 6;
+                entity.vertexIndices[22] = 5;
+                entity.vertexIndices[23] = 3;
+
+                entity.vertexIndices[24] = 4;
+                entity.vertexIndices[25] = 6;
+                entity.vertexIndices[26] = 7;
+
+                entity.vertexIndices[27] = 4;
+                entity.vertexIndices[28] = 5;
+                entity.vertexIndices[29] = 6;
+
+                entity.vertexIndices[30] = 1;
+                entity.vertexIndices[31] = 2;
+                entity.vertexIndices[32] = 3;
+
+                entity.vertexIndices[33] = 1;
+                entity.vertexIndices[34] = 3;
+                entity.vertexIndices[35] = 0;
+            }
+
+            // Normals and normal indices
+            entity.normals.resize(nTriangles * 3);
+            entity.normalIndices.resize(nTriangles * 3);
+            for (int i = 0; i < nTriangles; i++) {
+                int index = i * 3;
+                Point3F v1 = entity.vertices[entity.vertexIndices[index]];
+                Point3F v2 = entity.vertices[entity.vertexIndices[index + 1]];
+                Point3F v3 = entity.vertices[entity.vertexIndices[index + 2]];
+
+                Normal3F normal = NORMALIZE(CROSS(v2 - v1, v3 - v1));
+                for (int j = 0; j < 3; j++) {
+                    entity.normals[index + j] = normal;
+                    entity.normalIndices[index + j] = index + j;
+                }
+            }
+
+            // UVs
+            entity.texcoords.resize(1);
+            entity.texcoordIndices.resize(nTriangles * 3);
+            {
+                entity.texcoords[0] = Point2F(0.0f, 0.0f);
+                for (int i = 0; i < nTriangles; i++) {
+                    int index = i * 3;
+                    for (int j = 0; j < 3; j++) {
+                        entity.texcoordIndices[index + j] = 0;
+                    }
+                }
+            }
+        }
+
+        static void createObjMeshes(XmlParseInfo &info, SceneData &sceneData) {
+            sceneData.entities.push_back(ShapeEntity());
+            ShapeEntity &entity = sceneData.entities.back();
+            entity.toWorld = info.getTransformValue("toWorld", Transform());
+
+            // face normal
+            bool faceNormal = false;
+            faceNormal = info.getBoolValue("faceNormals", false);
+            entity.faceNormal = faceNormal;
+
+            std::string filename = info.getStringValue("filename", "");
+            ASSERT(filename != "", "Obj filename can't be empty. ");
+
+            bool good = utils::load_obj(sceneData.sceneDirectory + filename, entity);
+            ASSERT(good, "Load *.obj model failed: " + filename);
+            std::cout << "\tLoading mesh: " << filename << std::endl;
+            return;
+        }
+
+        static void handleTagShape(pugi::xml_node &node, XmlParseInfo &parseInfo, SceneData &sceneData) {
+            std::string type = node.attribute("type").value();
+
+            if (type == "rectangle") {
+                createRectangleShape(parseInfo, sceneData);
+            } else if (type == "cube") {
+                createCubeShape(parseInfo, sceneData);
+            } else if (type == "obj") {
+                createObjMeshes(parseInfo, sceneData);
+            } else {
+                ASSERT(false, "Only support rectangle shape for now");
+            }
+
+            // TODO ignore material
+//            Material material = parseInfo.currentMaterial;
+//            Medium::Ptr exteriorMedium = parseInfo.currentExteriorMedium;
+//            Medium::Ptr interiorMedium = parseInfo.currentInteriorMedium;
+
+/* ignore light
+            Spectrum radiance(0.0);
+            if (parseInfo.hasAreaLight) {
+                auto radianceType = parseInfo.getType("radiance");
+                if (radianceType == XmlAttrVal::Attr_Spectrum) {
+                    radiance = parseInfo.getSpectrumValue("radiance", 0);
+                } else {
+                    ASSERT(false, "Only support spectrum radiance for now.");
+                }
+            }
+
+            for (auto it = shapes->begin(); it != shapes->end(); it++) {
+                AreaLight::Ptr light = nullptr;
+                if (parseInfo.hasAreaLight) {
+                    light = std::make_shared<DiffuseAreaLight>(radiance, *it,
+                                                               MediumInterface(interiorMedium.get(),
+                                                                               exteriorMedium.get()),
+                                                               true);
+                    _scene->addLight(light);
+                }
+
+                Geometry::Ptr geometry = std::make_shared<Geometry>(*it, material, interiorMedium, exteriorMedium,
+                                                                    light);
+                _shapes.push_back(geometry);
+            }
+            */
+        }
+
         static void
         handleXmlNode(pugi::xml_node &node, XmlParseInfo &parseInfo,
                       XmlParseInfo &parentParseInfo, SceneData &sceneData) {
@@ -361,7 +584,7 @@ namespace RENDER_NAMESPACE {
 //                    handleTagBSDF(node, parseInfo, parentParseInfo);
 //                    break;
                 case Tag_Shape:
-                    handleTagShape(node, parseInfo);
+                    handleTagShape(node, parseInfo, sceneData);
                     break;
 //                case Tag_Ref:
 //                    handleTagRef(node, parentParseInfo);
@@ -395,9 +618,10 @@ namespace RENDER_NAMESPACE {
             handleXmlNode(node, info, parent, scene);
         }
 
-        void MitsubaSceneImporter::importScene(std::string sceneDir, SceneData &scene, MemoryAllocator &allocator) {
-            _inputSceneDir = sceneDir;
-            std::string xml_file = sceneDir + "scene.xml";
+        void MitsubaSceneImporter::importScene(std::string sceneDirectory, SceneData &sceneData,
+                                               MemoryAllocator &allocator) {
+            sceneData.sceneDirectory = sceneDirectory;
+            std::string xml_file = sceneDirectory + "scene.xml";
             std::cout << "Loading scene file: " << xml_file << std::endl;
 
             pugi::xml_document xml_doc;
@@ -407,20 +631,17 @@ namespace RENDER_NAMESPACE {
                         + " (at " + getOffset(ret.offset, xml_file) + ")");
 
             XmlParseInfo parseInfo;
-            parseXml(*xml_doc.begin(), parseInfo, scene);
+            parseXml(*xml_doc.begin(), parseInfo, sceneData);
+            std::cout << "\tReading scene data finished ." << std::endl;
 
-            std::cout << "\tBuilding bvh acceleration structure ... " << std::endl;
-            std::shared_ptr<Intersectable> bvh = std::make_shared<BVH>(_shapes);
-            _scene->setWorld(bvh);
-            _scene->setSceneName(Config::Camera::filename);
-
-            const std::vector<Light::Ptr> &lights = _scene->getLights();
-            for (auto it = lights.begin(); it != lights.end(); it++) {
-                (*it)->worldBound(_scene);
-            }
+            // TODO add lights
+//            const std::vector<Light::Ptr> &lights = _scene->getLights();
+//            for (auto it = lights.begin(); it != lights.end(); it++) {
+//                (*it)->worldBound(_scene);
+//            }
 
             std::cout << "Loading finished. " << std::endl;
-            return _scene;
+//            return _scene;
         }
 
         MitsubaSceneImporter::MitsubaSceneImporter() {
