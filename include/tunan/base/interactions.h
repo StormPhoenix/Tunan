@@ -5,7 +5,7 @@
 #ifndef TUNAN_INTERACTIONS_H
 #define TUNAN_INTERACTIONS_H
 
-#include <tunan/math.h>
+#include <tunan/base/math.h>
 #include <tunan/common.h>
 #include <tunan/base/mediums.h>
 

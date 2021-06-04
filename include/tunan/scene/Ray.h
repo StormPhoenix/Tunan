@@ -6,7 +6,7 @@
 #define TUNAN_RAY_H
 
 #include <tunan/common.h>
-#include <tunan/math.h>
+#include <tunan/base/math.h>
 
 namespace RENDER_NAMESPACE {
 

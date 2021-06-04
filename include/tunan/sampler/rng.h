@@ -5,7 +5,7 @@
 #ifndef TUNAN_RNG_H
 #define TUNAN_RNG_H
 
-#include <tunan/math.h>
+#include <tunan/base/math.h>
 #include <tunan/common.h>
 
 #include <inttypes.h>

@@ -5,7 +5,7 @@
 #ifndef TUNAN_SAMPLERS_H
 #define TUNAN_SAMPLERS_H
 
-#include <tunan/math.h>
+#include <tunan/base/math.h>
 #include <tunan/common.h>
 #include <tunan/utils/TaggedPointer.h>
 #include <tunan/sampler/rng.h>

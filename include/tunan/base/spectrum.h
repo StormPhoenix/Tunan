@@ -6,14 +6,13 @@
 #define TUNAN_SPECTRUM_H
 
 #include <tunan/common.h>
-#include <tunan/math.h>
+#include <tunan/base/math.h>
 #include <tunan/base/containers.h>
 
 #include <cassert>
 
 namespace RENDER_NAMESPACE {
     namespace base {
-        using namespace math;
         static const int SpectrumChannel = 3;
 
         class Spectrum {

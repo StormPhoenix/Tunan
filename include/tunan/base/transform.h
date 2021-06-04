@@ -6,7 +6,7 @@
 #define TUNAN_TRANSFORM_H
 
 #include <tunan/common.h>
-#include <tunan/math.h>
+#include <tunan/base/math.h>
 
 namespace RENDER_NAMESPACE {
     namespace base {
@@ -16,19 +16,19 @@ namespace RENDER_NAMESPACE {
             Transform();
 
             RENDER_CPU_GPU
-            Transform(Matrix4F transformMatrix);
+            Transform(Matrix4f transformMatrix);
 
             RENDER_CPU_GPU
-            Vector3F transformPoint(const Point3F &p) const;
+            Point3f transformPoint(const Point3f &p) const;
 
             RENDER_CPU_GPU
-            Vector3F transformVector(const Vector3F &v) const;
+            Vector3f transformVector(const Vector3f &v) const;
 
             RENDER_CPU_GPU
-            Vector3F transformNormal(const Vector3F &n) const;
+            Normal3f transformNormal(const Normal3f &n) const;
 
             RENDER_CPU_GPU
-            Matrix4F mat() const;
+            Matrix4f mat() const;
 
             RENDER_CPU_GPU
             Transform inverse() const;
@@ -46,11 +46,11 @@ namespace RENDER_NAMESPACE {
             static Transform scale(Float sx, Float sy, Float sz);
 
             RENDER_CPU_GPU
-            static Transform lookAt(Point3F origin, Point3F target, Vector3F up);
+            static Transform lookAt(Point3f origin, Point3f target, Vector3f up);
 
         private:
             bool _identity = false;
-            Matrix4F _transformMatrix;
+            Matrix4f _transformMatrix;
         };
     }
 }

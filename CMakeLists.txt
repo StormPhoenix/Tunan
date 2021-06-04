@@ -67,6 +67,7 @@ set(PROJ_INCLUDE_DIR
         ${PROJECT_SOURCE_DIR}/include)
 
 ### Compile *.PTX code
+set(RENDER_PTX_LIB "")
 if (BUILD_GPU_ENABLED)
     set(PTX_CODE_GEN ptx_code_gen)
     set(OPTIX_RAYTRACING_FILE src/tunan/gpu/optix_ray.cu)
@@ -99,11 +100,14 @@ if (BUILD_GPU_ENABLED)
     )
 
     message(STATUS "Build *.PTX embedded code: ${OPTIX_EMBEDDED_FILE}")
-    add_library(render_ptx_lib STATIC ${OPTIX_EMBEDDED_FILE})
+
+    set(RENDER_PTX_LIB "render_ptx_lib")
+    add_library(${RENDER_PTX_LIB} STATIC ${OPTIX_EMBEDDED_FILE})
 
 endif (BUILD_GPU_ENABLED)
 
 set(RENDER_BASE_SRCS
+        src/tunan/base/math.cpp
         src/tunan/base/interactions.cpp
         src/tunan/base/transform.cpp
         include/tunan/base/spectrum.h
@@ -128,7 +132,7 @@ set(RENDER_MATERIAL_SRCS
         src/tunan/material/Material.cpp)
 
 set(RENDER_MEDIA_SRCS
-        include/tunan/medium/Medium.h)
+        src/tunan/medium/Medium.cpp)
 
 set(RENDER_SCENE_SRCS
         src/tunan/scene/Ray.cpp
@@ -152,8 +156,8 @@ if (BUILD_GPU_ENABLED)
             src/tunan/scene/OptiXScene.cpp)
 
     set_source_files_properties(
-            include/tunan/utils/TaggedPointer.h
-            include/tunan/math.h
+            src/tunan/utils/TaggedPointer.h
+            src/tunan/base/math.cpp
             src/tunan/utils/model_loader.cpp
             ${RENDER_SRCS}
             ${RENDER_SCENE_SRCS}
@@ -228,14 +232,14 @@ target_include_directories(
         ${CUDA_INCLUDE_DIRECTORY}
 )
 
-add_dependencies(render_scene_lib render_utils_lib render_ptx_lib)
+add_dependencies(render_scene_lib render_utils_lib ${RENDER_PTX_LIB})
 
 target_link_libraries(
         render_scene_lib
         PRIVATE
         render_base_lib
         render_utils_lib
-        render_ptx_lib
+        ${RENDER_PTX_LIB}
         ${CUDA_LINK_LIBRARY}
 )
 

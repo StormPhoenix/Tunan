@@ -10,38 +10,38 @@ namespace RENDER_NAMESPACE {
         Transform::Transform() : _identity(true) {}
 
         RENDER_CPU_GPU
-        Transform::Transform(Matrix4F transformMatrix) :
+        Transform::Transform(Matrix4f transformMatrix) :
                 _transformMatrix(transformMatrix),
                 _identity(false) {}
 
         RENDER_CPU_GPU
-        Vector3F Transform::transformPoint(const Point3F &p) const {
+        Point3f Transform::transformPoint(const Point3f &p) const {
             if (_identity) {
                 return p;
             }
 
-            Point4F ret = _transformMatrix * Vector4d(p, 1.);
+            Point4f ret = _transformMatrix * Point4f(p, 1.);
             if (ret[3] == 1) {
-                return Vector3F(ret[0], ret[1], ret[2]);
+                return Point3f(ret[0], ret[1], ret[2]);
             } else {
-                return Vector3F(ret[0], ret[1], ret[2]) / ret[3];
+                return Point3f(ret[0], ret[1], ret[2]) / ret[3];
             }
         }
 
         RENDER_CPU_GPU
-        Vector3F Transform::transformVector(const Vector3F &v) const {
+        Vector3f Transform::transformVector(const Vector3f &v) const {
             if (_identity) {
                 return v;
             }
-            return _transformMatrix * Vector4d(v, 0.);
+            return _transformMatrix * Vector4f(v, 0.);
         }
 
         RENDER_CPU_GPU
-        Vector3F Transform::transformNormal(const Vector3F &n) const {
+        Normal3f Transform::transformNormal(const Normal3f &n) const {
             if (_identity) {
                 return n;
             }
-            Vector3F ret = INVERSE_TRANSPOSE(_transformMatrix) * Vector4d(n, 0.0f);
+            Normal3f ret = INVERSE_TRANSPOSE(_transformMatrix) * Normal4f(n, 0.0f);
             return NORMALIZE(ret);
         }
 

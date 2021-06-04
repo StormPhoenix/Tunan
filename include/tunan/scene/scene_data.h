@@ -6,7 +6,7 @@
 #define TUNAN_SCENE_DATA_H
 
 #include <tunan/material/Material.h>
-#include <tunan/math.h>
+#include <tunan/base/math.h>
 #include <tunan/common.h>
 #include <tunan/base/transform.h>
 
