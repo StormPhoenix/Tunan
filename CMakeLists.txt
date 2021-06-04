@@ -68,19 +68,19 @@ set(PROJ_INCLUDE_DIR
 
 ### Compile *.PTX code
 if (BUILD_GPU_ENABLED)
-    set(RENDER_PTX_LIB render_ptx_lib)
+    set(PTX_CODE_GEN ptx_code_gen)
     set(OPTIX_RAYTRACING_FILE src/tunan/gpu/optix_ray.cu)
-    add_library(${RENDER_PTX_LIB} OBJECT ${OPTIX_RAYTRACING_FILE})
-    set_property(TARGET ${RENDER_PTX_LIB} PROPERTY CUDA_PTX_COMPILATION ON)
-    target_compile_options("${RENDER_PTX_LIB}"
+    add_library(${PTX_CODE_GEN} OBJECT ${OPTIX_RAYTRACING_FILE})
+    set_property(TARGET ${PTX_CODE_GEN} PROPERTY CUDA_PTX_COMPILATION ON)
+    target_compile_options("${PTX_CODE_GEN}"
             PRIVATE
             -Xcudafe=--display_error_number -Xcudafe=--diag_suppress=3089)
-    target_include_directories(${RENDER_PTX_LIB}
+    target_include_directories(${PTX_CODE_GEN}
             PRIVATE
             ${CUDA_INCLUDE_DIRECTORY}
             ${OPTIX_INCLUDE_DIRECTORY}
             ${PROJ_INCLUDE_DIR})
-    target_link_libraries(${RENDER_PTX_LIB}
+    target_link_libraries(${PTX_CODE_GEN}
             PRIVATE
             ${CUDA_LINK_LIBRARY})
 
@@ -90,16 +90,16 @@ if (BUILD_GPU_ENABLED)
             OUTPUT "${OPTIX_EMBEDDED_FILE}"
             COMMAND ${CMAKE_COMMAND}
             "-DBIN_TO_C_COMMAND=${BIN2C}"
-            "-DOBJECTS=$<TARGET_OBJECTS:${RENDER_PTX_LIB}>"
+            "-DOBJECTS=$<TARGET_OBJECTS:${PTX_CODE_GEN}>"
             "-DVAR_NAME=${c_ptx_code_val_name}"
             "-DOUTPUT=${OPTIX_EMBEDDED_FILE}"
             -P ${CMAKE_MODULE_PATH}/bin2c_wrapper.cmake
             VERBATIM
-            DEPENDS "${RENDER_PTX_LIB}" $<TARGET_OBJECTS:${RENDER_PTX_LIB}>
+            DEPENDS "${PTX_CODE_GEN}" $<TARGET_OBJECTS:${PTX_CODE_GEN}>
     )
 
     message(STATUS "Build *.PTX embedded code: ${OPTIX_EMBEDDED_FILE}")
-    add_library(render_optix_ptxcode_lib STATIC ${OPTIX_EMBEDDED_FILE})
+    add_library(render_ptx_lib STATIC ${OPTIX_EMBEDDED_FILE})
 
 endif (BUILD_GPU_ENABLED)
 
@@ -228,14 +228,14 @@ target_include_directories(
         ${CUDA_INCLUDE_DIRECTORY}
 )
 
-add_dependencies(render_scene_lib render_utils_lib render_optix_ptxcode_lib)
+add_dependencies(render_scene_lib render_utils_lib render_ptx_lib)
 
 target_link_libraries(
         render_scene_lib
         PRIVATE
         render_base_lib
         render_utils_lib
-        render_optix_ptxcode_lib
+        render_ptx_lib
         ${CUDA_LINK_LIBRARY}
 )
 

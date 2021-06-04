@@ -38,7 +38,7 @@ int main() {
     SceneData sceneData;
     importer.importScene(sceneDirectory, sceneData, allocator);
     OptiXScene scene(sceneData, allocator);
-//    scene.intersect();
+    scene.intersect();
     // TODO think about resource deallocation
 //    delete resource;
     std::cout << "Hello, World!" << std::endl;

@@ -30,6 +30,10 @@ To be continued ...
 - 加入 scene importer 得到深度图
     - [x] cornel box scene importer (Material none)
     - [ ] 修改 optix_ray.cu，添加 __closesthit __raygen 方法
+    
+- 重构
+    - [ ] GLM 库封装，避免
+    - [ ] Optix 构建 step 抽取出函数
 
 ## Example
 To be continued ...

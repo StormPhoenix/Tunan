@@ -245,8 +245,6 @@ namespace RENDER_NAMESPACE {
     }
 
     void OptiXScene::intersect() {
-        // TODO delete
-//        CUDA_CHECK(cudaStreamCreate(&(state.cudaStream)));
         void *deviceParams;
         CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &deviceParams ), sizeof(RayParams)));
         CUDA_CHECK(cudaMemcpy(
@@ -290,7 +288,6 @@ namespace RENDER_NAMESPACE {
 
         std::vector<OptixBuildInput> buildInputs;
         buildInputs.resize(shapeCount);
-        // TODO memcpy to device
         for (int i = 0; i < shapeCount; i++) {
             TriangleMesh *mesh = meshes[i];
             size_t nVertices = mesh->nVertices;
@@ -363,13 +360,8 @@ namespace RENDER_NAMESPACE {
                 CUdeviceptr(deviceTempBuffer), gasBufferSizes.tempSizeInBytes,
                 CUdeviceptr(deviceOutputBuffer), gasBufferSizes.outputSizeInBytes, &traversableHandle,
                 &emitDesc, 1));
-//        cudaError css = cudaStreamSynchronize(0);
-//        cudaError error = cudaGetLastError();
-//        std::cout << std::string(cudaGetErrorString(error)) << std::endl;
         CUDA_CHECK(cudaStreamSynchronize(0));
 
-        // TODO illegal operation
-//        buildBVHBytes += *compactedSizeBufferPtr;
         buildBVHBytes += *((uint64_t *) (emitDesc.result));
 
         // Compact
@@ -383,7 +375,6 @@ namespace RENDER_NAMESPACE {
 
         CUDA_CHECK(cudaFree(deviceTempBuffer));
         CUDA_CHECK(cudaFree(deviceOutputBuffer));
-        CUDA_CHECK(cudaFree(compactedSizeBufferPtr));
 
         return traversableHandle;
     }

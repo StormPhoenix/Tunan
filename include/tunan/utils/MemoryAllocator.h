@@ -21,7 +21,8 @@ namespace RENDER_NAMESPACE {
             MemoryAllocator(MemoryResource *resource);
 
             MemoryAllocator(const MemoryAllocator &allocator) :
-                    _resource(allocator._resource) {}
+                    _resource(allocator._resource), _defaultBlockSize(1024 * 1024),
+                    _currentBlock(nullptr), _blockOffset(0), _allocatedBlockSize(0) {}
 
             void *allocate(size_t bytes, size_t alignBytes);
 
@@ -59,7 +60,7 @@ namespace RENDER_NAMESPACE {
             MemoryResource *_resource;
             size_t _defaultBlockSize;
 
-            uint8_t *_currentBlock = nullptr ;
+            uint8_t *_currentBlock = nullptr;
             size_t _blockOffset;
             size_t _allocatedBlockSize;
 
