@@ -18,6 +18,9 @@
 #include <optix_function_table_definition.h>
 #include <optix_stubs.h>
 
+// TODO delete
+#include <array>
+
 extern "C" {
 extern const unsigned char OptixPtxCode[];
 }
@@ -31,9 +34,12 @@ namespace RENDER_NAMESPACE {
             allocator(allocator), closestHitRecords(allocator) {
         filmWidth = sceneData.width;
         filmHeight = sceneData.height;
+        buildIntersectionStruct(sceneData);
+    }
+
+    void OptiXScene::initParams(const SceneData &sceneData) {
         state.params.camera = allocator.newObject<Camera>(sceneData.cameraToWorld, sceneData.fov,
                                                           filmWidth, filmHeight);
-
         // Output image buffer
         uchar3 *deviceOutputBuffer = nullptr;
         {
@@ -42,10 +48,9 @@ namespace RENDER_NAMESPACE {
                                   sceneData.width * sceneData.height * sizeof(uchar3)));
         }
         state.params.outputImage = deviceOutputBuffer;
-        buildOptiXData(sceneData);
     }
 
-    void OptiXScene::buildOptiXData(const SceneData &sceneData) {
+    void OptiXScene::createContext() {
         // Initialize optix context
         OptixDeviceContext optixContext;
         {
@@ -62,11 +67,41 @@ namespace RENDER_NAMESPACE {
             OPTIX_CHECK(optixDeviceContextCreate(cudaContext, &options, &optixContext));
         }
         state.optixContext = optixContext;
+    }
 
+    void OptiXScene::buildAccelStruct(const SceneData &sceneData) {
+        // Build traversable handle
+        OptixTraversableHandle triangleGASHandler = createTriangleGAS(sceneData, state.closesthitPG);
+
+        int sbtOffsetTriangles = 0;
+        base::Vector<OptixInstance> iasInstances(allocator);
+
+        OptixInstance gasInstance = {};
+        float identity[12] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0};
+        memcpy(gasInstance.transform, identity, 12 * sizeof(float));
+        gasInstance.visibilityMask = 255;
+        gasInstance.flags = OPTIX_INSTANCE_FLAG_NONE;
+        if (triangleGASHandler != 0) {
+            gasInstance.traversableHandle = triangleGASHandler;
+            gasInstance.sbtOffset = sbtOffsetTriangles;
+            iasInstances.push_back(gasInstance);
+        }
+
+        // Top level acceleration structure
+        OptixBuildInput buildInput = {};
+        buildInput.type = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
+        buildInput.instanceArray.instances = CUdeviceptr(iasInstances.data());
+        buildInput.instanceArray.numInstances = iasInstances.size();
+        std::vector<OptixBuildInput> buildInputs = {buildInput};
+
+        OptixTraversableHandle rootTraversable = buildBVH({buildInput});
+        state.params.traversable = rootTraversable;
+    }
+
+    void OptiXScene::createModule() {
         // log buffer
         char log[4096];
         size_t logSize = sizeof(log);
-
         // Create module
         OptixModule optixModule = nullptr;
         OptixPipelineCompileOptions pipelineCompileOptions = {};
@@ -97,14 +132,19 @@ namespace RENDER_NAMESPACE {
             const std::string ptxCode = std::string((const char *) OptixPtxCode);
 
             OPTIX_CHECK_LOG(optixModuleCreateFromPTX(
-                    optixContext, &moduleCompileOptions, &pipelineCompileOptions,
+                    state.optixContext, &moduleCompileOptions, &pipelineCompileOptions,
                     ptxCode.c_str(), ptxCode.size(), log, &logSize, &optixModule), log);
 
         }
+        state.pipelineCompileOptions = pipelineCompileOptions;
         state.optixModule = optixModule;
+    }
+
+    void OptiXScene::createProgramGroups() {
+        char log[4096];
+        size_t logSize = sizeof(log);
 
         OptixProgramGroupOptions programGroupOptions = {};
-        // Raygen + missing program
         OptixProgramGroup raygenFindIntersectionGroup;
         OptixProgramGroup raygenMissingGroup;
         {
@@ -112,7 +152,7 @@ namespace RENDER_NAMESPACE {
             OptixProgramGroupDesc raygenFindIntersectionDesc = {};
             raygenFindIntersectionDesc.kind = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
             raygenFindIntersectionDesc.raygen.module = state.optixModule;
-            raygenFindIntersectionDesc.raygen.entryFunctionName = "__raygen__findIntersection";
+            raygenFindIntersectionDesc.raygen.entryFunctionName = "__raygen__findclosesthit";
 
             OPTIX_CHECK_LOG(optixProgramGroupCreate(
                     state.optixContext,
@@ -122,10 +162,10 @@ namespace RENDER_NAMESPACE {
                     log, &logSize,
                     &raygenFindIntersectionGroup), log);
 
-            // Ray missing program group
-            // TODO temp for nullptr
             OptixProgramGroupDesc raygenMissingDesc = {};
             raygenMissingDesc.kind = OPTIX_PROGRAM_GROUP_KIND_MISS;
+            raygenMissingDesc.miss.module = state.optixModule;
+            raygenMissingDesc.miss.entryFunctionName = "__miss__findclosehit_scene";
             OPTIX_CHECK_LOG(optixProgramGroupCreate(
                     state.optixContext,
                     &raygenMissingDesc,
@@ -134,23 +174,28 @@ namespace RENDER_NAMESPACE {
                     log, &logSize,
                     &raygenMissingGroup), log);
         }
-        state.raygenFindIntersectionProgramGroup = raygenFindIntersectionGroup;
-        state.missProgramGroup = raygenMissingGroup;
+        state.raygenPG = raygenFindIntersectionGroup;
+        state.missPG = raygenMissingGroup;
 
         // Closest hit program
-        OptixProgramGroup closestHitProgramGroup;
+        OptixProgramGroup closesthitPG;
         {
             OptixProgramGroupDesc desc = {};
             desc.kind = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
             desc.hitgroup.moduleCH = state.optixModule;
             desc.hitgroup.entryFunctionNameCH = "__closesthit__scene";
-            desc.hitgroup.moduleAH = optixModule;
+            desc.hitgroup.moduleAH = state.optixModule;
             desc.hitgroup.entryFunctionNameAH = "__anyhit__scene";
             OPTIX_CHECK_LOG(optixProgramGroupCreate(
                     state.optixContext, &desc, 1, &programGroupOptions,
-                    log, &logSize, &closestHitProgramGroup), log);
+                    log, &logSize, &closesthitPG), log);
         }
-        state.closestHitProgramGroup = closestHitProgramGroup;
+        state.closesthitPG = closesthitPG;
+    }
+
+    void OptiXScene::createPipeline() {
+        char log[4096];
+        size_t logSize = sizeof(log);
 
         // Optix pipeline
         OptixPipeline pipeline = nullptr;
@@ -161,13 +206,13 @@ namespace RENDER_NAMESPACE {
             pipelineLinkOptions.debugLevel = OPTIX_COMPILE_DEBUG_LEVEL_FULL;
 
             OptixProgramGroup programGroups[] = {
-                    state.raygenFindIntersectionProgramGroup,
-                    state.missProgramGroup
+                    state.raygenPG,
+                    state.missPG
             };
 
             OPTIX_CHECK_LOG(optixPipelineCreate(
                     state.optixContext,
-                    &pipelineCompileOptions,
+                    &(state.pipelineCompileOptions),
                     &pipelineLinkOptions,
                     programGroups,
                     sizeof(programGroups) / sizeof(programGroups[0]),
@@ -175,73 +220,57 @@ namespace RENDER_NAMESPACE {
                     &pipeline), log);
         }
         state.optixPipeline = pipeline;
+    }
 
+    void OptiXScene::createSBT() {
         // Shader binding table
         OptixShaderBindingTable sbt = {};
         {
-            // TODO for testing
-            // Raygen record + Missing record
-            CUdeviceptr raygen_record;
-            const size_t raygen_record_size = sizeof(RaygenRecord);
-            CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &raygen_record ), raygen_record_size));
-            RaygenRecord rg_sbt;
-            OPTIX_CHECK(optixSbtRecordPackHeader(state.raygenFindIntersectionProgramGroup, &rg_sbt));
-            rg_sbt.data = {0.462f};
-            CUDA_CHECK(cudaMemcpy(
-                    reinterpret_cast<void *>( raygen_record ),
-                    &rg_sbt,
-                    raygen_record_size,
-                    cudaMemcpyHostToDevice
-            ));
+            // Raygen record
+            RaygenRecord hostRaygenRecord;
+            OPTIX_CHECK(optixSbtRecordPackHeader(state.raygenPG, &hostRaygenRecord));
+            // TODO test ragen data
+            hostRaygenRecord.data = {0.462f};
 
-            // TODO for testing
-            CUdeviceptr miss_record;
-            size_t miss_record_size = sizeof(RaygenRecord);
-            CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &miss_record ), miss_record_size));
-            RaygenRecord ms_sbt;
-            OPTIX_CHECK(optixSbtRecordPackHeader(state.missProgramGroup, &ms_sbt));
-            CUDA_CHECK(cudaMemcpy(
-                    reinterpret_cast<void *>( miss_record ),
-                    &ms_sbt,
-                    miss_record_size,
-                    cudaMemcpyHostToDevice
-            ));
+            CUdeviceptr deviceRaygenRecord;
+            const size_t raygenRecordSize = sizeof(RaygenRecord);
+            CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &deviceRaygenRecord ), raygenRecordSize));
+            CUDA_CHECK(cudaMemcpy(reinterpret_cast<void *>( deviceRaygenRecord ),
+                                  &hostRaygenRecord, raygenRecordSize, cudaMemcpyHostToDevice));
 
-            sbt.raygenRecord = raygen_record;
-            sbt.missRecordBase = miss_record;
+            // Miss record
+            RaygenRecord hostMissRecord;
+            OPTIX_CHECK(optixSbtRecordPackHeader(state.missPG, &hostMissRecord));
+            // TODO test miss data
+            hostMissRecord.data = {0.74};
+
+            CUdeviceptr deviceMissRecord;
+            size_t missRecordSize = sizeof(MissRecord);
+            CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &deviceMissRecord ), missRecordSize));
+            CUDA_CHECK(cudaMemcpy(reinterpret_cast<void *>( deviceMissRecord ),
+                                  &hostMissRecord, missRecordSize, cudaMemcpyHostToDevice));
+
+            sbt.raygenRecord = deviceRaygenRecord;
+            sbt.missRecordBase = deviceMissRecord;
             sbt.missRecordStrideInBytes = sizeof(RaygenRecord);
             sbt.missRecordCount = 1;
+
+            // Set closest hit sbt
+            sbt.hitgroupRecordBase = CUdeviceptr(closestHitRecords.data());
+            sbt.hitgroupRecordStrideInBytes = sizeof(ClosestHitRecord);
+            sbt.hitgroupRecordCount = closestHitRecords.size();
         }
-
-        // Build traversable handle
-        OptixTraversableHandle triangleGASHandler = createTriangleGAS(sceneData, state.closestHitProgramGroup);
-        int triangleOffset = 0;
-
-        // TODO self-define vector array
-        base::Vector<OptixInstance> iasInstances(allocator);
-
-        OptixInstance gasInstance = {};
-        if (triangleGASHandler != 0) {
-            gasInstance.traversableHandle = triangleGASHandler;
-            gasInstance.sbtOffset = triangleOffset;
-            iasInstances.push_back(gasInstance);
-        }
-
-        // Top level acceleration structure
-        OptixBuildInput buildInput = {};
-        buildInput.type = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
-        buildInput.instanceArray.instances = CUdeviceptr(iasInstances.data());
-        buildInput.instanceArray.numInstances = iasInstances.size();
-        std::vector<OptixBuildInput> buildInputs = {buildInput};
-
-        OptixTraversableHandle rootTraversable = buildBVH({buildInput});
-
-        // Set closest hit sbt
-        sbt.hitgroupRecordBase = CUdeviceptr(closestHitRecords.data());
-        sbt.hitgroupRecordStrideInBytes = sizeof(ClosestHitRecord);
-        sbt.hitgroupRecordCount = closestHitRecords.size();
         state.sbt = sbt;
-        state.params.traversable = rootTraversable;
+    }
+
+    void OptiXScene::buildIntersectionStruct(const SceneData &sceneData) {
+        initParams(sceneData);
+        createContext();
+        createModule();
+        createProgramGroups();
+        buildAccelStruct(sceneData);
+        createPipeline();
+        createSBT();
     }
 
     void OptiXScene::intersect() {
@@ -259,7 +288,7 @@ namespace RENDER_NAMESPACE {
                                 filmHeight, /*depth=*/1));
         CUDA_SYNC_CHECK();
 
-        // TODO for testing
+        // TODO delete testing image writing
         std::vector<uchar3> hostImageBuffer;
         hostImageBuffer.reserve(filmWidth * filmHeight);
         CUDA_CHECK(cudaMemcpy(static_cast<void *>(hostImageBuffer.data()), state.params.outputImage,
@@ -270,8 +299,7 @@ namespace RENDER_NAMESPACE {
         CUDA_CHECK(cudaFree(deviceParams));
     }
 
-    OptixTraversableHandle OptiXScene::createTriangleGAS(const SceneData &data,
-                                                         OptixProgramGroup &closestHitPG) {
+    OptixTraversableHandle OptiXScene::createTriangleGAS(const SceneData &data, OptixProgramGroup &closestHitPG) {
         std::vector<TriangleMesh *> meshes;
         std::vector<CUdeviceptr> devicePtrConversion;
         std::vector<uint32_t> triangleBuildInputFlag;

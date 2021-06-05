@@ -23,6 +23,10 @@ namespace RENDER_NAMESPACE {
     struct ClosestHitData {
         float r = 0.2;
     };
+
+    struct MissData {
+        float b = 0.6;
+    };
 }
 
 #endif //TUNAN_OPTIX_RAY_H

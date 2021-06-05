@@ -27,8 +27,8 @@ namespace RENDER_NAMESPACE {
             void *allocate(size_t bytes, size_t alignBytes);
 
             template<class T>
-            T *allocateObjects(size_t count = 1) {
-                return static_cast<T *>(allocate(sizeof(T) * count, sizeof(T)));
+            T *allocateObjects(size_t count = 1, size_t alignBytes = sizeof(T)) {
+                return static_cast<T *>(allocate(sizeof(T) * count, alignBytes));
             }
 
             template<class T, class... Args>

@@ -36,7 +36,25 @@ namespace RENDER_NAMESPACE {
     }
 
     RENDER_CPU_GPU
-    Ray Camera::generateRay(Float pixelX, Float pixelY, Sampler sampler) const {
+    Ray Camera::generateRay(Float pixelX, Float pixelY) const {
+        Float x = pixelX;
+        Float y = pixelY;
+
+        // Camera space
+        Point3F pOrigin = Point3F(0, 0, 0);
+
+        Point3F pTarget = _rasterToCamera.transformPoint(Point3F(x, y, 0));
+        Vector3F rayDir = NORMALIZE(pTarget - pOrigin);
+
+        // Convert to world space
+        Point3F pOriginWorld = _cameraToWorld.transformPoint(pOrigin);
+        Vector3F pDirWorld = NORMALIZE(_cameraToWorld.transformVector(rayDir));
+
+        return Ray(pOriginWorld, pDirWorld);
+    }
+
+    RENDER_CPU_GPU
+    Ray Camera::generateRayDifferential(Float pixelX, Float pixelY, Sampler sampler) const {
         Float x = pixelX;
         Float y = pixelY;
 

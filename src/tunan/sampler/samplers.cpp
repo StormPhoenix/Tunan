@@ -6,6 +6,9 @@
 
 namespace RENDER_NAMESPACE {
     namespace sampler {
+
+        // Attention: all sampler type must be copiable
+
         RENDER_CPU_GPU
         void IndependentSampler::forPixel(const Point2I pixel) {
             _currentPixel = pixel;

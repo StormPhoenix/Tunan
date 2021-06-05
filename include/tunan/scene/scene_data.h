@@ -89,6 +89,8 @@ namespace RENDER_NAMESPACE {
         size_t nTriangles;
         const Point3F *vertices;
         const int *vertexIndices;
+
+        Float transformMatrix[4][4];
     };
 }
 

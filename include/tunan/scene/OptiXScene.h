@@ -26,11 +26,16 @@ namespace RENDER_NAMESPACE {
         RayParams params;
         OptixModule optixModule = nullptr;
         OptixPipeline optixPipeline;
-        OptixProgramGroup raygenFindIntersectionProgramGroup = 0;
+        OptixPipelineCompileOptions pipelineCompileOptions = {0};
+        OptixProgramGroup raygenPG = 0;
         // TODO rename
-        OptixProgramGroup missProgramGroup = 0;
-        OptixProgramGroup closestHitProgramGroup = 0;
+        OptixProgramGroup missPG = 0;
+        OptixProgramGroup closesthitPG = 0;
         OptixShaderBindingTable sbt;
+
+        // TODO delete
+        CUdeviceptr d_vertices;
+        CUdeviceptr d_gas_output_buffer;
 
         OptixDeviceContext optixContext;
         CUstream cudaStream = 0;
@@ -44,22 +49,32 @@ namespace RENDER_NAMESPACE {
 };
 
 typedef SbtRecord <RayGenData> RaygenRecord;
-// TODO delete for testing
 typedef SbtRecord <ClosestHitData> ClosestHitRecord;
-// TODO
-//    struct ClosestHitRecord;
+typedef SbtRecord <MissData> MissRecord;
 
 class OptiXScene {
 public:
     OptiXScene(SceneData &sceneData, MemoryAllocator &allocator);
 
-    void OptiXScene2(SceneData &sceneData, MemoryAllocator &allocator);
-
-    void buildOptiXData(const SceneData &sceneData);
+    void buildIntersectionStruct(const SceneData &sceneData);
 
     void intersect();
 
 private:
+    void initParams(const SceneData &sceneData);
+
+    void createContext();
+
+    void buildAccelStruct(const SceneData &sceneData);
+
+    void createModule();
+
+    void createProgramGroups();
+
+    void createSBT();
+
+    void createPipeline();
+
     OptixTraversableHandle createTriangleGAS(const SceneData &data, OptixProgramGroup &closestHitPG);
 
     OptixTraversableHandle buildBVH(const std::vector<OptixBuildInput> &buildInputs);

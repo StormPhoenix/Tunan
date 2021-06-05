@@ -69,7 +69,8 @@ set(PROJ_INCLUDE_DIR
 ### Compile *.PTX code
 if (BUILD_GPU_ENABLED)
     set(PTX_CODE_GEN ptx_code_gen)
-    set(OPTIX_RAYTRACING_FILE src/tunan/gpu/optix_ray.cu)
+    set(OPTIX_RAYTRACING_FILE
+            src/tunan/gpu/optix_ray.cu)
     add_library(${PTX_CODE_GEN} OBJECT ${OPTIX_RAYTRACING_FILE})
     set_property(TARGET ${PTX_CODE_GEN} PROPERTY CUDA_PTX_COMPILATION ON)
     target_compile_options("${PTX_CODE_GEN}"
@@ -77,6 +78,7 @@ if (BUILD_GPU_ENABLED)
             -Xcudafe=--display_error_number -Xcudafe=--diag_suppress=3089)
     target_include_directories(${PTX_CODE_GEN}
             PRIVATE
+            src
             ${CUDA_INCLUDE_DIRECTORY}
             ${OPTIX_INCLUDE_DIRECTORY}
             ${PROJ_INCLUDE_DIR})
@@ -164,77 +166,83 @@ if (BUILD_GPU_ENABLED)
             PROPERTIES LANGUAGE CUDA)
 endif ()
 
-add_library(render_utils_lib
+set(RENDER_UTILS_LIB "tunan_utils")
+add_library(${RENDER_UTILS_LIB}
         ${RENDER_UTILS_SRCS})
 target_include_directories(
-        render_utils_lib
+        ${RENDER_UTILS_LIB}
         PRIVATE
         ${CUDA_INCLUDE_DIRECTORY}
         ${PROJ_INCLUDE_DIR}
 )
 target_link_libraries(
-        render_utils_lib
+        ${RENDER_UTILS_LIB}
         PRIVATE
         ${CUDA_LINK_LIBRARY}
 )
 
-add_library(render_base_lib
+set(RENDER_BASE_LIB "tunan_base")
+add_library(${RENDER_BASE_LIB}
         ${RENDER_BASE_SRCS})
 target_include_directories(
-        render_base_lib
+        ${RENDER_BASE_LIB}
         PRIVATE
         ${PROJ_INCLUDE_DIR}
 )
 target_link_libraries(
-        render_base_lib
+        ${RENDER_BASE_LIB}
         PRIVATE
-        render_utils_lib
+        ${RENDER_UTILS_LIB}
 )
 
-add_library(render_media_lib
+set(RENDER_MEDIA_LIB "tunan_media")
+add_library(${RENDER_MEDIA_LIB}
         ${RENDER_MEDIA_SRCS})
-target_include_directories(render_media_lib
+target_include_directories(${RENDER_MEDIA_LIB}
         PRIVATE
         ${PROJ_INCLUDE_DIR})
 
-add_library(render_material_lib
+set(RENDER_MATERIAL_LIB "tunan_material")
+add_library(${RENDER_MATERIAL_LIB}
         ${RENDER_MATERIAL_SRCS})
 target_include_directories(
-        render_material_lib
+        ${RENDER_MATERIAL_LIB}
         PRIVATE
         ${PROJ_INCLUDE_DIR}
 )
 target_link_libraries(
-        render_material_lib
+        ${RENDER_MATERIAL_LIB}
         PRIVATE
-        render_base_lib
-        render_utils_lib
+        ${RENDER_BASE_LIB}
+        ${RENDER_UTILS_LIB}
 )
 
-add_library(render_sampler_lib
+set(RENDER_SAMPLER_LIB "tunan_sampler")
+add_library(${RENDER_SAMPLER_LIB}
         ${RENDER_SAMPLER_SRCS})
-target_include_directories(render_sampler_lib
+target_include_directories(${RENDER_SAMPLER_LIB}
         PRIVATE
         ${PROJ_INCLUDE_DIR}
         ${CUDA_INCLUDE_DIRECTORY})
 
-add_library(render_scene_lib
+set(RENDER_SCENE_LIB "tunan_scene")
+add_library(${RENDER_SCENE_LIB}
         ${RENDER_SCENE_SRCS})
 target_include_directories(
-        render_scene_lib
+        ${RENDER_SCENE_LIB}
         PRIVATE
         ${PROJ_INCLUDE_DIR}
         ${OPTIX_INCLUDE_DIRECTORY}
         ${CUDA_INCLUDE_DIRECTORY}
 )
 
-add_dependencies(render_scene_lib render_utils_lib render_ptx_lib)
+add_dependencies(${RENDER_SCENE_LIB} ${RENDER_UTILS_LIB} render_ptx_lib)
 
 target_link_libraries(
-        render_scene_lib
+        ${RENDER_SCENE_LIB}
         PRIVATE
-        render_base_lib
-        render_utils_lib
+        ${RENDER_BASE_LIB}
+        ${RENDER_UTILS_LIB}
         render_ptx_lib
         ${CUDA_LINK_LIBRARY}
 )
@@ -243,12 +251,12 @@ add_executable(${PROJECT_NAME} ${RENDER_SRCS})
 target_link_libraries(
         ${PROJECT_NAME}
         PRIVATE
-        render_sampler_lib
-        render_utils_lib
-        render_scene_lib
-        render_base_lib
-        render_media_lib
-        render_material_lib
+        ${RENDER_SAMPLER_LIB}
+        ${RENDER_UTILS_LIB}
+        ${RENDER_SCENE_LIB}
+        ${RENDER_BASE_LIB}
+        ${RENDER_MEDIA_LIB}
+        ${RENDER_MATERIAL_LIB}
 )
 target_include_directories(
         ${PROJECT_NAME}

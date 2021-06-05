@@ -24,7 +24,10 @@ namespace RENDER_NAMESPACE {
                Float nearClip = 1.0, Float farClip = 10000);
 
         RENDER_CPU_GPU
-        Ray generateRay(Float pixelX, Float pixelY, Sampler sampler) const;
+        Ray generateRay(Float pixelX, Float pixelY) const;
+
+        RENDER_CPU_GPU
+        Ray generateRayDifferential(Float pixelX, Float pixelY, Sampler sampler) const;
 
         RENDER_CPU_GPU
         void pdfWe(const Ray &ray, Float &pdfPos, Float &pdfDir) const;
@@ -57,7 +60,9 @@ namespace RENDER_NAMESPACE {
         RENDER_CPU_GPU
         Spectrum We(const Ray &ray, Point2F *const filmPosition) const;
 
-    private:
+        // TODO delete
+//    private:
+    public:
         Vector3F _origin;
         Vector3F _front;
         Float _filmPlaneArea;

@@ -16,5 +16,12 @@ namespace RENDER_NAMESPACE {
 
         // Vertex indices
         vertexIndices = entity.vertexIndices;
+
+        for (int row = 0; row < 4; row ++) {
+            for (int col = 0; col < 4; col ++) {
+                std::cout << entity.toWorld.mat()[col][row] << std::endl;
+                transformMatrix[row][col] = entity.toWorld.mat()[col][row];
+            }
+        }
     }
 }
