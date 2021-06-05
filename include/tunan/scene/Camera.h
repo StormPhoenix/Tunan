@@ -21,7 +21,7 @@ namespace RENDER_NAMESPACE {
         RENDER_CPU_GPU
         Camera(Transform cameraToWorld, Float hFov,
                int resolutionWidth, int resolutionHeight,
-               Float nearClip = 1.0, Float farClip = 10000);
+               Float nearClip = 1.0, Float farClip = 1000);
 
         RENDER_CPU_GPU
         Ray generateRay(Float pixelX, Float pixelY) const;

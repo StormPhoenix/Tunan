@@ -57,6 +57,7 @@ namespace RENDER_NAMESPACE {
         template<>
         struct EvaluateTpType<1> {
             template<typename F, typename Tp, typename... Ts>
+            RENDER_CPU_GPU
             inline auto operator()(F func, Tp tp, int index, TypePack<Ts...> types) {
                 static_assert(sizeof...(Ts) >= 1, "Types can be zero. ");
                 using T = typename GetFirstType<TypePack<Ts...>>::type;
@@ -67,6 +68,7 @@ namespace RENDER_NAMESPACE {
         template<int n>
         struct EvaluateTpType {
             template<typename F, typename TP, typename... Ts>
+            RENDER_CPU_GPU
             inline auto operator()(F func, TP tp, int index, TypePack<Ts...> types) {
                 if (index > 1) {
                     using RestType = typename RemoveFirstType<TypePack<Ts...>>::type;

@@ -213,6 +213,13 @@ namespace RENDER_NAMESPACE {
                 used--;
             }
 
+            void reset(size_t n) {
+                if (n > nAllocated) {
+                    allocate(n);
+                }
+                used = n;
+            }
+
         private:
             void allocate(size_t n) {
                 if (n <= nAllocated) {

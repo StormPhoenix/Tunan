@@ -5,7 +5,8 @@
 #include <tunan/common.h>
 #include <tunan/base/containers.h>
 #include <tunan/scene/Camera.h>
-#include <tunan/scene/OptiXScene.h>
+#include <tunan/scene/TriangleMesh.h>
+#include <tunan/scene/OptixIntersectable.h>
 #include <tunan/gpu/cuda_utils.h>
 #include <tunan/gpu/optix_utils.h>
 #include <tunan/gpu/optix_ray.h>
@@ -18,28 +19,25 @@
 #include <optix_function_table_definition.h>
 #include <optix_stubs.h>
 
-// TODO delete
-#include <array>
-
 extern "C" {
 extern const unsigned char OptixPtxCode[];
 }
 
 namespace RENDER_NAMESPACE {
+
+
     static void optiXLogCallback(unsigned int level, const char *tag, const char *message, void *cbdata) {
         std::cout << "OptiX callback: " << tag << ": " << message << std::endl;
     }
 
-    OptiXScene::OptiXScene(SceneData &sceneData, MemoryAllocator &allocator) :
+    OptixIntersectable::OptixIntersectable(SceneData &sceneData, MemoryAllocator &allocator) :
             allocator(allocator), closestHitRecords(allocator) {
-        filmWidth = sceneData.width;
         filmHeight = sceneData.height;
+        filmWidth = sceneData.width;
         buildIntersectionStruct(sceneData);
     }
 
-    void OptiXScene::initParams(const SceneData &sceneData) {
-        state.params.camera = allocator.newObject<Camera>(sceneData.cameraToWorld, sceneData.fov,
-                                                          filmWidth, filmHeight);
+    void OptixIntersectable::initParams(SceneData &sceneData) {
         // Output image buffer
         uchar3 *deviceOutputBuffer = nullptr;
         {
@@ -50,7 +48,7 @@ namespace RENDER_NAMESPACE {
         state.params.outputImage = deviceOutputBuffer;
     }
 
-    void OptiXScene::createContext() {
+    void OptixIntersectable::createContext() {
         // Initialize optix context
         OptixDeviceContext optixContext;
         {
@@ -69,7 +67,7 @@ namespace RENDER_NAMESPACE {
         state.optixContext = optixContext;
     }
 
-    void OptiXScene::buildAccelStruct(const SceneData &sceneData) {
+    void OptixIntersectable::buildAccelStruct(SceneData &sceneData) {
         // Build traversable handle
         OptixTraversableHandle triangleGASHandler = createTriangleGAS(sceneData, state.closesthitPG);
 
@@ -98,7 +96,7 @@ namespace RENDER_NAMESPACE {
         state.params.traversable = rootTraversable;
     }
 
-    void OptiXScene::createModule() {
+    void OptixIntersectable::createModule() {
         // log buffer
         char log[4096];
         size_t logSize = sizeof(log);
@@ -140,7 +138,7 @@ namespace RENDER_NAMESPACE {
         state.optixModule = optixModule;
     }
 
-    void OptiXScene::createProgramGroups() {
+    void OptixIntersectable::createProgramGroups() {
         char log[4096];
         size_t logSize = sizeof(log);
 
@@ -193,7 +191,7 @@ namespace RENDER_NAMESPACE {
         state.closesthitPG = closesthitPG;
     }
 
-    void OptiXScene::createPipeline() {
+    void OptixIntersectable::createPipeline() {
         char log[4096];
         size_t logSize = sizeof(log);
 
@@ -222,7 +220,7 @@ namespace RENDER_NAMESPACE {
         state.optixPipeline = pipeline;
     }
 
-    void OptiXScene::createSBT() {
+    void OptixIntersectable::createSBT() {
         // Shader binding table
         OptixShaderBindingTable sbt = {};
         {
@@ -263,7 +261,7 @@ namespace RENDER_NAMESPACE {
         state.sbt = sbt;
     }
 
-    void OptiXScene::buildIntersectionStruct(const SceneData &sceneData) {
+    void OptixIntersectable::buildIntersectionStruct(SceneData &sceneData) {
         initParams(sceneData);
         createContext();
         createModule();
@@ -273,7 +271,7 @@ namespace RENDER_NAMESPACE {
         createSBT();
     }
 
-    void OptiXScene::intersect() {
+    void OptixIntersectable::intersect() {
         void *deviceParams;
         CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &deviceParams ), sizeof(RayParams)));
         CUDA_CHECK(cudaMemcpy(
@@ -282,10 +280,8 @@ namespace RENDER_NAMESPACE {
                 cudaMemcpyHostToDevice
         ));
 
-        OPTIX_CHECK(optixLaunch(state.optixPipeline,
-                                state.cudaStream,
-                                CUdeviceptr(deviceParams), sizeof(RayParams), &state.sbt, filmWidth,
-                                filmHeight, /*depth=*/1));
+        OPTIX_CHECK(optixLaunch(state.optixPipeline, state.cudaStream, CUdeviceptr(deviceParams), sizeof(RayParams),
+                                &state.sbt, filmWidth, filmHeight, /*depth=*/1));
         CUDA_SYNC_CHECK();
 
         // TODO delete testing image writing
@@ -295,11 +291,12 @@ namespace RENDER_NAMESPACE {
                               filmWidth * filmHeight * sizeof(uchar3), cudaMemcpyDeviceToHost));
 
         // Write image
-        utils::writeImage("test.png", filmWidth, filmHeight, 3, hostImageBuffer.data());
+        utils::writeImage("test.png", filmWidth, filmHeight, 3,
+                          reinterpret_cast<const unsigned char *>(hostImageBuffer.data()));
         CUDA_CHECK(cudaFree(deviceParams));
     }
 
-    OptixTraversableHandle OptiXScene::createTriangleGAS(const SceneData &data, OptixProgramGroup &closestHitPG) {
+    OptixTraversableHandle OptixIntersectable::createTriangleGAS(SceneData &data, OptixProgramGroup &closestHitPG) {
         std::vector<TriangleMesh *> meshes;
         std::vector<CUdeviceptr> devicePtrConversion;
         std::vector<uint32_t> triangleBuildInputFlag;
@@ -311,7 +308,10 @@ namespace RENDER_NAMESPACE {
 
         // Create meshes
         for (int i = 0; i < shapeCount; i++) {
-            meshes[i] = allocator.newObject<TriangleMesh>(data.entities[i]);
+            ShapeEntity &entity = data.entities[i];
+            meshes[i] = allocator.newObject<TriangleMesh>(entity.nVertices, entity.vertices,
+                                                          entity.nTriangles, entity.vertexIndices,
+                                                          entity.toWorld);
         }
 
         std::vector<OptixBuildInput> buildInputs;
@@ -328,6 +328,9 @@ namespace RENDER_NAMESPACE {
             input.triangleArray.numVertices = nVertices;
             devicePtrConversion[i] = CUdeviceptr(mesh->vertices);
             input.triangleArray.vertexBuffers = &(devicePtrConversion[i]);
+
+            input.triangleArray.transformFormat = OPTIX_TRANSFORM_FORMAT_MATRIX_FLOAT12;
+            input.triangleArray.preTransform = CUdeviceptr(mesh->transformMatrix);
 
             // Indices
             input.triangleArray.indexFormat = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
@@ -349,7 +352,7 @@ namespace RENDER_NAMESPACE {
             ClosestHitRecord hitRecord;
             OPTIX_CHECK(optixSbtRecordPackHeader(closestHitPG, &hitRecord));
             // TODO for testing
-            hitRecord.data.r = 0.1;
+            hitRecord.data.mesh = mesh;
             closestHitRecords.push_back(hitRecord);
         }
 
@@ -360,7 +363,7 @@ namespace RENDER_NAMESPACE {
         }
     }
 
-    OptixTraversableHandle OptiXScene::buildBVH(const std::vector<OptixBuildInput> &buildInputs) {
+    OptixTraversableHandle OptixIntersectable::buildBVH(const std::vector<OptixBuildInput> &buildInputs) {
         // Figure out memory requirements.
         OptixAccelBuildOptions accelOptions = {};
         accelOptions.buildFlags = (OPTIX_BUILD_FLAG_ALLOW_COMPACTION | OPTIX_BUILD_FLAG_PREFER_FAST_TRACE);

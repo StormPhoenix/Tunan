@@ -2,8 +2,8 @@
 // Created by StormPhoenix on 2021/5/31.
 //
 
-#ifndef TUNAN_OPTIXSCENE_H
-#define TUNAN_OPTIXSCENE_H
+#ifndef TUNAN_OPTIXINTERSECTABLE_H
+#define TUNAN_OPTIXINTERSECTABLE_H
 
 #include <tunan/common.h>
 #include <tunan/base/containers.h>
@@ -52,20 +52,20 @@ typedef SbtRecord <RayGenData> RaygenRecord;
 typedef SbtRecord <ClosestHitData> ClosestHitRecord;
 typedef SbtRecord <MissData> MissRecord;
 
-class OptiXScene {
+class OptixIntersectable {
 public:
-    OptiXScene(SceneData &sceneData, MemoryAllocator &allocator);
+    OptixIntersectable(SceneData &sceneData, MemoryAllocator &allocator);
 
-    void buildIntersectionStruct(const SceneData &sceneData);
+    void buildIntersectionStruct(SceneData &sceneData);
 
     void intersect();
 
 private:
-    void initParams(const SceneData &sceneData);
+    void initParams(SceneData &sceneData);
 
     void createContext();
 
-    void buildAccelStruct(const SceneData &sceneData);
+    void buildAccelStruct(SceneData &sceneData);
 
     void createModule();
 
@@ -75,11 +75,12 @@ private:
 
     void createPipeline();
 
-    OptixTraversableHandle createTriangleGAS(const SceneData &data, OptixProgramGroup &closestHitPG);
+    OptixTraversableHandle createTriangleGAS(SceneData &data, OptixProgramGroup &closestHitPG);
 
     OptixTraversableHandle buildBVH(const std::vector<OptixBuildInput> &buildInputs);
 
 private:
+    // TODO delete
     int filmWidth, filmHeight;
     OptiXState state;
     // Memory allocator
@@ -91,4 +92,4 @@ private:
 
 }
 
-#endif //TUNAN_OPTIXSCENE_H
+#endif //TUNAN_OPTIXINTERSECTABLE_H

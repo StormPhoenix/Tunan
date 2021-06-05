@@ -3,7 +3,7 @@
 // TODO for testing
 #include <tunan/common.h>
 #include <tunan/scene/importers.h>
-#include <tunan/scene/OptiXScene.h>
+#include <tunan/scene/OptixIntersectable.h>
 #include <tunan/utils/memory/CUDAResource.h>
 #include <tunan/utils/MemoryAllocator.h>
 
@@ -22,11 +22,17 @@ namespace fs = std::filesystem;
 namespace fs = ghc::filesystem;
 #endif
 
+// TODO delete for testing
+#include <tunan/tracer/path.h>
+#include <tunan/sampler/SamplerFactory.h>
+
 int main() {
-    // TODO for testing
+    // TODO delete for testing
     using namespace tunan;
     using namespace tunan::importer;
     using namespace tunan::utils;
+    using namespace tunan::tracer;
+    using namespace tunan::sampler;
 
     MemoryResource *resource = new CUDAResource();
     MemoryAllocator allocator(resource);
@@ -35,11 +41,16 @@ int main() {
 //    std::string sceneDirectory =  "/resource/scenes/cornel-box/";
     MitsubaSceneImporter importer = MitsubaSceneImporter();
 
-    SceneData sceneData;
-    importer.importScene(sceneDirectory, sceneData, allocator);
-    OptiXScene scene(sceneData, allocator);
+    SceneData parsedScene;
+    importer.importScene(sceneDirectory, parsedScene, allocator);
+
+    /*
+    OptixIntersectable scene(sceneData, allocator);
     scene.intersect();
-    // TODO think about resource deallocation
+    */
+    PathTracer tracer(parsedScene, allocator);
+
+     // TODO think about resource deallocation
 //    delete resource;
     std::cout << "Hello, World!" << std::endl;
     return 0;

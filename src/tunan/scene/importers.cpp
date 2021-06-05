@@ -333,17 +333,15 @@ namespace RENDER_NAMESPACE {
             entity.nVertices = nVertices;
             entity.vertices = allocator.allocateObjects<Point3F>(nVertices);
             {
-                // TODO temporay transformation
-                entity.vertices[0] = entity.toWorld.transformPoint(Point3F(-1, -1, 0));
-                entity.vertices[1] = entity.toWorld.transformPoint(Point3F(1, -1, 0));
-                entity.vertices[2] = entity.toWorld.transformPoint(Point3F(1, 1, 0));
-                entity.vertices[3] = entity.toWorld.transformPoint(Point3F(-1, 1, 0));
-                /*
+                // TODO delete temporay transformation
+//                entity.vertices[0] = entity.toWorld.transformPoint(Point3F(-1, -1, 0));
+//                entity.vertices[1] = entity.toWorld.transformPoint(Point3F(1, -1, 0));
+//                entity.vertices[2] = entity.toWorld.transformPoint(Point3F(1, 1, 0));
+//                entity.vertices[3] = entity.toWorld.transformPoint(Point3F(-1, 1, 0));
                 entity.vertices[0] = Point3F(-1, -1, 0);
                 entity.vertices[1] = Point3F(1, -1, 0);
                 entity.vertices[2] = Point3F(1, 1, 0);
                 entity.vertices[3] = Point3F(-1, 1, 0);
-                 */
             }
 
             // Normals

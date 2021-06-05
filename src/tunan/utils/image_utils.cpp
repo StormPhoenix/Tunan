@@ -292,8 +292,19 @@ namespace RENDER_NAMESPACE {
             }
         }
 
-        void writeImage(const std::string filename, int width, int height, int channel, const void *input_image) {
-            stbi_write_png(filename.c_str(), width, height, channel, input_image, 0);
+        void writeImage(const std::string filename, int width, int height, int channel,
+                        const unsigned char *input_image) {
+            unsigned char *image_buffer = (unsigned char *) malloc(sizeof(unsigned char) * width * height * channel);
+            for (int row = 0; row < height; row++) {
+                for (int col = 0; col < width; col++) {
+                    int input_offset = (row * width + col) * channel;
+                    int output_offset = ((height - row - 1) * width + col) * channel;
+                    for (int ch = 0; ch < channel; ch++) {
+                        image_buffer[output_offset + ch] = input_image[input_offset + ch];
+                    }
+                }
+            }
+            stbi_write_png(filename.c_str(), width, height, channel, image_buffer, 0);
         }
     }
 }

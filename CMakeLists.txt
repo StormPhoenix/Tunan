@@ -66,6 +66,15 @@ endif (CUDA_FOUND AND CUDA_FOUND AND START_CUDA)
 set(PROJ_INCLUDE_DIR
         ${PROJECT_SOURCE_DIR}/include)
 
+add_library (cuda_build_configuration INTERFACE)
+if (BUILD_GPU_ENABLED)
+    target_compile_options (
+            cuda_build_configuration
+            INTERFACE
+            "$<$<COMPILE_LANGUAGE:CUDA>:--use_fast_math;--expt-relaxed-constexpr;--extended-lambda;--forward-unknown-to-host-compiler>"
+    )
+endif(BUILD_GPU_ENABLED)
+
 ### Compile *.PTX code
 if (BUILD_GPU_ENABLED)
     set(PTX_CODE_GEN ptx_code_gen)
@@ -123,6 +132,7 @@ set(RENDER_UTILS_SRCS
 
 set(RENDER_SAMPLER_SRCS
         include/tunan/sampler/rng.h
+        src/tunan/sampler/SamplerFactory.cpp
         src/tunan/sampler/samplers.cpp)
 
 set(RENDER_MATERIAL_SRCS
@@ -135,10 +145,17 @@ set(RENDER_MEDIA_SRCS
 set(RENDER_SCENE_SRCS
         src/tunan/scene/Ray.cpp
         src/tunan/scene/Camera.cpp
-        src/tunan/scene/scene_data.cpp
         src/tunan/scene/importers.cpp
+        src/tunan/scene/scene_data.cpp
+        src/tunan/scene/TriangleMesh.cpp
         include/ext/pugixml/pugixml.cpp
         include/tunan/common.h)
+
+set(RENDER_TRACER_SRCS
+        src/tunan/tracer/path.cpp)
+
+set(RENDER_PARALLEL_SRCS
+        src/tunan/parallel/parallels.cpp)
 
 set(RENDER_SRCS
         main.cpp)
@@ -151,7 +168,7 @@ if (BUILD_GPU_ENABLED)
 
     set(RENDER_SCENE_SRCS
             ${RENDER_SCENE_SRCS}
-            src/tunan/scene/OptiXScene.cpp)
+            src/tunan/scene/OptixIntersectable.cpp)
 
     set_source_files_properties(
             include/tunan/utils/TaggedPointer.h
@@ -161,8 +178,10 @@ if (BUILD_GPU_ENABLED)
             ${RENDER_SCENE_SRCS}
             ${RENDER_BASE_SRCS}
             ${RENDER_MEDIA_SRCS}
+            ${RENDER_TRACER_SRCS}
             ${RENDER_MATERIAL_SRCS}
             ${RENDER_SAMPLER_SRCS}
+            ${RENDER_PARALLEL_SRCS}
             PROPERTIES LANGUAGE CUDA)
 endif ()
 
@@ -220,6 +239,9 @@ target_link_libraries(
 set(RENDER_SAMPLER_LIB "tunan_sampler")
 add_library(${RENDER_SAMPLER_LIB}
         ${RENDER_SAMPLER_SRCS})
+set_property (TARGET ${RENDER_SAMPLER_LIB} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+set_property(TARGET ${RENDER_SAMPLER_LIB} PROPERTY CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+
 target_include_directories(${RENDER_SAMPLER_LIB}
         PRIVATE
         ${PROJ_INCLUDE_DIR}
@@ -247,10 +269,48 @@ target_link_libraries(
         ${CUDA_LINK_LIBRARY}
 )
 
+set(RENDER_PARALLEL_LIB tunan_parallel)
+add_library(${RENDER_PARALLEL_LIB}
+        ${RENDER_PARALLEL_SRCS})
+target_link_libraries(
+        ${RENDER_PARALLEL_LIB}
+        PRIVATE
+        ${CUDA_LINK_LIBRARY}
+)
+target_include_directories(
+        ${RENDER_PARALLEL_LIB}
+        PRIVATE
+        ${PROJ_INCLUDE_DIR}
+        ${OPTIX_INCLUDE_DIRECTORY}
+        ${CUDA_INCLUDE_DIRECTORY}
+)
+
+set(RENDER_TRACER_LIB tunan_tracer)
+add_library(${RENDER_TRACER_LIB} ${RENDER_TRACER_SRCS})
+set_property (TARGET ${RENDER_TRACER_LIB} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+set_property(TARGET ${RENDER_TRACER_LIB} PROPERTY CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+
+target_link_libraries(
+        ${RENDER_TRACER_LIB}
+        PRIVATE
+        cuda_build_configuration
+        ${RENDER_UTILS_LIB}
+        ${RENDER_SAMPLER_LIB}
+        ${RENDER_PARALLEL_LIB}
+)
+target_include_directories(
+        ${RENDER_TRACER_LIB}
+        PRIVATE
+        ${PROJ_INCLUDE_DIR}
+        ${OPTIX_INCLUDE_DIRECTORY}
+        ${CUDA_INCLUDE_DIRECTORY}
+)
+
 add_executable(${PROJECT_NAME} ${RENDER_SRCS})
 target_link_libraries(
         ${PROJECT_NAME}
         PRIVATE
+        ${RENDER_TRACER_LIB}
         ${RENDER_SAMPLER_LIB}
         ${RENDER_UTILS_LIB}
         ${RENDER_SCENE_LIB}

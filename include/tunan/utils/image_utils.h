@@ -13,7 +13,8 @@ namespace RENDER_NAMESPACE {
         float *readImage(const std::string &filename, int *width, int *height,
                          int desire_channels, int *channels_in_file);
 
-        void writeImage(const std::string filename, int width, int height, int channel, const void *input_image);
+        void writeImage(const std::string filename, int width, int height, int channel,
+                        const unsigned char *input_image);
     }
 }
 

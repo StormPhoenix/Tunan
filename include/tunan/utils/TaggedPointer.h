@@ -21,7 +21,8 @@ namespace RENDER_NAMESPACE {
             template<typename T>
             RENDER_CPU_GPU TaggedPointer(T *ptr) {
                 uintptr_t p = reinterpret_cast<uintptr_t>(ptr);
-                ASSERT((p & ptrMask) == p, "TaggedPointer address too large. ");
+//                ASSERT((p & ptrMask) == p, "TaggedPointer address too large. ");
+                assert((p & ptrMask) == p);
                 constexpr unsigned int typeId = typeIndex<T>();
                 taggedPtr = p | ((uintptr_t) typeId << typeShift);
             }
@@ -37,7 +38,7 @@ namespace RENDER_NAMESPACE {
             }
 
             RENDER_CPU_GPU
-                    TaggedPointer &operator=(const TaggedPointer &tp) {
+            TaggedPointer &operator=(const TaggedPointer &tp) {
                 taggedPtr = tp.taggedPtr;
                 return *this;
             }
@@ -101,7 +102,7 @@ namespace RENDER_NAMESPACE {
             }
 
             template<typename F>
-            RENDER_CPU_GPU inline auto proxyCall(F func) const{
+            RENDER_CPU_GPU inline auto proxyCall(F func) const {
                 return EvaluateTpType<maxTag()>()(func, *this, typeId(), Types());
             }
 

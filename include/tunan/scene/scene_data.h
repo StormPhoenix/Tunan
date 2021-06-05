@@ -80,18 +80,6 @@ namespace RENDER_NAMESPACE {
 
         std::vector<Material> materials;
     } SceneData;
-
-    class TriangleMesh {
-    public:
-        TriangleMesh(const ShapeEntity &entity);
-
-        size_t nVertices;
-        size_t nTriangles;
-        const Point3F *vertices;
-        const int *vertexIndices;
-
-        Float transformMatrix[4][4];
-    };
 }
 
 #endif //TUNAN_SCENE_DATA_H
