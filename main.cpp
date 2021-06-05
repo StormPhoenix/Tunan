@@ -3,7 +3,6 @@
 // TODO for testing
 #include <tunan/common.h>
 #include <tunan/scene/importers.h>
-#include <tunan/scene/OptixIntersectable.h>
 #include <tunan/utils/memory/CUDAResource.h>
 #include <tunan/utils/MemoryAllocator.h>
 
@@ -44,10 +43,6 @@ int main() {
     SceneData parsedScene;
     importer.importScene(sceneDirectory, parsedScene, allocator);
 
-    /*
-    OptixIntersectable scene(sceneData, allocator);
-    scene.intersect();
-    */
     PathTracer tracer(parsedScene, allocator);
 
      // TODO think about resource deallocation

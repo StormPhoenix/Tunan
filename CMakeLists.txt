@@ -111,217 +111,117 @@ if (BUILD_GPU_ENABLED)
 
     message(STATUS "Build *.PTX embedded code: ${OPTIX_EMBEDDED_FILE}")
     add_library(render_ptx_lib STATIC ${OPTIX_EMBEDDED_FILE})
-
 endif (BUILD_GPU_ENABLED)
 
-set(RENDER_BASE_SRCS
-        src/tunan/base/interactions.cpp
-        src/tunan/base/transform.cpp
-        include/tunan/base/spectrum.h
-        include/tunan/base/containers.h
-        include/tunan/base/mediums.h)
+set(PUGIXML_SRCS
+        include/ext/pugixml/pugixml.cpp)
 
-set(RENDER_UTILS_SRCS
-        src/tunan/utils/model_loader.cpp
-        src/tunan/utils/image_utils.cpp
-        src/tunan/utils/file_utils.cpp
-        src/tunan/utils/MemoryAllocator.cpp
-        src/tunan/utils/memory/CPUResource.cpp
-        include/tunan/utils/type_utils.h
-        include/tunan/utils/TaggedPointer.h)
-
-set(RENDER_SAMPLER_SRCS
-        include/tunan/sampler/rng.h
+set(TuNan_SRCS
+        src/tunan/parallel/parallels.cpp
+        src/tunan/tracer/path.cpp
         src/tunan/sampler/SamplerFactory.cpp
-        src/tunan/sampler/samplers.cpp)
-
-set(RENDER_MATERIAL_SRCS
+        src/tunan/sampler/samplers.cpp
         src/tunan/material/Lambertian.cpp
-        src/tunan/material/Material.cpp)
-
-set(RENDER_MEDIA_SRCS
-        include/tunan/medium/Medium.h)
-
-set(RENDER_SCENE_SRCS
+        src/tunan/material/Material.cpp
         src/tunan/scene/Ray.cpp
         src/tunan/scene/Camera.cpp
         src/tunan/scene/importers.cpp
         src/tunan/scene/scene_data.cpp
-        src/tunan/scene/TriangleMesh.cpp
-        include/ext/pugixml/pugixml.cpp
-        include/tunan/common.h)
+        src/tunan/scene/TriangleMesh.cpp)
 
-set(RENDER_TRACER_SRCS
-        src/tunan/tracer/path.cpp)
+set(TuNan_HDRS
+        include/tunan/common.h
+        include/tunan/sampler/rng.h
+        include/tunan/medium/Medium.h)
 
-set(RENDER_PARALLEL_SRCS
-        src/tunan/parallel/parallels.cpp)
+set(TuNan_BASE_SRCS
+        src/tunan/base/interactions.cpp
+        src/tunan/base/transform.cpp)
+set(TuNan_BASE_HDRS
+        include/tunan/base/spectrum.h
+        include/tunan/base/containers.h
+        include/tunan/base/mediums.h)
 
-set(RENDER_SRCS
-        main.cpp)
+set(TuNan_UTIL_SRCS
+        src/tunan/utils/model_loader.cpp
+        src/tunan/utils/image_utils.cpp
+        src/tunan/utils/file_utils.cpp
+        src/tunan/utils/MemoryAllocator.cpp
+        src/tunan/utils/memory/CPUResource.cpp)
+
+set(TuNan_UTIL_HDRS
+        include/tunan/utils/type_utils.h
+        include/tunan/utils/TaggedPointer.h)
+
 
 ### Set cuda properties
 if (BUILD_GPU_ENABLED)
-    set(RENDER_UTILS_SRCS
-            ${RENDER_UTILS_SRCS}
+    set(TuNan_UTIL_SRCS
+            ${TuNan_UTIL_SRCS}
             src/tunan/utils/memory/CUDAResource.cpp)
 
-    set(RENDER_SCENE_SRCS
-            ${RENDER_SCENE_SRCS}
+    set(TuNan_SRCS
+            ${TuNan_SRCS}
             src/tunan/scene/OptixIntersectable.cpp)
 
     set_source_files_properties(
             include/tunan/utils/TaggedPointer.h
             include/tunan/math.h
             src/tunan/utils/model_loader.cpp
-            ${RENDER_SRCS}
-            ${RENDER_SCENE_SRCS}
-            ${RENDER_BASE_SRCS}
-            ${RENDER_MEDIA_SRCS}
-            ${RENDER_TRACER_SRCS}
-            ${RENDER_MATERIAL_SRCS}
-            ${RENDER_SAMPLER_SRCS}
-            ${RENDER_PARALLEL_SRCS}
+            main.cpp
+            ${TuNan_SRCS}
+            ${TuNan_HDRS}
+            ${TuNan_BASE_SRCS}
+            ${TuNan_BASE_HDRS}
+            ${TuNan_UTIL_SRCS}
+            ${TuNan_UTIL_HDRS}
             PROPERTIES LANGUAGE CUDA)
 endif ()
 
-set(RENDER_UTILS_LIB "tunan_utils")
-add_library(${RENDER_UTILS_LIB}
-        ${RENDER_UTILS_SRCS})
-target_include_directories(
-        ${RENDER_UTILS_LIB}
-        PRIVATE
-        ${CUDA_INCLUDE_DIRECTORY}
-        ${PROJ_INCLUDE_DIR}
-)
-target_link_libraries(
-        ${RENDER_UTILS_LIB}
-        PRIVATE
-        ${CUDA_LINK_LIBRARY}
-)
-
-set(RENDER_BASE_LIB "tunan_base")
-add_library(${RENDER_BASE_LIB}
-        ${RENDER_BASE_SRCS})
-target_include_directories(
-        ${RENDER_BASE_LIB}
-        PRIVATE
-        ${PROJ_INCLUDE_DIR}
-)
-target_link_libraries(
-        ${RENDER_BASE_LIB}
-        PRIVATE
-        ${RENDER_UTILS_LIB}
-)
-
-set(RENDER_MEDIA_LIB "tunan_media")
-add_library(${RENDER_MEDIA_LIB}
-        ${RENDER_MEDIA_SRCS})
-target_include_directories(${RENDER_MEDIA_LIB}
+set(TuNan_LIB tunan_lib)
+add_library(${TuNan_LIB} STATIC
+        ${TuNan_SRCS}
+        ${TuNan_HDRS}
+        ${TuNan_BASE_SRCS}
+        ${TuNan_BASE_HDRS}
+        ${TuNan_UTIL_SRCS}
+        ${TuNan_UTIL_HDRS})
+target_include_directories(${TuNan_LIB}
         PRIVATE
         ${PROJ_INCLUDE_DIR})
+set_property(TARGET ${TuNan_LIB} PROPERTY CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+target_link_libraries (${TuNan_LIB} PRIVATE $<$<BOOL:PBRT_CUDA_ENABLED>:cuda_build_configuration>)
 
-set(RENDER_MATERIAL_LIB "tunan_material")
-add_library(${RENDER_MATERIAL_LIB}
-        ${RENDER_MATERIAL_SRCS})
-target_include_directories(
-        ${RENDER_MATERIAL_LIB}
+if (BUILD_GPU_ENABLED)
+    set_property (TARGET ${TuNan_LIB} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+    add_dependencies(${TuNan_LIB} render_ptx_lib)
+    target_link_libraries(${TuNan_LIB}
+            PRIVATE
+            render_ptx_lib
+            ${CUDA_LINK_LIBRARY})
+
+    target_include_directories(${TuNan_LIB}
+            PRIVATE
+            ${OPTIX_INCLUDE_DIRECTORY}
+            ${CUDA_INCLUDE_DIRECTORY})
+endif (BUILD_GPU_ENABLED)
+set_property (TARGET ${TuNan_LIB} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+
+set(PUGIXML_LIB pugixml)
+add_library(${PUGIXML_LIB} ${PUGIXML_SRCS})
+target_include_directories(${PUGIXML_LIB}
         PRIVATE
-        ${PROJ_INCLUDE_DIR}
-)
-target_link_libraries(
-        ${RENDER_MATERIAL_LIB}
-        PRIVATE
-        ${RENDER_BASE_LIB}
-        ${RENDER_UTILS_LIB}
-)
+        include/ext)
 
-set(RENDER_SAMPLER_LIB "tunan_sampler")
-add_library(${RENDER_SAMPLER_LIB}
-        ${RENDER_SAMPLER_SRCS})
-set_property (TARGET ${RENDER_SAMPLER_LIB} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-set_property(TARGET ${RENDER_SAMPLER_LIB} PROPERTY CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-
-target_include_directories(${RENDER_SAMPLER_LIB}
-        PRIVATE
-        ${PROJ_INCLUDE_DIR}
-        ${CUDA_INCLUDE_DIRECTORY})
-
-set(RENDER_SCENE_LIB "tunan_scene")
-add_library(${RENDER_SCENE_LIB}
-        ${RENDER_SCENE_SRCS})
-target_include_directories(
-        ${RENDER_SCENE_LIB}
-        PRIVATE
-        ${PROJ_INCLUDE_DIR}
-        ${OPTIX_INCLUDE_DIRECTORY}
-        ${CUDA_INCLUDE_DIRECTORY}
-)
-
-add_dependencies(${RENDER_SCENE_LIB} ${RENDER_UTILS_LIB} render_ptx_lib)
-
-target_link_libraries(
-        ${RENDER_SCENE_LIB}
-        PRIVATE
-        ${RENDER_BASE_LIB}
-        ${RENDER_UTILS_LIB}
-        render_ptx_lib
-        ${CUDA_LINK_LIBRARY}
-)
-
-set(RENDER_PARALLEL_LIB tunan_parallel)
-add_library(${RENDER_PARALLEL_LIB}
-        ${RENDER_PARALLEL_SRCS})
-target_link_libraries(
-        ${RENDER_PARALLEL_LIB}
-        PRIVATE
-        ${CUDA_LINK_LIBRARY}
-)
-target_include_directories(
-        ${RENDER_PARALLEL_LIB}
-        PRIVATE
-        ${PROJ_INCLUDE_DIR}
-        ${OPTIX_INCLUDE_DIRECTORY}
-        ${CUDA_INCLUDE_DIRECTORY}
-)
-
-set(RENDER_TRACER_LIB tunan_tracer)
-add_library(${RENDER_TRACER_LIB} ${RENDER_TRACER_SRCS})
-set_property (TARGET ${RENDER_TRACER_LIB} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-set_property(TARGET ${RENDER_TRACER_LIB} PROPERTY CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-
-target_link_libraries(
-        ${RENDER_TRACER_LIB}
-        PRIVATE
-        cuda_build_configuration
-        ${RENDER_UTILS_LIB}
-        ${RENDER_SAMPLER_LIB}
-        ${RENDER_PARALLEL_LIB}
-)
-target_include_directories(
-        ${RENDER_TRACER_LIB}
-        PRIVATE
-        ${PROJ_INCLUDE_DIR}
-        ${OPTIX_INCLUDE_DIRECTORY}
-        ${CUDA_INCLUDE_DIRECTORY}
-)
-
-add_executable(${PROJECT_NAME} ${RENDER_SRCS})
+add_executable(${PROJECT_NAME} main.cpp)
 target_link_libraries(
         ${PROJECT_NAME}
         PRIVATE
-        ${RENDER_TRACER_LIB}
-        ${RENDER_SAMPLER_LIB}
-        ${RENDER_UTILS_LIB}
-        ${RENDER_SCENE_LIB}
-        ${RENDER_BASE_LIB}
-        ${RENDER_MEDIA_LIB}
-        ${RENDER_MATERIAL_LIB}
-)
+        ${PUGIXML_LIB}
+        ${TuNan_LIB})
 target_include_directories(
         ${PROJECT_NAME}
         PRIVATE
         ${OPTIX_INCLUDE_DIRECTORY}
         ${CUDA_INCLUDE_DIRECTORY}
-        ${PROJ_INCLUDE_DIR}
-)
+        ${PROJ_INCLUDE_DIR})
