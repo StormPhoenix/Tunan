@@ -6,12 +6,21 @@
 #include <tunan/parallel/parallels.h>
 #include <tunan/sampler/SamplerFactory.h>
 
+#ifdef __RENDER_GPU_MODE__
+
+#include <tunan/scene/OptixIntersectable.h>
+
+#endif
+
 namespace RENDER_NAMESPACE {
     namespace tracer {
         using sampler::SamplerFactory;
 
         PathTracer::PathTracer(SceneData &parsedScene, MemoryAllocator &allocator) :
-                _allocator(allocator), _world(parsedScene, allocator) {
+                _allocator(allocator) {
+#ifdef __RENDER_GPU_MODE__
+            _world = new OptixIntersectable(parsedScene, allocator);
+#endif
             _filmWidth = parsedScene.width;
             _filmHeight = parsedScene.height;
             _camera = allocator.newObject<Camera>(parsedScene.cameraToWorld, parsedScene.fov, _filmWidth, _filmHeight);
@@ -36,13 +45,15 @@ namespace RENDER_NAMESPACE {
                     generateCameraRays(sampleIndex, row);
                     // TODO Need synchronized ?
                     for (int bounce = 0; bounce < _maxBounce; bounce++) {
-                        _world.intersect(_rayQueue, _missQueue, _materialEvaQueue, _mediaEvaQueue, _areaLightEvaQueue);
+                        _world->intersect(_rayQueue, _missQueue, _materialEvaQueue, _mediaEvaQueue, _areaLightEvaQueue);
                         // TODO Handle media queue
                         // TODO Handle area light queue
 
-                        evaluateMissRays(sampleIndex, row);
+                        // TODO
+//                        evaluateMissRays(sampleIndex, row);
 
-                        evaluateMateriaAndBSDF(sampleIndex, row);
+                        // TODO
+//                        evaluateMaterialAndBSDF(sampleIndex, row);
                     }
                 }
             }
@@ -58,7 +69,6 @@ namespace RENDER_NAMESPACE {
 
         template<typename SamplerType>
         void PathTracer::generateCameraRays(int sampleIndex, int scanLine) {
-            // TODO refactor cuda declare
             auto func = RENDER_CPU_GPU_LAMBDA(int idx) {
                 int pixelY = idx / _filmWidth + scanLine;
                 int pixelX = idx % _filmWidth;
@@ -75,5 +85,6 @@ namespace RENDER_NAMESPACE {
             int nItem = _rayQueue->size();
             parallel::parallelFor(func, nItem);
         }
+
     }
 }

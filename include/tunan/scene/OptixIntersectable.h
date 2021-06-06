@@ -6,15 +6,15 @@
 #define TUNAN_OPTIXINTERSECTABLE_H
 
 #include <tunan/common.h>
-#include <tunan/base/containers.h>
+#include <tunan/tracer/tracer.h>
 #include <tunan/gpu/optix_ray.h>
+#include <tunan/base/containers.h>
 #include <tunan/material/Material.h>
 #include <tunan/scene/scene_data.h>
-#include <tunan/tracer/path.h>
+#include <tunan/scene/SceneIntersectable.h>
 #include <tunan/utils/MemoryAllocator.h>
 
 #include <optix.h>
-
 #include <string>
 #include <vector>
 #include <map>
@@ -22,6 +22,7 @@
 namespace RENDER_NAMESPACE {
     using material::Material;
     using utils::MemoryAllocator;
+    using namespace tracer;
 
     typedef struct OptiXState {
         RayParams params;
@@ -49,12 +50,11 @@ namespace RENDER_NAMESPACE {
         T data;
     };
 
-    typedef SbtRecord <RayGenData> RaygenRecord;
-    typedef SbtRecord <ClosestHitData> ClosestHitRecord;
-    typedef SbtRecord <MissData> MissRecord;
+    typedef SbtRecord<RayGenData> RaygenRecord;
+    typedef SbtRecord<ClosestHitData> ClosestHitRecord;
+    typedef SbtRecord<MissData> MissRecord;
 
-    using namespace tracer;
-    class OptixIntersectable {
+    class OptixIntersectable : public SceneIntersectable {
     public:
         OptixIntersectable(SceneData &sceneData, MemoryAllocator &allocator);
 
@@ -90,7 +90,7 @@ namespace RENDER_NAMESPACE {
         MemoryAllocator &allocator;
         uint64_t buildBVHBytes = 0;
         // Closest hit SBT records
-        base::Vector <ClosestHitRecord> closestHitRecords;
+        base::Vector<ClosestHitRecord> closestHitRecords;
     };
 }
 

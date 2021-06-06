@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.17)
 project(Tunan)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 
 INCLUDE(CheckCXXSourceCompiles)
 INCLUDE(CheckCXXSourceRuns)
@@ -71,7 +71,7 @@ if (BUILD_GPU_ENABLED)
     target_compile_options (
             cuda_build_configuration
             INTERFACE
-            "$<$<COMPILE_LANGUAGE:CUDA>:--use_fast_math;--expt-relaxed-constexpr;--extended-lambda;--forward-unknown-to-host-compiler>"
+            "$<$<COMPILE_LANGUAGE:CUDA>:--std=c++17;--use_fast_math;--expt-relaxed-constexpr;--extended-lambda;--forward-unknown-to-host-compiler>"
     )
 endif(BUILD_GPU_ENABLED)
 
@@ -123,6 +123,7 @@ set(TuNan_SRCS
         src/tunan/sampler/samplers.cpp
         src/tunan/material/materials.cpp
         src/tunan/material/Material.cpp
+        src/tunan/scene/OptixIntersectable.cpp
         src/tunan/scene/Ray.cpp
         src/tunan/scene/Camera.cpp
         src/tunan/scene/importers.cpp
@@ -161,9 +162,9 @@ if (BUILD_GPU_ENABLED)
             ${TuNan_UTIL_SRCS}
             src/tunan/utils/memory/CUDAResource.cpp)
 
-    set(TuNan_SRCS
-            ${TuNan_SRCS}
-            src/tunan/scene/OptixIntersectable.cpp)
+#    set(TuNan_SRCS
+#            ${TuNan_SRCS}
+#            src/tunan/scene/OptixIntersectable.cpp)
 
     set_source_files_properties(
             include/tunan/utils/TaggedPointer.h

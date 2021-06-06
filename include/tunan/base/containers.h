@@ -9,8 +9,10 @@
 #include <tunan/common.h>
 
 #ifdef __RENDER_GPU_MODE__
+
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+
 #endif
 
 #include <initializer_list>
@@ -254,7 +256,7 @@ namespace RENDER_NAMESPACE {
             Queue() = default;
 
             RENDER_CPU_GPU
-            Queue(int maxQueueSize, const MemoryAllocator &allocator) :
+            Queue(int maxQueueSize, MemoryAllocator &allocator) :
                     maxQueueSize(maxQueueSize), allocator(allocator) {
                 buffer = allocator.allocateObjects<T>(maxQueueSize);
                 nAllocated = maxQueueSize;

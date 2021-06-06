@@ -7,56 +7,15 @@
 
 #include <tunan/common.h>
 #include <tunan/sampler/samplers.h>
-#include <tunan/scene/scene_data.h>
 #include <tunan/scene/Camera.h>
-#include <tunan/base/containers.h>
-#include <tunan/base/spectrum.h>
+#include <tunan/scene/scene_data.h>
+#include <tunan/scene/SceneIntersectable.h>
 #include <tunan/utils/MemoryAllocator.h>
-
-// TODO move OptixIntersectable.h to *.cpp file
-#ifdef __RENDER_GPU_MODE__
-#include <tunan/scene/OptixIntersectable.h>
-#endif
+#include <tunan/tracer/tracer.h>
 
 namespace RENDER_NAMESPACE {
     namespace tracer {
         using sampler::Sampler;
-
-        typedef struct RayDetails {
-            Ray ray;
-            int pixelIndex;
-        } RayDetails;
-
-        typedef struct MaterialEvaDetails {
-            // TODO
-            int bounce;
-            Point3F p;
-            Normal3F ng;
-            Normal3F ns;
-            Vector3F wo;
-            int pixelIndex;
-        } MaterialEvaDetails;
-
-        typedef struct MediaEvaDetails {
-            // TODO
-        } MediaEvaDetails;
-
-        typedef struct Pixel {
-            // TODO
-            Spectrum L;
-            int pixelX, pixelY;
-        } Pixel;
-
-        typedef struct AreaLightHitDetails {
-            // TODO
-        } AreaLightHitDetails;
-
-        typedef base::Queue<RayDetails> RayQueue;
-        typedef base::Queue<RayDetails> MissQueue;
-        typedef base::Queue<MaterialEvaDetails> MaterialEvaQueue;
-        typedef base::Queue<MediaEvaDetails> MediaEvaQueue;
-        typedef base::Queue<AreaLightHitDetails> AreaLightHitQueue;
-        typedef base::Queue<Pixel> PixelQueue;
 
         class PathTracer {
         public:
@@ -71,7 +30,7 @@ namespace RENDER_NAMESPACE {
 
             void evaluateMissRays(int sampleIndex, int scanLine);
 
-            void evaluateMateriaAndBSDF(int sampleIndex, int scanLine);
+            void evaluateMaterialAndBSDF(int sampleIndex, int scanLine);
 
         private:
             Camera *_camera;
@@ -92,7 +51,7 @@ namespace RENDER_NAMESPACE {
             int _nIterations = 100;
 
             // TODO extract base class {WorldIntersectable}
-            OptixIntersectable _world;
+            SceneIntersectable *_world;
             MemoryAllocator &_allocator;
         };
     }

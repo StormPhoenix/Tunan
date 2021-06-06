@@ -9,7 +9,6 @@
 #include <tunan/math.h>
 
 namespace RENDER_NAMESPACE {
-
     class Ray {
     public:
         Ray();
