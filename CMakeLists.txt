@@ -73,6 +73,7 @@ if (BUILD_GPU_ENABLED)
             INTERFACE
             "$<$<COMPILE_LANGUAGE:CUDA>:--std=c++17;--use_fast_math;--expt-relaxed-constexpr;--extended-lambda;--forward-unknown-to-host-compiler>"
     )
+#    --std=c++17;
 endif(BUILD_GPU_ENABLED)
 
 ### Compile *.PTX code

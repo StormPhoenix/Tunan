@@ -44,7 +44,7 @@ int main() {
     importer.importScene(sceneDirectory, parsedScene, allocator);
 
     PathTracer tracer(parsedScene, allocator);
-
+    tracer.render();
      // TODO think about resource deallocation
 //    delete resource;
     std::cout << "Hello, World!" << std::endl;

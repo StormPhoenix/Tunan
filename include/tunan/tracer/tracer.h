@@ -18,6 +18,7 @@ namespace RENDER_NAMESPACE {
         typedef struct RayDetails {
             Ray ray;
             int pixelIndex;
+            int bounce = 0;
         } RayDetails;
 
         typedef struct MaterialEvaDetails {
@@ -34,22 +35,30 @@ namespace RENDER_NAMESPACE {
             // TODO
         } MediaEvaDetails;
 
-        typedef struct Pixel {
-            // TODO
+        typedef struct RaySamples {
+            // 3 samples
+            struct {
+                Float u;
+                Point2F uv;
+            } scatter;
+        } RaySamples;
+
+        typedef struct PixelState {
             Spectrum L;
             int pixelX, pixelY;
-        } Pixel;
+            RaySamples raySamples;
+        } PixelState;
 
         typedef struct AreaLightHitDetails {
             // TODO
         } AreaLightHitDetails;
 
-        typedef base::Queue<RayDetails> RayQueue;
-        typedef base::Queue<RayDetails> MissQueue;
-        typedef base::Queue<MaterialEvaDetails> MaterialEvaQueue;
-        typedef base::Queue<MediaEvaDetails> MediaEvaQueue;
-        typedef base::Queue<AreaLightHitDetails> AreaLightHitQueue;
-        typedef base::Queue<Pixel> PixelQueue;
+        typedef base::Queue <RayDetails> RayQueue;
+        typedef base::Queue <RayDetails> MissQueue;
+        typedef base::Queue <MaterialEvaDetails> MaterialEvaQueue;
+        typedef base::Queue <MediaEvaDetails> MediaEvaQueue;
+        typedef base::Queue <AreaLightHitDetails> AreaLightHitQueue;
+        typedef base::Vector <PixelState> PixelStateArray;
     }
 }
 

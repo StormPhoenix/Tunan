@@ -15,6 +15,7 @@ namespace RENDER_NAMESPACE {
     using base::Spectrum;
     using base::Transform;
     using sampler::Sampler;
+    using sampler::CameraSamples;
 
     class Camera {
     public:
@@ -27,7 +28,7 @@ namespace RENDER_NAMESPACE {
         Ray generateRay(Float pixelX, Float pixelY) const;
 
         RENDER_CPU_GPU
-        Ray generateRayDifferential(Float pixelX, Float pixelY, Sampler sampler) const;
+        Ray generateRayDifferential(Float pixelX, Float pixelY, const CameraSamples &cameraSamples) const;
 
         RENDER_CPU_GPU
         void pdfWe(const Ray &ray, Float &pdfPos, Float &pdfDir) const;

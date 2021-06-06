@@ -28,6 +28,11 @@ namespace RENDER_NAMESPACE {
             template<typename SamplerType>
             void generateCameraRays(int sampleIndex, int scanLine);
 
+            void generateRaySamples(int sampleIndex);
+
+            template<typename SamplerType>
+            void generateRaySamples(int sampleIndex);
+
             void evaluateMissRays(int sampleIndex, int scanLine);
 
             void evaluateMaterialAndBSDF(int sampleIndex, int scanLine);
@@ -36,6 +41,7 @@ namespace RENDER_NAMESPACE {
             Camera *_camera;
             Sampler _sampler;
             int _filmWidth, _filmHeight;
+            int _maxQueueSize = 0;
             int _maxBounce;
 
             // Queues
@@ -44,7 +50,7 @@ namespace RENDER_NAMESPACE {
             MaterialEvaQueue *_materialEvaQueue;
             MediaEvaQueue *_mediaEvaQueue;
             AreaLightHitQueue *_areaLightEvaQueue;
-            PixelQueue *_pixelQueue;
+            PixelStateArray *_pixelArray;
 
             // TODO temporay tracing config
             int _scanLines = 100;

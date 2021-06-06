@@ -4,6 +4,7 @@
 
 #include <tunan/tracer/path.h>
 #include <tunan/parallel/parallels.h>
+#include <tunan/sampler/samplers.h>
 #include <tunan/sampler/SamplerFactory.h>
 
 #ifdef __RENDER_GPU_MODE__
@@ -20,6 +21,8 @@ namespace RENDER_NAMESPACE {
                 _allocator(allocator) {
 #ifdef __RENDER_GPU_MODE__
             _world = new OptixIntersectable(parsedScene, allocator);
+#else
+            // TODO cpu scene intersectable
 #endif
             _filmWidth = parsedScene.width;
             _filmHeight = parsedScene.height;
@@ -27,25 +30,27 @@ namespace RENDER_NAMESPACE {
             _sampler = SamplerFactory::newSampler(parsedScene.sampleNum, _allocator);
 
             // Initialize queues
-            int maxQueueSize = _filmWidth * _scanLines;
-            _rayQueue = allocator.newObject<RayQueue>(maxQueueSize, allocator);
-            _missQueue = allocator.newObject<MissQueue>(maxQueueSize, allocator);
-            _mediaEvaQueue = allocator.newObject<MediaEvaQueue>(maxQueueSize, allocator);
-            _materialEvaQueue = allocator.newObject<MaterialEvaQueue>(maxQueueSize, allocator);
-            _areaLightEvaQueue = allocator.newObject<AreaLightHitQueue>(maxQueueSize, allocator);
-            _pixelQueue = allocator.newObject<PixelQueue>(maxQueueSize, allocator);
+            _maxQueueSize = _filmWidth * _scanLines;
+            _rayQueue = allocator.newObject<RayQueue>(_maxQueueSize, allocator);
+            _missQueue = allocator.newObject<MissQueue>(_maxQueueSize, allocator);
+            _mediaEvaQueue = allocator.newObject<MediaEvaQueue>(_maxQueueSize, allocator);
+            _materialEvaQueue = allocator.newObject<MaterialEvaQueue>(_maxQueueSize, allocator);
+            _areaLightEvaQueue = allocator.newObject<AreaLightHitQueue>(_maxQueueSize, allocator);
+
+            _pixelArray = allocator.newObject<PixelStateArray>(allocator);
+            _pixelArray->reset(_maxQueueSize);
         }
 
         void PathTracer::render() {
             for (int sampleIndex = 0; sampleIndex < _nIterations; sampleIndex++) {
                 for (int row = 0; row < _filmHeight; row += _scanLines) {
-                    // TODO Reset queues
+                    // TODO other queues also need resets
                     _rayQueue->reset();
-                    // Generate camera rays
                     generateCameraRays(sampleIndex, row);
                     // TODO Need synchronized ?
                     for (int bounce = 0; bounce < _maxBounce; bounce++) {
-                        _world->intersect(_rayQueue, _missQueue, _materialEvaQueue, _mediaEvaQueue, _areaLightEvaQueue);
+                        generateRaySamples(sampleIndex);
+//                        _world->intersect(_rayQueue, _missQueue, _materialEvaQueue, _mediaEvaQueue, _areaLightEvaQueue);
                         // TODO Handle media queue
                         // TODO Handle area light queue
 
@@ -57,6 +62,34 @@ namespace RENDER_NAMESPACE {
                     }
                 }
             }
+        }
+
+        void PathTracer::generateRaySamples(int sampleIndex) {
+            auto func = [=](auto sampler) {
+                using SamplerType = typename std::remove_reference<decltype(*sampler)>::type;
+                return generateRaySamples<SamplerType>(sampleIndex);
+            };
+            _sampler.proxyCall(func);
+        }
+
+        template<typename SamplerType>
+        void PathTracer::generateRaySamples(int sampleIndex) {
+            auto func = RENDER_CPU_GPU_LAMBDA(const RayDetails &r) {
+                int bounce = r.bounce;
+                int pixelIndex = r.pixelIndex;
+                // TODO very important
+                // 2 for CameraSamples
+                int dimension = 2 + 3 * bounce;
+
+                PixelState &pixelState = (*_pixelArray)[pixelIndex];
+
+                SamplerType sampler = (*_sampler.cast<SamplerType>());
+                sampler.setCurrentSample({pixelState.pixelX, pixelState.pixelY}, sampleIndex, dimension);
+
+                pixelState.raySamples.scatter.u = sampler.sample1D();
+                pixelState.raySamples.scatter.uv = sampler.sample2D();
+            };
+            parallel::parallelForQueue(func, _rayQueue, _maxQueueSize);
         }
 
         void PathTracer::generateCameraRays(int sampleIndex, int scanLine) {
@@ -73,17 +106,32 @@ namespace RENDER_NAMESPACE {
                 int pixelY = idx / _filmWidth + scanLine;
                 int pixelX = idx % _filmWidth;
 
+                if (pixelY < 0 || pixelY >= _filmHeight ||
+                    pixelX < 0 || pixelX >= _filmWidth) {
+                    return;
+                }
+
                 SamplerType sampler = (*_sampler.cast<SamplerType>());
                 sampler.forPixel(Point2I(pixelX, pixelY));
+                sampler.setSampleIndex(sampleIndex);
 
-                // TODO use: generateRayDifferential
-                RayDetails &rayDetails = (*_rayQueue)[idx];
-                rayDetails.ray = _camera->generateRay(pixelX, pixelY);
+                CameraSamples cs;
+                cs.uvLens = sampler.sample2D();
+
+                RayDetails rayDetails;
+                rayDetails.ray = _camera->generateRayDifferential(pixelX, pixelY, cs);
                 rayDetails.pixelIndex = idx;
+                rayDetails.bounce = 0;
+                _rayQueue->enqueue(rayDetails);
+
+                PixelState &pixelState = (*_pixelArray)[idx];
+                pixelState.L = Spectrum(0);
+                pixelState.pixelX = pixelX;
+                pixelState.pixelY = pixelY;
+                return;
             };
 
-            int nItem = _rayQueue->size();
-            parallel::parallelFor(func, nItem);
+            parallel::parallelFor(func, _maxQueueSize);
         }
 
     }

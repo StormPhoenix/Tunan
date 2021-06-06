@@ -12,16 +12,26 @@
 
 namespace RENDER_NAMESPACE {
     namespace sampler {
+        typedef struct CameraSamples {
+            Point2F uvLens;
+        } CameraSamples;
+
         class IndependentSampler {
         public:
             IndependentSampler(int nSamples, int seed = 0) :
                     _nSamples(nSamples), _seed(seed) {}
 
             RENDER_CPU_GPU
+            void setCurrentSample(const Point2I pixel, int sampleIndex, int dimension);
+
+            RENDER_CPU_GPU
             void forPixel(const Point2I pixel);
 
             RENDER_CPU_GPU
             void setSampleIndex(int sampleIndex);
+
+            RENDER_CPU_GPU
+            void advance(int dimension);
 
             RENDER_CPU_GPU
             bool nextSampleRound();
@@ -51,9 +61,13 @@ namespace RENDER_NAMESPACE {
         public:
             using TaggedPointer::TaggedPointer;
 
+            RENDER_CPU_GPU inline void setCurrentSample(const Point2I pixel, int sampleIndex, int dimension);
+
             RENDER_CPU_GPU inline void forPixel(const Point2I pixel);
 
             RENDER_CPU_GPU inline void setSampleIndex(int sampleIndex);
+
+            RENDER_CPU_GPU inline void advance(int dimension);
 
             RENDER_CPU_GPU inline bool nextSampleRound();
 
@@ -62,7 +76,7 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU inline Vector2F sample2D();
         };
 
-        RENDER_CPU_GPU Vector2F diskUniformSampling(Sampler sampler, Float radius = 1.);
+        RENDER_CPU_GPU Vector2F diskUniformSampling(const Point2F &uv, Float radius = 1.);
     }
 }
 

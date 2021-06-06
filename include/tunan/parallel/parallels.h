@@ -6,6 +6,7 @@
 #define TUNAN_PARALLELS_H
 
 #include <tunan/common.h>
+#include <tunan/base/containers.h>
 
 #ifdef __RENDER_GPU_MODE__
 
@@ -49,6 +50,7 @@ namespace RENDER_NAMESPACE {
 
             int gridSize = (count + blockSize - 1) / blockSize;
             kernel<<<gridSize, blockSize>>>(func, count);
+            CUDA_CHECK(cudaDeviceSynchronize());
         }
 
 #endif
@@ -57,6 +59,20 @@ namespace RENDER_NAMESPACE {
         void parallelFor(F func, int count) {
 #ifdef __RENDER_GPU_MODE__
             gpuParallelFor(func, count);
+#endif
+            // TODO unimplemented
+        }
+
+        template<typename F, typename QueueItem>
+        void parallelForQueue(F func, const base::Queue <QueueItem> *queue, size_t maxQueueSize) {
+#ifdef __RENDER_GPU_MODE__
+            auto f = [=] RENDER_GPU(int idx) mutable {
+                if (idx >= queue->size()) {
+                    return;
+                }
+                func((*queue)[idx]);
+            };
+            gpuParallelFor(f, maxQueueSize);
 #endif
             // TODO unimplemented
         }

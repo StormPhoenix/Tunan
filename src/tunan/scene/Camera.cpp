@@ -56,14 +56,14 @@ namespace RENDER_NAMESPACE {
     }
 
     RENDER_CPU_GPU
-    Ray Camera::generateRayDifferential(Float pixelX, Float pixelY, Sampler sampler) const {
+    Ray Camera::generateRayDifferential(Float pixelX, Float pixelY, const CameraSamples &cameraSamples) const {
         Float x = pixelX;
         Float y = pixelY;
 
         // Camera space
         Point3F pOrigin = Point3F(0, 0, 0);
         if (_lensRadius > 0) {
-            Vector2F diskSample = sampler::diskUniformSampling(sampler, _lensRadius);
+            Vector2F diskSample = sampler::diskUniformSampling(cameraSamples.uvLens, _lensRadius);
             pOrigin = Point3F(diskSample.x, diskSample.y, 0);
         }
 
