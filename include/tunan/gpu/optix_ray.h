@@ -6,11 +6,15 @@
 #define TUNAN_OPTIX_RAY_H
 
 #include <optix.h>
+#include <tunan/tracer/path.h>
 #include <tunan/scene/TriangleMesh.h>
 #include <tunan/scene/Camera.h>
 
 namespace RENDER_NAMESPACE {
+    using namespace tracer;
+
     struct RayParams {
+        RayQueue *rayQueue;
         uchar3 *outputImage;
         OptixTraversableHandle traversable;
     };

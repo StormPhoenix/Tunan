@@ -3,7 +3,7 @@
 //
 
 #include <tunan/material/Material.h>
-#include <tunan/material/Lambertian.h>
+#include <tunan/material/materials.h>
 
 namespace RENDER_NAMESPACE {
     namespace material {

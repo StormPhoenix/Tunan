@@ -5,6 +5,7 @@
 #include <tunan/scene/Ray.h>
 
 namespace RENDER_NAMESPACE {
+    using namespace math;
     Ray::Ray() : _minStep(0.0), _step(Infinity) {}
 
     RENDER_CPU_GPU

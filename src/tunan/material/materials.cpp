@@ -1,8 +1,8 @@
 //
-// Created by StormPhoenix on 2021/5/31.
+// Created by Storm Phoenix on 2021/6/6.
 //
 
-#include <tunan/material/Lambertian.h>
+#include <tunan/material/materials.h>
 
 namespace RENDER_NAMESPACE {
     namespace material {

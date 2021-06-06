@@ -5,6 +5,8 @@
 #include <tunan/scene/Camera.h>
 
 namespace RENDER_NAMESPACE {
+    using namespace math;
+
     RENDER_CPU_GPU
     Camera::Camera(Transform cameraToWorld, Float hFov,
                    int resolutionWidth, int resolutionHeight,

@@ -18,6 +18,8 @@
 
 namespace RENDER_NAMESPACE {
     namespace sampler {
+        using namespace math;
+
         class RNG {
         public:
             RENDER_CPU_GPU RNG() : state(PCG32_DEFAULT_STATE), inc(PCG32_DEFAULT_STREAM) {};

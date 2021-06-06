@@ -1,9 +1,9 @@
 //
-// Created by StormPhoenix on 2021/5/31.
+// Created by Storm Phoenix on 2021/6/6.
 //
 
-#ifndef TUNAN_LAMBERTIAN_H
-#define TUNAN_LAMBERTIAN_H
+#ifndef TUNAN_MATERIALS_H
+#define TUNAN_MATERIALS_H
 
 #include <tunan/common.h>
 #include <tunan/bsdf/bxdf/BxDF.h>
@@ -32,7 +32,8 @@ namespace RENDER_NAMESPACE {
         private:
             Spectrum _Kd;
         };
+
     }
 }
 
-#endif //TUNAN_LAMBERTIAN_H
+#endif //TUNAN_MATERIALS_H

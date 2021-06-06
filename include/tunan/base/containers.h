@@ -5,10 +5,17 @@
 #ifndef TUNAN_CONTAINER_H
 #define TUNAN_CONTAINER_H
 
-#include <cassert>
 #include <tunan/utils/MemoryAllocator.h>
 #include <tunan/common.h>
+
+#ifdef __RENDER_GPU_MODE__
+#include <cuda.h>
+#include <cuda_runtime_api.h>
+#endif
+
 #include <initializer_list>
+#include <cassert>
+#include <atomic>
 
 namespace RENDER_NAMESPACE {
     namespace base {
@@ -237,6 +244,102 @@ namespace RENDER_NAMESPACE {
         private:
             int nAllocated;
             int used;
+            T *buffer = nullptr;
+            MemoryAllocator allocator;
+        };
+
+        template<typename T>
+        class Queue {
+        public:
+            Queue() = default;
+
+            RENDER_CPU_GPU
+            Queue(int maxQueueSize, const MemoryAllocator &allocator) :
+                    maxQueueSize(maxQueueSize), allocator(allocator) {
+                buffer = allocator.allocateObjects<T>(maxQueueSize);
+                nAllocated = maxQueueSize;
+            }
+
+            RENDER_CPU_GPU
+            T &operator[](size_t index) {
+                assert(index >= 0 && index < _size);
+                return buffer[index];
+            }
+
+            RENDER_CPU_GPU
+            const T &operator[](size_t index) const {
+                assert(index >= 0 && index < _size);
+                return buffer[index];
+            }
+
+
+            RENDER_CPU_GPU
+            int enqueue(T &val) {
+                int index = push();
+                buffer[index] = val;
+                return index;
+            }
+
+            RENDER_CPU_GPU
+            int enqueue(T &&val) {
+                int index = push();
+                buffer[index] = val;
+                return index;
+            }
+
+            RENDER_CPU_GPU
+            T dequeue() {
+                int index = pop() - 1;
+                return buffer[index];
+            }
+
+            RENDER_CPU_GPU
+            int size() const {
+#ifdef __RENDER_GPU_MODE__
+                return _size;
+#else
+                return _size.load(std::memory_order_relaxed);
+#endif
+            }
+
+            RENDER_CPU_GPU
+            void reset() {
+#ifdef __RENDER_GPU_MODE__
+                _size = 0;
+#else
+                _size.store(0, std::memory_order_relaxed);
+#endif
+            }
+
+        private:
+            int push() {
+                assert(_size < maxQueueSize);
+#ifdef __RENDER_GPU_MODE__
+                return atomicAdd(&_size, 1);
+#else
+                return _size.fetch_add(1, std::memory_order_relaxed);
+#endif
+            }
+
+            int pop() {
+                assert(_size > 0);
+#ifdef __RENDER_GPU_MODE__
+                return atomicSub(&_size, 1);
+#else
+                return _size.fetch_sub(1, std::memory_order_relaxed);
+#endif
+            }
+
+        private:
+            int maxQueueSize = 0;
+
+#ifdef __RENDER_GPU_MODE__
+            int _size = 0;
+#else
+            std::atomic<int> _size{0};
+#endif
+
+            int nAllocated = 0;
             T *buffer = nullptr;
             MemoryAllocator allocator;
         };

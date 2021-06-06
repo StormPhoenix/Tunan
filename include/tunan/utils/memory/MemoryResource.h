@@ -6,6 +6,7 @@
 #define TUNAN_MEMORYRESOURCE_H
 
 #include <tunan/common.h>
+#include <stddef.h>
 
 namespace RENDER_NAMESPACE {
     namespace utils {

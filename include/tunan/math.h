@@ -129,7 +129,7 @@ namespace RENDER_NAMESPACE {
 #ifdef __RENDER_GPU_MODE__
             return isnan(val);
 #else
-            return std::isnan(v);
+            return std::isnan(val);
 #endif
         }
     }

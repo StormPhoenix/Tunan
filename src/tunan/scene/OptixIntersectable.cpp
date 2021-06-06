@@ -271,7 +271,10 @@ namespace RENDER_NAMESPACE {
         createSBT();
     }
 
-    void OptixIntersectable::intersect() {
+    void OptixIntersectable::intersect(RayQueue *rayQueue, MissQueue *missQueue, MaterialEvaQueue *materialEvaQueue,
+                                       MediaEvaQueue *mediaEvaQueue, AreaLightHitQueue *areaLightHitQueue) {
+        state.params.rayQueue = rayQueue;
+
         void *deviceParams;
         CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &deviceParams ), sizeof(RayParams)));
         CUDA_CHECK(cudaMemcpy(
@@ -280,8 +283,9 @@ namespace RENDER_NAMESPACE {
                 cudaMemcpyHostToDevice
         ));
 
+        int nRayItem = rayQueue->size();
         OPTIX_CHECK(optixLaunch(state.optixPipeline, state.cudaStream, CUdeviceptr(deviceParams), sizeof(RayParams),
-                                &state.sbt, filmWidth, filmHeight, /*depth=*/1));
+                                &state.sbt, /*width=*/nRayItem, /*height=*/1, /*depth=*/1));
         CUDA_SYNC_CHECK();
 
         // TODO delete testing image writing

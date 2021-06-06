@@ -14,6 +14,8 @@
 #define RENDER_GPU
 #endif
 
+#define RENDER_CPU_GPU_LAMBDA(...) [=, *this] RENDER_CPU_GPU(__VA_ARGS__) mutable
+
 #if defined(_RENDER_DATA_DOUBLE_)
 using Float = double;
 #else

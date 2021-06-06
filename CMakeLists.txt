@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 project(Tunan)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 INCLUDE(CheckCXXSourceCompiles)
 INCLUDE(CheckCXXSourceRuns)
@@ -121,7 +121,7 @@ set(TuNan_SRCS
         src/tunan/tracer/path.cpp
         src/tunan/sampler/SamplerFactory.cpp
         src/tunan/sampler/samplers.cpp
-        src/tunan/material/Lambertian.cpp
+        src/tunan/material/materials.cpp
         src/tunan/material/Material.cpp
         src/tunan/scene/Ray.cpp
         src/tunan/scene/Camera.cpp
@@ -132,6 +132,7 @@ set(TuNan_SRCS
 set(TuNan_HDRS
         include/tunan/common.h
         include/tunan/sampler/rng.h
+        include/tunan/material/materials.h
         include/tunan/medium/Medium.h)
 
 set(TuNan_BASE_SRCS

@@ -14,6 +14,7 @@ __constant__ RayParams params;
 }
 
 extern "C" __global__ void __raygen__findclosesthit() {
+
     uint3 launch_index = optixGetLaunchIndex();
     unsigned int pixel_x = launch_index.x;
     unsigned int pixel_y = launch_index.y;

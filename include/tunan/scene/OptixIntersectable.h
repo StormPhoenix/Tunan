@@ -7,10 +7,11 @@
 
 #include <tunan/common.h>
 #include <tunan/base/containers.h>
-#include <tunan/scene/scene_data.h>
-#include <tunan/material/Material.h>
-#include <tunan/utils/MemoryAllocator.h>
 #include <tunan/gpu/optix_ray.h>
+#include <tunan/material/Material.h>
+#include <tunan/scene/scene_data.h>
+#include <tunan/tracer/path.h>
+#include <tunan/utils/MemoryAllocator.h>
 
 #include <optix.h>
 
@@ -43,53 +44,54 @@ namespace RENDER_NAMESPACE {
 
     template<typename T>
     struct __align__(OPTIX_SBT_RECORD_ALIGNMENT) SbtRecord {
-    __align__(OPTIX_SBT_RECORD_ALIGNMENT)
-    char header[OPTIX_SBT_RECORD_HEADER_SIZE];
-    T data;
-};
+        __align__(OPTIX_SBT_RECORD_ALIGNMENT)
+        char header[OPTIX_SBT_RECORD_HEADER_SIZE];
+        T data;
+    };
 
-typedef SbtRecord <RayGenData> RaygenRecord;
-typedef SbtRecord <ClosestHitData> ClosestHitRecord;
-typedef SbtRecord <MissData> MissRecord;
+    typedef SbtRecord <RayGenData> RaygenRecord;
+    typedef SbtRecord <ClosestHitData> ClosestHitRecord;
+    typedef SbtRecord <MissData> MissRecord;
 
-class OptixIntersectable {
-public:
-    OptixIntersectable(SceneData &sceneData, MemoryAllocator &allocator);
+    using namespace tracer;
+    class OptixIntersectable {
+    public:
+        OptixIntersectable(SceneData &sceneData, MemoryAllocator &allocator);
 
-    void buildIntersectionStruct(SceneData &sceneData);
+        void buildIntersectionStruct(SceneData &sceneData);
 
-    void intersect();
+        void intersect(RayQueue *rayQueue, MissQueue *missQueue, MaterialEvaQueue *materialEvaQueue,
+                       MediaEvaQueue *mediaEvaQueue, AreaLightHitQueue *areaLightHitQueue);
 
-private:
-    void initParams(SceneData &sceneData);
+    private:
+        void initParams(SceneData &sceneData);
 
-    void createContext();
+        void createContext();
 
-    void buildAccelStruct(SceneData &sceneData);
+        void buildAccelStruct(SceneData &sceneData);
 
-    void createModule();
+        void createModule();
 
-    void createProgramGroups();
+        void createProgramGroups();
 
-    void createSBT();
+        void createSBT();
 
-    void createPipeline();
+        void createPipeline();
 
-    OptixTraversableHandle createTriangleGAS(SceneData &data, OptixProgramGroup &closestHitPG);
+        OptixTraversableHandle createTriangleGAS(SceneData &data, OptixProgramGroup &closestHitPG);
 
-    OptixTraversableHandle buildBVH(const std::vector<OptixBuildInput> &buildInputs);
+        OptixTraversableHandle buildBVH(const std::vector<OptixBuildInput> &buildInputs);
 
-private:
-    // TODO delete
-    int filmWidth, filmHeight;
-    OptiXState state;
-    // Memory allocator
-    MemoryAllocator &allocator;
-    uint64_t buildBVHBytes = 0;
-    // Closest hit SBT records
-    base::Vector <ClosestHitRecord> closestHitRecords;
-};
-
+    private:
+        // TODO delete
+        int filmWidth, filmHeight;
+        OptiXState state;
+        // Memory allocator
+        MemoryAllocator &allocator;
+        uint64_t buildBVHBytes = 0;
+        // Closest hit SBT records
+        base::Vector <ClosestHitRecord> closestHitRecords;
+    };
 }
 
 #endif //TUNAN_OPTIXINTERSECTABLE_H
