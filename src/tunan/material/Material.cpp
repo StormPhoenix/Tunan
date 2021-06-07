@@ -8,7 +8,7 @@
 namespace RENDER_NAMESPACE {
     namespace material {
         RENDER_CPU_GPU
-        inline void Material::evaluateBSDF(SurfaceInteraction &insect, MemoryAllocator &allocator, TransportMode mode) {
+        inline BSDF Material::evaluateBSDF(SurfaceInteraction &insect, MemoryAllocator &allocator, TransportMode mode) {
             auto func = [&](auto ptr) { return ptr->evaluateBSDF(insect, allocator, mode); };
             return proxyCall(func);
         }

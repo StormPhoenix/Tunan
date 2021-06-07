@@ -6,9 +6,9 @@
 #define TUNAN_MATERIALS_H
 
 #include <tunan/common.h>
-#include <tunan/bsdf/bxdf/BxDF.h>
 #include <tunan/base/spectrum.h>
 #include <tunan/base/interactions.h>
+#include <tunan/material/Material.h>
 #include <tunan/utils/MemoryAllocator.h>
 
 namespace RENDER_NAMESPACE {
@@ -16,13 +16,12 @@ namespace RENDER_NAMESPACE {
         using utils::MemoryAllocator;
         using base::Spectrum;
         using base::SurfaceInteraction;
-        using bsdf::TransportMode;
 
         class Lambertian {
         public:
             Lambertian(Spectrum Kd) : _Kd(Kd) {}
 
-            RENDER_CPU_GPU void evaluateBSDF(SurfaceInteraction &si, MemoryAllocator &allocator,
+            RENDER_CPU_GPU BSDF evaluateBSDF(SurfaceInteraction &si, MemoryAllocator &allocator,
                                              TransportMode mode = TransportMode::RADIANCE);
 
             RENDER_CPU_GPU bool isSpecular() {

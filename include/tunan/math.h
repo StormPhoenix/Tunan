@@ -76,9 +76,6 @@ using Point4I = Vector4i;
 #define CROSS(x, y) glm::cross(x, y)
 #define LOOK_AT(eye, center, up) glm::lookAt(eye, center, up)
 
-namespace RENDER_NAMESPACE {
-    namespace math {
-
 #ifdef __RENDER_GPU_MODE__
 
 #define Infinity std::numeric_limits<Float>::infinity()
@@ -96,7 +93,7 @@ namespace RENDER_NAMESPACE {
 
 #else
 
-        static constexpr Float Infinity = std::numeric_limits<Float>::infinity();
+static constexpr Float Infinity = std::numeric_limits<Float>::infinity();
         static constexpr Float Epsilon = std::numeric_limits<Float>::epsilon() * 0.5;
         static constexpr Float MaxFloat = std::numeric_limits<Float>::max();
 
@@ -117,13 +114,14 @@ namespace RENDER_NAMESPACE {
 #define Inv_2Pi Float(0.15915494309189533577)
 #define Inv_4Pi Float(0.07957747154594766788)
 #else
-        constexpr Float Pi = 3.14159265358979323846;
-        constexpr Float Inv_Pi = 0.31830988618379067154;
-        constexpr Float Inv_2Pi = 0.15915494309189533577;
-        constexpr Float Inv_4Pi = 0.07957747154594766788;
+constexpr Float Pi = 3.14159265358979323846;
+constexpr Float Inv_Pi = 0.31830988618379067154;
+constexpr Float Inv_2Pi = 0.15915494309189533577;
+constexpr Float Inv_4Pi = 0.07957747154594766788;
 #endif // __RENDER_GPU_MODE__
 
-
+namespace RENDER_NAMESPACE {
+    namespace math {
         template<typename T>
         inline RENDER_CPU_GPU typename std::enable_if_t<std::is_floating_point<T>::value, bool> isNaN(T val) {
 #ifdef __RENDER_GPU_MODE__
@@ -131,6 +129,21 @@ namespace RENDER_NAMESPACE {
 #else
             return std::isnan(val);
 #endif
+        }
+
+        inline RENDER_CPU_GPU bool isValid(const Vector3F v) {
+            return !isNaN(v.x) && !isNaN(v.y) && !isNaN(v.z);
+        }
+
+        inline RENDER_CPU_GPU void tangentSpace(const Vector3F &tanY, Vector3F *tanX, Vector3F *tanZ) {
+            // 计算与 tanY 垂直的 tanX
+            if (std::abs(tanY.x) > std::abs(tanY.y)) {
+                (*tanX) = Vector3F(-tanY.z, 0, tanY.x);
+            } else {
+                (*tanX) = Vector3F(0, tanY.z, -tanY.y);
+            }
+            (*tanX) = NORMALIZE(*tanX);
+            (*tanZ) = NORMALIZE(CROSS(tanY, *tanX));
         }
     }
 }

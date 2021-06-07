@@ -84,7 +84,7 @@ namespace RENDER_NAMESPACE {
                     materialId = shapes[s].mesh.material_ids[f];
                     index_offset += fv;
                 }
-                entity.materialIndex = materialId;
+//                entity.materialIndex = materialId;
             }
             return true;
         }

@@ -2,6 +2,7 @@
 // Created by StormPhoenix on 2021/6/2.
 //
 
+#include <tunan/common.h>
 #include <tunan/sampler/samplers.h>
 
 namespace RENDER_NAMESPACE {
@@ -106,5 +107,21 @@ namespace RENDER_NAMESPACE {
 
             return Vector2F(r * std::cos(theta), r * std::sin(theta));
         }
+
+        RENDER_CPU_GPU Vector3F hemiCosineSampling(const Vector2F &uv) {
+            Vector2F sample = uv;
+            // fi = 2 * Pi * sampleU
+            Float sampleU = sample.x;
+            // sampleV = sin^2(theta)
+            Float sampleV = sample.y;
+            // x = sin(theta) * cos(fi)
+            Float x = sqrt(sampleV) * cos(2 * Pi * sampleU);
+            // y = cos(theta)
+            Float y = sqrt(1 - sampleV);
+            // z = sin(theta) * sin(fi)
+            Float z = sqrt(sampleV) * sin(2 * Pi * sampleU);
+            return NORMALIZE(Vector3F(x, y, z));
+        }
+
     }
 }

@@ -14,6 +14,9 @@ namespace RENDER_NAMESPACE {
         class Interaction {
         public:
             RENDER_CPU_GPU
+            Interaction() = default;
+
+            RENDER_CPU_GPU
             Interaction(Point3F p, Normal3F ng, Vector3F wo, Point2F uv)
                     : p(p), ng(ng), uv(uv), wo(NORMALIZE(wo)) {}
 
@@ -27,8 +30,11 @@ namespace RENDER_NAMESPACE {
         class SurfaceInteraction : public Interaction {
         public:
             RENDER_CPU_GPU
-            SurfaceInteraction(Point3F p, Normal3F ng, Vector3F wo, Point2F uv)
-                    : Interaction(p, ng, wo, uv), ns(ng) {}
+            SurfaceInteraction() = default;
+
+            RENDER_CPU_GPU
+            SurfaceInteraction(Point3F p, Normal3F ng, Normal3F ns, Vector3F wo, Point2F uv)
+                    : Interaction(p, ng, wo, uv), ns(ns) {}
 
             Normal3F ns;
         };

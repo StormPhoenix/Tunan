@@ -8,6 +8,7 @@
 #include <tunan/utils/model_loader.h>
 #include <tunan/utils/MemoryAllocator.h>
 #include <tunan/scene/scene_data.h>
+#include <tunan/material/materials.h>
 
 #include <ext/pugixml/pugixml.hpp>
 
@@ -17,6 +18,7 @@
 namespace RENDER_NAMESPACE {
     namespace importer {
         using utils::MemoryAllocator;
+        using namespace material;
 
 #define GET_PARSE_INFO_VALUE_FUNC_DECLARE(Type, TypeUpperCase) \
     Type get##TypeUpperCase##Value(const std::string name, const Type defaultValue);                                                               \
@@ -182,6 +184,25 @@ namespace RENDER_NAMESPACE {
 
         static std::map<std::string, TagType> nodeTypeMap;
 
+        inline Vector3F toVector(const std::string &val) {
+            Vector3F ret;
+            char *tmp;
+#if defined(_RENDER_DATA_DOUBLE_)
+            ret[0] = strtod(val.c_str(), &tmp);
+                for (int i = 1; i < 3; i++) {
+                    tmp++;
+                    ret[i] = strtod(tmp, &tmp);
+                }
+#else
+            ret[0] = strtof(val.c_str(), &tmp);
+            for (int i = 1; i < 3; i++) {
+                tmp++;
+                ret[i] = strtof(tmp, &tmp);
+            }
+#endif
+            return ret;
+        }
+
         static std::string getOffset(long pos, std::string xml_file) {
             std::fstream is(xml_file);
             char buffer[1024];
@@ -333,15 +354,14 @@ namespace RENDER_NAMESPACE {
             entity.nVertices = nVertices;
             entity.vertices = allocator.allocateObjects<Point3F>(nVertices);
             {
-                // TODO delete temporay transformation
-//                entity.vertices[0] = entity.toWorld.transformPoint(Point3F(-1, -1, 0));
-//                entity.vertices[1] = entity.toWorld.transformPoint(Point3F(1, -1, 0));
-//                entity.vertices[2] = entity.toWorld.transformPoint(Point3F(1, 1, 0));
-//                entity.vertices[3] = entity.toWorld.transformPoint(Point3F(-1, 1, 0));
-                entity.vertices[0] = Point3F(-1, -1, 0);
-                entity.vertices[1] = Point3F(1, -1, 0);
-                entity.vertices[2] = Point3F(1, 1, 0);
-                entity.vertices[3] = Point3F(-1, 1, 0);
+                entity.vertices[0] = entity.toWorld.transformPoint(Point3F(-1, -1, 0));
+                entity.vertices[1] = entity.toWorld.transformPoint(Point3F(1, -1, 0));
+                entity.vertices[2] = entity.toWorld.transformPoint(Point3F(1, 1, 0));
+                entity.vertices[3] = entity.toWorld.transformPoint(Point3F(-1, 1, 0));
+//                entity.vertices[0] = Point3F(-1, -1, 0);
+//                entity.vertices[1] = Point3F(1, -1, 0);
+//                entity.vertices[2] = Point3F(1, 1, 0);
+//                entity.vertices[3] = Point3F(-1, 1, 0);
             }
 
             // Normals
@@ -349,10 +369,10 @@ namespace RENDER_NAMESPACE {
             entity.normals = allocator.allocateObjects<Normal3F>(nNormals);
             Normal3F normal(0, 0, 1);
             {
-                entity.normals[0] = normal;
-                entity.normals[1] = normal;
-                entity.normals[2] = normal;
-                entity.normals[3] = normal;
+                entity.normals[0] = entity.toWorld.transformNormal(normal);
+                entity.normals[1] = entity.toWorld.transformNormal(normal);
+                entity.normals[2] = entity.toWorld.transformNormal(normal);
+                entity.normals[3] = entity.toWorld.transformNormal(normal);
             }
 
             // UVs
@@ -409,14 +429,23 @@ namespace RENDER_NAMESPACE {
             entity.nVertices = nVertices;
             entity.vertices = allocator.allocateObjects<Point3F>(nVertices);
             {
-                entity.vertices[0] = Point3F(1, -1, -1);
-                entity.vertices[1] = Point3F(1, -1, 1);
-                entity.vertices[2] = Point3F(-1, -1, 1);
-                entity.vertices[3] = Point3F(-1, -1, -1);
-                entity.vertices[4] = Point3F(1, 1, -1);
-                entity.vertices[5] = Point3F(-1, 1, -1);
-                entity.vertices[6] = Point3F(-1, 1, 1);
-                entity.vertices[7] = Point3F(1, 1, 1);
+                entity.vertices[0] = entity.toWorld.transformPoint(Point3F(1, -1, -1));
+                entity.vertices[1] = entity.toWorld.transformPoint(Point3F(1, -1, 1));
+                entity.vertices[2] = entity.toWorld.transformPoint(Point3F(-1, -1, 1));
+                entity.vertices[3] = entity.toWorld.transformPoint(Point3F(-1, -1, -1));
+                entity.vertices[4] = entity.toWorld.transformPoint(Point3F(1, 1, -1));
+                entity.vertices[5] = entity.toWorld.transformPoint(Point3F(-1, 1, -1));
+                entity.vertices[6] = entity.toWorld.transformPoint(Point3F(-1, 1, 1));
+                entity.vertices[7] = entity.toWorld.transformPoint(Point3F(1, 1, 1));
+
+//                entity.vertices[0] = Point3F(1, -1, -1);
+//                entity.vertices[1] = Point3F(1, -1, 1);
+//                entity.vertices[2] = Point3F(-1, -1, 1);
+//                entity.vertices[3] = Point3F(-1, -1, -1);
+//                entity.vertices[4] = Point3F(1, 1, -1);
+//                entity.vertices[5] = Point3F(-1, 1, -1);
+//                entity.vertices[6] = Point3F(-1, 1, 1);
+//                entity.vertices[7] = Point3F(1, 1, 1);
             }
 
             // Vertex indices
@@ -519,8 +548,86 @@ namespace RENDER_NAMESPACE {
 
             bool good = utils::load_obj(sceneData.sceneDirectory + filename, entity, allocator);
             ASSERT(good, "Load *.obj model failed: " + filename);
+
+            // Transform mesh from object space to world space
+            {
+                for (int i = 0; i < entity.nVertices; i++) {
+                    entity.vertices[i] = entity.toWorld.transformPoint(entity.vertices[i]);
+                }
+
+                for (int i = 0; i < entity.nNormals; i++) {
+                    entity.normals[i] = entity.toWorld.transformNormal(entity.normals[i]);
+                }
+            }
+
             std::cout << "\tLoading mesh: " << filename << std::endl;
             return;
+        }
+
+        const Material createDiffuseMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
+            Material material;
+
+            // TODO not support texture for now
+            if (!info.attrExists("reflectance")) {
+                // Create default diffuse material
+//                Texture<Spectrum>::Ptr texture = std::make_shared<ConstantTexture<Spectrum>>(0.);
+//                material = _allocator.newObject<Lambertian>(texture);
+                material = allocator.newObject<Lambertian>(Spectrum(0));
+            } else {
+                auto type = info.getType("reflectance");
+                if (type == XmlAttrVal::Attr_Spectrum) {
+                    Spectrum Kd = info.getSpectrumValue("reflectance", Spectrum(0));
+//                    Texture<Spectrum>::Ptr texture = std::make_shared<ConstantTexture<Spectrum>>(albedo);
+                    material = allocator.newObject<Lambertian>(Kd);
+//                } else if (type == XmlAttrVal::Attr_SpectrumTexture) {
+//                    Texture<Spectrum>::Ptr texture = info.getSpectrumTextureValue("reflectance", nullptr);
+//                    ASSERT(texture, "Texture can't be nullptr. ");
+//                    material = _allocator.newObject<Lambertian>(texture);
+                } else {
+                    // TODO
+                    ASSERT(false, "Reflectance type not supported .");
+                }
+            }
+            return material;
+        }
+
+        void handleTagBSDF(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parent,
+                                  SceneData &sceneData, MemoryAllocator &allocator) {
+            std::string type = node.attribute("type").value();
+            std::string id = node.attribute("id").value();
+
+            Material material;
+            if (type == "diffuse") {
+                material = createDiffuseMaterial(parseInfo, allocator);
+                /*
+            } else if (type == "dielectric") {
+                material = createDielectricMaterial(parseInfo);
+            } else if (type == "mirror") {
+                material = createMirrorMaterial(parseInfo);
+            } else if (type == "glass") {
+                material = createGlassMaterial(parseInfo);
+            } else if (type == "roughconductor" || type == "conductor") {
+                material = createRoughConductorMaterial(parseInfo);
+            } else if (type == "twosided") {
+                ASSERT(!parseInfo.currentMaterial.nullable(),
+                       "BSDF twosided should have {currentMaterial} attribute. ");
+                material = (const Material) (parseInfo.currentMaterial);
+                material.setTwoSided(true);
+            } else if (type == "coating") {
+            } else if (type == "coating") {
+                material = createCoatingMaterial(parseInfo);
+            } else if (type == "plastic") {
+                material = createPlasticMaterial(parseInfo);
+                 */
+            } else {
+                ASSERT(false, "Material " + type + " not supported for now");
+            }
+
+            if (id == "") {
+                parent.currentMaterial = (const Material) (material);
+            } else {
+                sceneData.materialMap[id] = (const Material) (material);
+            }
         }
 
         static void handleTagShape(pugi::xml_node &node, XmlParseInfo &parseInfo,
@@ -537,12 +644,13 @@ namespace RENDER_NAMESPACE {
                 ASSERT(false, "Only support rectangle shape for now");
             }
 
-            // TODO ignore material
-//            Material material = parseInfo.currentMaterial;
+            ShapeEntity &entity = sceneData.entities.back();
+            Material material = parseInfo.currentMaterial;
+            entity.material = material;
 //            Medium::Ptr exteriorMedium = parseInfo.currentExteriorMedium;
 //            Medium::Ptr interiorMedium = parseInfo.currentInteriorMedium;
 
-/* ignore light
+/*
             Spectrum radiance(0.0);
             if (parseInfo.hasAreaLight) {
                 auto radianceType = parseInfo.getType("radiance");
@@ -552,7 +660,9 @@ namespace RENDER_NAMESPACE {
                     ASSERT(false, "Only support spectrum radiance for now.");
                 }
             }
+            */
 
+/*
             for (auto it = shapes->begin(); it != shapes->end(); it++) {
                 AreaLight::Ptr light = nullptr;
                 if (parseInfo.hasAreaLight) {
@@ -568,6 +678,44 @@ namespace RENDER_NAMESPACE {
                 _shapes.push_back(geometry);
             }
             */
+        }
+
+        static void handleTagLookAt(pugi::xml_node &node, XmlParseInfo &parent) {
+            const Vector3F origin = toVector(node.attribute("origin").value());
+            const Vector3F target = toVector(node.attribute("target").value());
+            const Vector3F up = toVector(node.attribute("up").value());
+
+            Matrix4F mat;
+            mat[3][0] = origin[0];
+            mat[3][1] = origin[1];
+            mat[3][2] = origin[2];
+            mat[3][3] = 1;
+
+            Vector3F forward = NORMALIZE(target - origin);
+            Vector3F left = CROSS(up, forward);
+            Vector3F realUp = CROSS(forward, left);
+            mat[0][0] = left[0];
+            mat[0][1] = left[1];
+            mat[0][2] = left[2];
+            mat[0][3] = 0;
+
+            mat[1][0] = realUp[0];
+            mat[1][1] = realUp[1];
+            mat[1][2] = realUp[2];
+            mat[1][3] = 0;
+
+            mat[2][0] = forward[0];
+            mat[2][1] = forward[1];
+            mat[2][2] = forward[2];
+            mat[2][3] = 0;
+
+            parent.transformMat = Transform(mat);
+        }
+
+        void handleTagRef(pugi::xml_node &node, XmlParseInfo &parent, SceneData &sceneData) {
+            std::string id = node.attribute("id").value();
+            ASSERT(sceneData.materialMap.count(id) > 0, "Material " + id + " Not Exists.!");
+            parent.currentMaterial = (const Material) (sceneData.materialMap[id]);
         }
 
         static void
@@ -613,24 +761,24 @@ namespace RENDER_NAMESPACE {
 //                case Tag_Texture:
 //                    handleTagTexture(node, parseInfo, parentParseInfo);
 //                    break;
-//                case Tag_BSDF:
-//                    handleTagBSDF(node, parseInfo, parentParseInfo);
-//                    break;
+                case Tag_BSDF:
+                    handleTagBSDF(node, parseInfo, parentParseInfo, sceneData, allocator);
+                    break;
                 case Tag_Shape:
                     handleTagShape(node, parseInfo, sceneData, allocator);
                     break;
-//                case Tag_Ref:
-//                    handleTagRef(node, parentParseInfo);
-//                    break;
+                case Tag_Ref:
+                    handleTagRef(node, parentParseInfo, sceneData);
+                    break;
 //                case Tag_RGB:
 //                    handleTagRGB(node, parentParseInfo);
 //                    break;
 //                case Tag_Emitter:
 //                    handleTagEmitter(node, parseInfo, parentParseInfo);
 //                    break;
-//                case Tag_LookAt:
-//                    handleTagLookAt(node, parentParseInfo);
-//                    break;
+                case Tag_LookAt:
+                    handleTagLookAt(node, parentParseInfo);
+                    break;
                 case Tag_Integrator:
                     handleTagIntegrator(node, parseInfo, sceneData);
                     break;

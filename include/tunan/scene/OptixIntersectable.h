@@ -61,7 +61,10 @@ namespace RENDER_NAMESPACE {
         void buildIntersectionStruct(SceneData &sceneData);
 
         void intersect(RayQueue *rayQueue, MissQueue *missQueue, MaterialEvaQueue *materialEvaQueue,
-                       MediaEvaQueue *mediaEvaQueue, AreaLightHitQueue *areaLightHitQueue);
+                       MediaEvaQueue *mediaEvaQueue, AreaLightHitQueue *areaLightHitQueue,
+                       PixelStateArray *pixelStateArray);
+
+        void writeImage() override;
 
     private:
         void initParams(SceneData &sceneData);

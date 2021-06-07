@@ -7,6 +7,8 @@
 #include <tunan/sampler/samplers.h>
 #include <tunan/sampler/SamplerFactory.h>
 
+#include <iostream>
+
 #ifdef __RENDER_GPU_MODE__
 
 #include <tunan/scene/OptixIntersectable.h>
@@ -50,8 +52,11 @@ namespace RENDER_NAMESPACE {
                     _rayQueue->reset();
                     generateCameraRays(sampleIndex, row);
                     for (int bounce = 0; bounce < _maxBounce; bounce++) {
+                        _missQueue->reset();
+                        _materialEvaQueue->reset();
                         generateRaySamples(sampleIndex);
-//                        _world->intersect(_rayQueue, _missQueue, _materialEvaQueue, _mediaEvaQueue, _areaLightEvaQueue);
+                        _world->intersect(_rayQueue, _missQueue, _materialEvaQueue, _mediaEvaQueue,
+                                          _areaLightEvaQueue, _pixelArray);
                         // TODO Handle media queue
                         // TODO Handle area light queue
                         // TODO
@@ -60,7 +65,17 @@ namespace RENDER_NAMESPACE {
 //                        evaluateMaterialAndBSDF(sampleIndex, row);
                     }
                 }
+                std::cout << sampleIndex << std::endl;
+                _world->writeImage();
             }
+        }
+
+        void PathTracer::evaluateMaterialAndBSDF(int sampleIndex, int scanLine) {
+            auto func = RENDER_CPU_GPU_LAMBDA(MaterialEvaDetails &m) {
+                // TODO
+//                m.material.evaluateBSDF()
+            };
+            parallel::parallelForQueue(func, _materialEvaQueue, _maxQueueSize);
         }
 
         void PathTracer::generateRaySamples(int sampleIndex) {

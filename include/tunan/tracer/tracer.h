@@ -8,12 +8,15 @@
 #include <tunan/math.h>
 #include <tunan/common.h>
 #include <tunan/scene/Ray.h>
+#include <tunan/material/Material.h>
 #include <tunan/base/spectrum.h>
 #include <tunan/base/containers.h>
+#include <tunan/base/interactions.h>
 
 namespace RENDER_NAMESPACE {
     namespace tracer {
-        using base::Spectrum;
+        using namespace base;
+        using namespace material;
 
         typedef struct RayDetails {
             Ray ray;
@@ -24,11 +27,9 @@ namespace RENDER_NAMESPACE {
         typedef struct MaterialEvaDetails {
             // TODO
             int bounce;
-            Point3F p;
-            Normal3F ng;
-            Normal3F ns;
-            Vector3F wo;
             int pixelIndex;
+            Material material;
+            SurfaceInteraction si;
         } MaterialEvaDetails;
 
         typedef struct MediaEvaDetails {

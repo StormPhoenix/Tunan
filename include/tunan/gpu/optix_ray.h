@@ -9,12 +9,17 @@
 #include <tunan/tracer/tracer.h>
 #include <tunan/scene/TriangleMesh.h>
 #include <tunan/scene/Camera.h>
+#include <tunan/material/Material.h>
 
 namespace RENDER_NAMESPACE {
     using namespace tracer;
+    using namespace material;
 
     struct RayParams {
         RayQueue *rayQueue;
+        MissQueue *missQueue;
+        MaterialEvaQueue *materialEvaQueue;
+        PixelStateArray *pixelStateArray;
         uchar3 *outputImage;
         OptixTraversableHandle traversable;
     };
@@ -25,6 +30,7 @@ namespace RENDER_NAMESPACE {
 
     struct ClosestHitData {
         TriangleMesh *mesh;
+        Material material;
     };
 
     struct MissData {

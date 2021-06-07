@@ -37,6 +37,7 @@ int main() {
     MemoryAllocator allocator(resource);
 
     std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/cornel-box/";
+//    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/cbox-bunny/";
 //    std::string sceneDirectory =  "/resource/scenes/cornel-box/";
     MitsubaSceneImporter importer = MitsubaSceneImporter();
 

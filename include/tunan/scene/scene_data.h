@@ -35,9 +35,10 @@ namespace RENDER_NAMESPACE {
         int *texcoordIndices = nullptr;
 
         bool faceNormal = false;
+        Material material;
         base::Transform toWorld;
-        std::string materialName = "";
-        int materialIndex = -1;
+//        std::string materialName = "";
+//        int materialIndex = -1;
     } ShapeEntity;
 
     typedef struct SceneData {
@@ -79,6 +80,7 @@ namespace RENDER_NAMESPACE {
         std::map<std::string, Material> namedMaterial;
 
         std::vector<Material> materials;
+        std::map<std::string, Material> materialMap;
     } SceneData;
 }
 

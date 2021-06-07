@@ -44,16 +44,18 @@ namespace RENDER_NAMESPACE {
             int _maxQueueSize = 0;
             int _maxBounce = 0;
 
+            // Pixels
+            PixelStateArray *_pixelArray;
+
             // Queues
             RayQueue *_rayQueue;
             MissQueue *_missQueue;
-            MaterialEvaQueue *_materialEvaQueue;
             MediaEvaQueue *_mediaEvaQueue;
+            MaterialEvaQueue *_materialEvaQueue;
             AreaLightHitQueue *_areaLightEvaQueue;
-            PixelStateArray *_pixelArray;
 
             // TODO temporay tracing config
-            int _scanLines = 100;
+            int _scanLines = 400;
             int _nIterations = 100;
 
             // TODO extract base class {WorldIntersectable}

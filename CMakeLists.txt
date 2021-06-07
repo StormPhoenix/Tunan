@@ -124,6 +124,7 @@ set(TuNan_SRCS
         src/tunan/sampler/samplers.cpp
         src/tunan/material/materials.cpp
         src/tunan/material/Material.cpp
+        src/tunan/material/bsdfs.cpp
         src/tunan/scene/OptixIntersectable.cpp
         src/tunan/scene/Ray.cpp
         src/tunan/scene/Camera.cpp

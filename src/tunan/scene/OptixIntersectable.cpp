@@ -163,7 +163,7 @@ namespace RENDER_NAMESPACE {
             OptixProgramGroupDesc raygenMissingDesc = {};
             raygenMissingDesc.kind = OPTIX_PROGRAM_GROUP_KIND_MISS;
             raygenMissingDesc.miss.module = state.optixModule;
-            raygenMissingDesc.miss.entryFunctionName = "__miss__findclosehit_scene";
+            raygenMissingDesc.miss.entryFunctionName = "__miss__findclosesthit";
             OPTIX_CHECK_LOG(optixProgramGroupCreate(
                     state.optixContext,
                     &raygenMissingDesc,
@@ -272,8 +272,12 @@ namespace RENDER_NAMESPACE {
     }
 
     void OptixIntersectable::intersect(RayQueue *rayQueue, MissQueue *missQueue, MaterialEvaQueue *materialEvaQueue,
-                                       MediaEvaQueue *mediaEvaQueue, AreaLightHitQueue *areaLightHitQueue) {
+                                       MediaEvaQueue *mediaEvaQueue, AreaLightHitQueue *areaLightHitQueue,
+                                       PixelStateArray *pixelStateArray) {
         state.params.rayQueue = rayQueue;
+        state.params.missQueue = missQueue;
+        state.params.pixelStateArray = pixelStateArray;
+        state.params.materialEvaQueue = materialEvaQueue;
 
         void *deviceParams;
         CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &deviceParams ), sizeof(RayParams)));
@@ -287,7 +291,10 @@ namespace RENDER_NAMESPACE {
         OPTIX_CHECK(optixLaunch(state.optixPipeline, state.cudaStream, CUdeviceptr(deviceParams), sizeof(RayParams),
                                 &state.sbt, /*width=*/nRayItem, /*height=*/1, /*depth=*/1));
         CUDA_SYNC_CHECK();
+        CUDA_CHECK(cudaFree(deviceParams));
+    }
 
+    void OptixIntersectable::writeImage() {
         // TODO delete testing image writing
         std::vector<uchar3> hostImageBuffer;
         hostImageBuffer.reserve(filmWidth * filmHeight);
@@ -297,7 +304,6 @@ namespace RENDER_NAMESPACE {
         // Write image
         utils::writeImage("test.png", filmWidth, filmHeight, 3,
                           reinterpret_cast<const unsigned char *>(hostImageBuffer.data()));
-        CUDA_CHECK(cudaFree(deviceParams));
     }
 
     OptixTraversableHandle OptixIntersectable::createTriangleGAS(SceneData &data, OptixProgramGroup &closestHitPG) {
@@ -313,14 +319,16 @@ namespace RENDER_NAMESPACE {
         // Create meshes
         for (int i = 0; i < shapeCount; i++) {
             ShapeEntity &entity = data.entities[i];
-            meshes[i] = allocator.newObject<TriangleMesh>(entity.nVertices, entity.vertices,
-                                                          entity.nTriangles, entity.vertexIndices,
-                                                          entity.toWorld);
+            meshes[i] = allocator.newObject<TriangleMesh>(
+                    entity.nVertices, entity.vertices, entity.nNormals, entity.normals,
+                    entity.nTexcoords, entity.texcoords, entity.nTriangles, entity.vertexIndices,
+                    entity.normalIndices, entity.texcoordIndices, entity.toWorld);
         }
 
         std::vector<OptixBuildInput> buildInputs;
         buildInputs.resize(shapeCount);
         for (int i = 0; i < shapeCount; i++) {
+            ShapeEntity &entity = data.entities[i];
             TriangleMesh *mesh = meshes[i];
             size_t nVertices = mesh->nVertices;
 
@@ -333,8 +341,10 @@ namespace RENDER_NAMESPACE {
             devicePtrConversion[i] = CUdeviceptr(mesh->vertices);
             input.triangleArray.vertexBuffers = &(devicePtrConversion[i]);
 
-            input.triangleArray.transformFormat = OPTIX_TRANSFORM_FORMAT_MATRIX_FLOAT12;
-            input.triangleArray.preTransform = CUdeviceptr(mesh->transformMatrix);
+            // Triangle mesh data are in object space by default
+            input.triangleArray.transformFormat = OPTIX_TRANSFORM_FORMAT_NONE;
+//            input.triangleArray.transformFormat = OPTIX_TRANSFORM_FORMAT_MATRIX_FLOAT12;
+//            input.triangleArray.preTransform = CUdeviceptr(mesh->transformMatrix);
 
             // Indices
             input.triangleArray.indexFormat = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
@@ -355,8 +365,8 @@ namespace RENDER_NAMESPACE {
             // Set shader binding table data
             ClosestHitRecord hitRecord;
             OPTIX_CHECK(optixSbtRecordPackHeader(closestHitPG, &hitRecord));
-            // TODO for testing
             hitRecord.data.mesh = mesh;
+            hitRecord.data.material = entity.material;
             closestHitRecords.push_back(hitRecord);
         }
 

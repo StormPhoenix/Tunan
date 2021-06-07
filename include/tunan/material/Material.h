@@ -7,7 +7,7 @@
 
 #include <tunan/common.h>
 #include <tunan/base/interactions.h>
-#include <tunan/bsdf/bxdf/BxDF.h>
+#include <tunan/material/bsdfs.h>
 #include <tunan/utils/TaggedPointer.h>
 #include <tunan/utils/MemoryAllocator.h>
 
@@ -17,6 +17,7 @@ namespace RENDER_NAMESPACE {
         using utils::MemoryAllocator;
         using base::SurfaceInteraction;
         using bsdf::TransportMode;
+        using bsdf::BSDF;
 
         class Lambertian;
 
@@ -24,7 +25,7 @@ namespace RENDER_NAMESPACE {
         public:
             using TaggedPointer::TaggedPointer;
 
-            RENDER_CPU_GPU inline void evaluateBSDF(SurfaceInteraction &insect, MemoryAllocator &allocator,
+            RENDER_CPU_GPU inline BSDF evaluateBSDF(SurfaceInteraction &insect, MemoryAllocator &allocator,
                                                     TransportMode mode = TransportMode::RADIANCE);
 
             RENDER_CPU_GPU inline bool isSpecular();

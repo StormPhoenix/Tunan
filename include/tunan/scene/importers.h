@@ -8,6 +8,7 @@
 #include <tunan/common.h>
 
 #include <string>
+#include <map>
 
 namespace RENDER_NAMESPACE {
     class SceneData;

@@ -77,6 +77,8 @@ namespace RENDER_NAMESPACE {
         };
 
         RENDER_CPU_GPU Vector2F diskUniformSampling(const Point2F &uv, Float radius = 1.);
+
+        RENDER_CPU_GPU Vector3F hemiCosineSampling(const Vector2F &uv);
     }
 }
 
