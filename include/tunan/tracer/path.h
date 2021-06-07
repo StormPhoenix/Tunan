@@ -42,7 +42,7 @@ namespace RENDER_NAMESPACE {
             Sampler _sampler;
             int _filmWidth, _filmHeight;
             int _maxQueueSize = 0;
-            int _maxBounce;
+            int _maxBounce = 0;
 
             // Queues
             RayQueue *_rayQueue;

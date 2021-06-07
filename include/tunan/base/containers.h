@@ -26,6 +26,7 @@ namespace RENDER_NAMESPACE {
         template<typename T, int N>
         class Array {
         public:
+            RENDER_CPU_GPU
             Array() {}
 
             RENDER_CPU_GPU
@@ -253,6 +254,7 @@ namespace RENDER_NAMESPACE {
         template<typename T>
         class Queue {
         public:
+            RENDER_CPU_GPU
             Queue() = default;
 
             RENDER_CPU_GPU
@@ -314,6 +316,7 @@ namespace RENDER_NAMESPACE {
             }
 
         private:
+            RENDER_CPU_GPU
             int push() {
                 assert(_size < maxQueueSize);
 #ifdef __RENDER_GPU_MODE__
@@ -323,6 +326,7 @@ namespace RENDER_NAMESPACE {
 #endif
             }
 
+            RENDER_CPU_GPU
             int pop() {
                 assert(_size > 0);
 #ifdef __RENDER_GPU_MODE__

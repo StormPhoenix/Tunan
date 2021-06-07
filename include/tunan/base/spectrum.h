@@ -18,6 +18,7 @@ namespace RENDER_NAMESPACE {
 
         class Spectrum {
         public:
+            RENDER_CPU_GPU
             Spectrum() = default;
 
             RENDER_CPU_GPU

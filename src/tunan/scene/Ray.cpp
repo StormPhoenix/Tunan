@@ -6,6 +6,7 @@
 
 namespace RENDER_NAMESPACE {
     using namespace math;
+    RENDER_CPU_GPU
     Ray::Ray() : _minStep(0.0), _step(Infinity) {}
 
     RENDER_CPU_GPU

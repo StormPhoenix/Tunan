@@ -11,6 +11,7 @@
 namespace RENDER_NAMESPACE {
     class Ray {
     public:
+        RENDER_CPU_GPU
         Ray();
 
         RENDER_CPU_GPU

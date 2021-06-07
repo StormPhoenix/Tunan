@@ -28,6 +28,8 @@ namespace RENDER_NAMESPACE {
             _filmHeight = parsedScene.height;
             _camera = allocator.newObject<Camera>(parsedScene.cameraToWorld, parsedScene.fov, _filmWidth, _filmHeight);
             _sampler = SamplerFactory::newSampler(parsedScene.sampleNum, _allocator);
+            _nIterations = parsedScene.sampleNum;
+            _maxBounce = parsedScene.maxDepth;
 
             // Initialize queues
             _maxQueueSize = _filmWidth * _scanLines;
@@ -47,16 +49,13 @@ namespace RENDER_NAMESPACE {
                     // TODO other queues also need resets
                     _rayQueue->reset();
                     generateCameraRays(sampleIndex, row);
-                    // TODO Need synchronized ?
                     for (int bounce = 0; bounce < _maxBounce; bounce++) {
                         generateRaySamples(sampleIndex);
 //                        _world->intersect(_rayQueue, _missQueue, _materialEvaQueue, _mediaEvaQueue, _areaLightEvaQueue);
                         // TODO Handle media queue
                         // TODO Handle area light queue
-
                         // TODO
 //                        evaluateMissRays(sampleIndex, row);
-
                         // TODO
 //                        evaluateMaterialAndBSDF(sampleIndex, row);
                     }
