@@ -58,6 +58,14 @@ namespace RENDER_NAMESPACE {
             }
 
             RENDER_CPU_GPU
+            Spectrum &operator=(const Spectrum &s) {
+                for (int i = 0; i < SpectrumChannel; i ++) {
+                    values[i] = s[i];
+                }
+                return *this;
+            }
+
+            RENDER_CPU_GPU
             Spectrum operator+(const Spectrum &v) const {
                 Spectrum ret = *this;
                 return ret += v;

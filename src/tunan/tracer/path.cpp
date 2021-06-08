@@ -6,6 +6,7 @@
 #include <tunan/parallel/parallels.h>
 #include <tunan/sampler/samplers.h>
 #include <tunan/sampler/SamplerFactory.h>
+#include <tunan/utils/type_utils.h>
 
 #include <iostream>
 
@@ -70,10 +71,31 @@ namespace RENDER_NAMESPACE {
             }
         }
 
-        void PathTracer::evaluateMaterialAndBSDF(int sampleIndex, int scanLine) {
-            auto func = RENDER_CPU_GPU_LAMBDA(MaterialEvaDetails &m) {
-                // TODO
-//                m.material.evaluateBSDF()
+        typedef struct MaterialEvaWrapper {
+            template<typename T>
+            void operator()() {
+                tracer->evaluateMaterialBSDF<T>();
+            }
+
+            PathTracer *tracer;
+        } MaterialEvaWrapper;
+
+        void PathTracer::evaluateMaterialBSDF() {
+            forEachType(MaterialEvaWrapper({this}), Material::Types());
+        }
+
+        template<typename MaterialType>
+        void PathTracer::evaluateMaterialBSDF() {
+            auto func = RENDER_CPU_GPU_LAMBDA(const MaterialEvaDetails &m) {
+                if (!m.material.isType<MaterialType>()) {
+                    return;
+                }
+
+                MaterialType *material = m.material.cast<MaterialType>();
+                using MaterialBxDF = MaterialType::MaterialBxDF;
+                MaterialBxDF bxdf;
+                BSDF bsdf = material->evaluateBSDF(m.si, &bxdf);
+                // TODO generate ray
             };
             parallel::parallelForQueue(func, _materialEvaQueue, _maxQueueSize);
         }

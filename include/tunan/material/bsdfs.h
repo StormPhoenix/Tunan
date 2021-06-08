@@ -31,6 +31,9 @@ namespace RENDER_NAMESPACE {
         class LambertianBxDF {
         public:
             RENDER_CPU_GPU
+            LambertianBxDF();
+
+            RENDER_CPU_GPU
             LambertianBxDF(const Spectrum &Kd);
 
             RENDER_CPU_GPU
@@ -50,7 +53,7 @@ namespace RENDER_NAMESPACE {
             inline ~LambertianBxDF() {}
 
         private:
-            const Spectrum _Kd;
+            Spectrum _Kd;
             BxDFType _type;
         };
 

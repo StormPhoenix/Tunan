@@ -10,13 +10,13 @@ namespace RENDER_NAMESPACE {
         using bsdf::LambertianBxDF;
 
         RENDER_CPU_GPU
-        BSDF Lambertian::evaluateBSDF(SurfaceInteraction &si, MemoryAllocator &allocator, TransportMode mode) {
+        BSDF Lambertian::evaluateBSDF(SurfaceInteraction &si, LambertianBxDF *bxdf, TransportMode mode) {
             // TODO delete
 //            Spectrum albedo = _Kd->evaluate(insect);
-
-//            LambertianBxDF bxdf = allocator.newObject<LambertianBxDF>(_Kd);
-//            insect.bsdf = allocator.newObject<BSDF>(insect);
-//            insect.bsdf->addBXDF(lambertianBXDF);
+            (*bxdf) = LambertianBxDF(_Kd);
+            BSDF bsdf = BSDF(si.ng, si.ns, si.wo);
+            bsdf.setBxDF(bxdf);
+            return bsdf;
         }
     }
 }

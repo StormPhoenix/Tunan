@@ -78,6 +78,18 @@ namespace RENDER_NAMESPACE {
                 }
             }
         };
+
+        template<typename FWrapper, typename... Ts>
+        void forEachType(FWrapper wrapper, TypePack<Ts...>);
+
+        template<typename FWrapper, typename T, typename... Ts>
+        void forEachType(FWrapper wrapper, TypePack<T, Ts...>) {
+            wrapper.template operator()<T>();
+            forEachType(wrapper, TypePack<Ts...>());
+        }
+
+        template<typename FWrapper>
+        void forEachType(FWrapper wrapper, TypePack<>) {}
     }
 }
 

@@ -35,7 +35,10 @@ namespace RENDER_NAMESPACE {
 
             void evaluateMissRays(int sampleIndex, int scanLine);
 
-            void evaluateMaterialAndBSDF(int sampleIndex, int scanLine);
+            void evaluateMaterialBSDF();
+
+            template<typename MaterialType>
+            void evaluateMaterialBSDF();
 
         private:
             Camera *_camera;

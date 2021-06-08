@@ -25,9 +25,6 @@ namespace RENDER_NAMESPACE {
         public:
             using TaggedPointer::TaggedPointer;
 
-            RENDER_CPU_GPU inline BSDF evaluateBSDF(SurfaceInteraction &insect, MemoryAllocator &allocator,
-                                                    TransportMode mode = TransportMode::RADIANCE);
-
             RENDER_CPU_GPU inline bool isSpecular();
         };
 

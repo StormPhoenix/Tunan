@@ -8,6 +8,9 @@
 
 namespace RENDER_NAMESPACE {
     namespace bsdf {
+        RENDER_CPU_GPU
+        LambertianBxDF::LambertianBxDF() :
+                _type(BxDFType(BSDF_DIFFUSE | BSDF_REFLECTION)), _Kd(0) {}
 
         RENDER_CPU_GPU
         LambertianBxDF::LambertianBxDF(const Spectrum &Kd) :
@@ -146,7 +149,7 @@ namespace RENDER_NAMESPACE {
 
         RENDER_CPU_GPU
         Spectrum BSDF::sampleF(const Vector3F &worldWo, Vector3F *worldWi, Float *pdf,
-                               Vector2F uv, BxDFType *sampleType, BxDFType type)  {
+                               Vector2F uv, BxDFType *sampleType, BxDFType type) {
             bool matched = _bxdf.allIncludeOf(type);
             if (!matched) {
                 // 没有类型被匹配上
