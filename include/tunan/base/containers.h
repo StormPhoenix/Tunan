@@ -297,7 +297,7 @@ namespace RENDER_NAMESPACE {
 
             RENDER_CPU_GPU
             int size() const {
-#ifdef __BUILD_GPU_RENDER_ENABLE__
+#ifdef RENDER_GPU_CODE
                 return _size;
 #else
                 return _size.load(std::memory_order_relaxed);
@@ -306,7 +306,7 @@ namespace RENDER_NAMESPACE {
 
             RENDER_CPU_GPU
             void reset() {
-#ifdef __BUILD_GPU_RENDER_ENABLE__
+#ifdef RENDER_GPU_CODE
                 _size = 0;
 #else
                 _size.store(0, std::memory_order_relaxed);
@@ -317,7 +317,7 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU
             int push() {
                 assert(_size < maxQueueSize);
-#ifdef __BUILD_GPU_RENDER_ENABLE__
+#ifdef RENDER_GPU_CODE
                 return atomicAdd(&_size, 1);
 #else
                 return _size.fetch_add(1, std::memory_order_relaxed);
@@ -327,7 +327,7 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU
             int pop() {
                 assert(_size > 0);
-#ifdef __BUILD_GPU_RENDER_ENABLE__
+#ifdef RENDER_GPU_CODE
                 return atomicSub(&_size, 1);
 #else
                 return _size.fetch_sub(1, std::memory_order_relaxed);
@@ -337,7 +337,7 @@ namespace RENDER_NAMESPACE {
         private:
             int maxQueueSize = 0;
 
-#ifdef __BUILD_GPU_RENDER_ENABLE__
+#ifdef RENDER_GPU_CODE
             int _size = 0;
 #else
             std::atomic<int> _size{0};

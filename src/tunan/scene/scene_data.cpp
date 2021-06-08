@@ -8,6 +8,10 @@
 namespace RENDER_NAMESPACE {
 
     void ShapeEntity::createAreaLights(const Spectrum &radiance, utils::MemoryAllocator &allocator) {
+        if (nTriangles > 0) {
+            areaLights = allocator.allocateObjects<DiffuseAreaLight>(nTriangles);
+        }
+
         for (int i = 0; i < nTriangles; i++) {
             int offset = i * 3;
             Point3F p0 = vertices[vertexIndices[offset]];
@@ -22,8 +26,7 @@ namespace RENDER_NAMESPACE {
             }
             Shape shape = allocator.newObject<Triangle>(p0, p1, p2, n0, n1, n2);
             // TODO medium
-            DiffuseAreaLight *areaLight = allocator.newObject<DiffuseAreaLight>(radiance, shape, nullptr);
-            areaLights.push_back(areaLight);
+            areaLights[i] = DiffuseAreaLight(radiance, shape, nullptr);
         }
     }
 }

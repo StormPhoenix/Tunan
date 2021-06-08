@@ -367,6 +367,7 @@ namespace RENDER_NAMESPACE {
             OPTIX_CHECK(optixSbtRecordPackHeader(closestHitPG, &hitRecord));
             hitRecord.data.mesh = mesh;
             hitRecord.data.material = entity.material;
+            hitRecord.data.areaLights = entity.areaLights;
             closestHitRecords.push_back(hitRecord);
         }
 

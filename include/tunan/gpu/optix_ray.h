@@ -9,6 +9,7 @@
 #include <tunan/tracer/tracer.h>
 #include <tunan/scene/TriangleMesh.h>
 #include <tunan/scene/Camera.h>
+#include <tunan/scene/lights.h>
 #include <tunan/material/Material.h>
 
 namespace RENDER_NAMESPACE {
@@ -29,8 +30,9 @@ namespace RENDER_NAMESPACE {
     };
 
     struct ClosestHitData {
-        TriangleMesh *mesh;
+        TriangleMesh *mesh = nullptr;
         Material material;
+        DiffuseAreaLight *areaLights = nullptr;
     };
 
     struct MissData {

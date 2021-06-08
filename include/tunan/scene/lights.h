@@ -44,7 +44,7 @@ namespace RENDER_NAMESPACE {
     protected:
         Shape _shape;
         bool _twoSided = false;
-        const Spectrum _intensity;
+        Spectrum _intensity;
         LightSourceType _type = Area;
         const MediumInterface *_mediumInterface = nullptr;
     };

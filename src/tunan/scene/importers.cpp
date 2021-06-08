@@ -660,8 +660,11 @@ namespace RENDER_NAMESPACE {
                     ASSERT(false, "Only support spectrum radiance for now.");
                 }
                 entity.createAreaLights(radiance, allocator);
-                for (int i = 0; i < entity.areaLights.size(); i++) {
-                    sceneData.lights.push_back(entity.areaLights[i]);
+                if (sceneData.lights == nullptr) {
+                    sceneData.lights = allocator.newObject<base::Vector<Light>>(allocator);
+                }
+                for (int i = 0; i < entity.nTriangles; i++) {
+                    sceneData.lights->push_back(entity.areaLights + i);
                 }
             }
 
