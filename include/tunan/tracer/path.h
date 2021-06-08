@@ -28,17 +28,22 @@ namespace RENDER_NAMESPACE {
             template<typename SamplerType>
             void generateCameraRays(int sampleIndex, int scanLine);
 
-            void generateRaySamples(int sampleIndex);
+            void generateRaySamples(int sampleIndex, int bounce);
 
             template<typename SamplerType>
-            void generateRaySamples(int sampleIndex);
+            void generateRaySamples(int sampleIndex, int bounce);
 
             void evaluateMissRays(int sampleIndex, int scanLine);
 
-            void evaluateMaterialBSDF();
+            void evaluateMaterialBSDF(int bounce);
 
             template<typename MaterialType>
-            void evaluateMaterialBSDF();
+            void evaluateMaterialBSDF(int bounce);
+
+        protected:
+            RayQueue *currentRayQueue(int depth);
+
+            RayQueue *nextRayQueue(int depth);
 
         private:
             Camera *_camera;
@@ -51,7 +56,7 @@ namespace RENDER_NAMESPACE {
             PixelStateArray *_pixelArray;
 
             // Queues
-            RayQueue *_rayQueue;
+            RayQueue *_rayQueues[2];
             MissQueue *_missQueue;
             MediaEvaQueue *_mediaEvaQueue;
             MaterialEvaQueue *_materialEvaQueue;

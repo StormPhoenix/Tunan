@@ -22,6 +22,7 @@ namespace RENDER_NAMESPACE {
             Ray ray;
             int pixelIndex;
             int bounce = 0;
+            bool specularBounce = false;
         } RayDetails;
 
         typedef struct MaterialEvaDetails {
@@ -46,6 +47,7 @@ namespace RENDER_NAMESPACE {
 
         typedef struct PixelState {
             Spectrum L;
+            Spectrum beta;
             int pixelX, pixelY;
             RaySamples raySamples;
         } PixelState;

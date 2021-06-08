@@ -712,11 +712,38 @@ namespace RENDER_NAMESPACE {
             parent.transformMat = Transform(mat);
         }
 
-        void handleTagRef(pugi::xml_node &node, XmlParseInfo &parent, SceneData &sceneData) {
+        static void handleTagRef(pugi::xml_node &node, XmlParseInfo &parent, SceneData &sceneData) {
             std::string id = node.attribute("id").value();
             ASSERT(sceneData.materialMap.count(id) > 0, "Material " + id + " Not Exists.!");
             parent.currentMaterial = (const Material) (sceneData.materialMap[id]);
         }
+
+        void handleTagRGB(pugi::xml_node &node, XmlParseInfo &parentParseInfo) {
+            if (strcmp(node.name(), "spectrum") == 0) {
+                // TODO: Fix Spectrum declared with wavelength
+                ASSERT(false, "No implemented!");
+            } else if (strcmp(node.name(), "rgb") == 0 || strcmp(node.name(), "color") == 0) {
+                Spectrum ret;
+                std::string colorValue = node.attribute("value").value();
+                char *tmp;
+#if defined(_RENDER_DATA_DOUBLE_)
+                ret[0] = strtod(colorValue.c_str(), &tmp);
+                    for (int i = 1; i < 3; i++) {
+                        tmp++;
+                        ret[i] = strtod(tmp, &tmp);
+                    }
+#else
+                ret[0] = strtof(colorValue.c_str(), &tmp);
+                for (int i = 1; i < 3; i++) {
+                    tmp++;
+                    ret[i] = strtof(tmp, &tmp);
+                }
+#endif
+                std::string name = node.attribute("name").value();
+                parentParseInfo.setSpectrumValue(name, ret);
+            }
+        }
+
 
         static void
         handleXmlNode(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parentParseInfo,
@@ -770,9 +797,9 @@ namespace RENDER_NAMESPACE {
                 case Tag_Ref:
                     handleTagRef(node, parentParseInfo, sceneData);
                     break;
-//                case Tag_RGB:
-//                    handleTagRGB(node, parentParseInfo);
-//                    break;
+                case Tag_RGB:
+                    handleTagRGB(node, parentParseInfo);
+                    break;
 //                case Tag_Emitter:
 //                    handleTagEmitter(node, parseInfo, parentParseInfo);
 //                    break;

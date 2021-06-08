@@ -5,7 +5,11 @@
 #ifndef TUNAN_COMMON_H
 #define TUNAN_COMMON_H
 
-#ifdef __RENDER_GPU_MODE__
+#ifdef __CUDA_ARCH__
+#define RENDER_GPU_CODE
+#endif
+
+#if defined(__BUILD_GPU_RENDER_ENABLE__) && defined(__CUDACC__)
 #define GLM_FORCE_CUDA
 #define RENDER_CPU_GPU __host__ __device__
 #define RENDER_GPU __device__
@@ -14,7 +18,7 @@
 #define RENDER_GPU
 #endif
 
-#define RENDER_CPU_GPU_LAMBDA(...) [=, *this] RENDER_CPU_GPU(__VA_ARGS__) mutable
+#define RENDER_CPU_GPU_LAMBDA(...) [=, *this] RENDER_CPU_GPU (__VA_ARGS__) mutable
 
 #if defined(_RENDER_DATA_DOUBLE_)
 using Float = double;

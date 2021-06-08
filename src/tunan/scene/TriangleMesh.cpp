@@ -51,6 +51,15 @@ namespace RENDER_NAMESPACE {
             uv = uv0 * b0 + uv1 * b1 + uv2 * (1 - b0 - b1);
         }
 
-        return SurfaceInteraction(p, ng, ns, wo, uv);
+        // error offset computation
+        Float xError = (std::abs(b0 * p0.x) + std::abs(b1 * p1.x) + std::abs((1 - b0 - b1) * p2.x))
+                       * math::gamma(7);
+        Float yError = (std::abs(b0 * p0.y) + std::abs(b1 * p1.y) + std::abs((1 - b0 - b1) * p2.y))
+                       * math::gamma(7);
+        Float zError = (std::abs(b0 * p0.z) + std::abs(b1 * p1.z) + std::abs((1 - b0 - b1) * p2.z))
+                       * math::gamma(7);
+        Vector3F error = Vector3F(xError, yError, zError);
+
+        return SurfaceInteraction(p, ng, ns, wo, uv, error);
     }
 }

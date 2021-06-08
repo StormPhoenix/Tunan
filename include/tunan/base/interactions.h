@@ -8,6 +8,7 @@
 #include <tunan/math.h>
 #include <tunan/common.h>
 #include <tunan/base/mediums.h>
+#include <tunan/scene/Ray.h>
 
 namespace RENDER_NAMESPACE {
     namespace base {
@@ -33,10 +34,14 @@ namespace RENDER_NAMESPACE {
             SurfaceInteraction() = default;
 
             RENDER_CPU_GPU
-            SurfaceInteraction(Point3F p, Normal3F ng, Normal3F ns, Vector3F wo, Point2F uv)
-                    : Interaction(p, ng, wo, uv), ns(ns) {}
+            SurfaceInteraction(Point3F p, Normal3F ng, Normal3F ns, Vector3F wo, Point2F st, Vector3F error)
+                    : Interaction(p, ng, wo, st), ns(ns), error(error) {}
+
+            RENDER_CPU_GPU
+            Ray generateRay(const Vector3F &direction) const;
 
             Normal3F ns;
+            Vector3F error;
         };
     }
 }

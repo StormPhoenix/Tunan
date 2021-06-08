@@ -27,6 +27,15 @@ namespace RENDER_NAMESPACE {
             }
 
             RENDER_CPU_GPU
+            bool isBlack() const {
+                for (int i = 0; i < SpectrumChannel; ++i)
+                    if (values[i] != 0.) {
+                        return false;
+                    }
+                return true;
+            }
+
+            RENDER_CPU_GPU
             Float operator[](int i) const {
                 CHECK(i >= 0 && i < SpectrumChannel);
                 return values[i];
@@ -59,7 +68,7 @@ namespace RENDER_NAMESPACE {
 
             RENDER_CPU_GPU
             Spectrum &operator=(const Spectrum &s) {
-                for (int i = 0; i < SpectrumChannel; i ++) {
+                for (int i = 0; i < SpectrumChannel; i++) {
                     values[i] = s[i];
                 }
                 return *this;

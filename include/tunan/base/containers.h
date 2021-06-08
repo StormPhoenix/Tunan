@@ -8,7 +8,7 @@
 #include <tunan/utils/MemoryAllocator.h>
 #include <tunan/common.h>
 
-#ifdef __RENDER_GPU_MODE__
+#ifdef __BUILD_GPU_RENDER_ENABLE__
 
 #include <cuda.h>
 #include <cuda_runtime_api.h>
@@ -254,10 +254,8 @@ namespace RENDER_NAMESPACE {
         template<typename T>
         class Queue {
         public:
-            RENDER_CPU_GPU
             Queue() = default;
 
-            RENDER_CPU_GPU
             Queue(int maxQueueSize, MemoryAllocator &allocator) :
                     maxQueueSize(maxQueueSize), allocator(allocator) {
                 buffer = allocator.allocateObjects<T>(maxQueueSize);
@@ -299,7 +297,7 @@ namespace RENDER_NAMESPACE {
 
             RENDER_CPU_GPU
             int size() const {
-#ifdef __RENDER_GPU_MODE__
+#ifdef __BUILD_GPU_RENDER_ENABLE__
                 return _size;
 #else
                 return _size.load(std::memory_order_relaxed);
@@ -308,7 +306,7 @@ namespace RENDER_NAMESPACE {
 
             RENDER_CPU_GPU
             void reset() {
-#ifdef __RENDER_GPU_MODE__
+#ifdef __BUILD_GPU_RENDER_ENABLE__
                 _size = 0;
 #else
                 _size.store(0, std::memory_order_relaxed);
@@ -319,7 +317,7 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU
             int push() {
                 assert(_size < maxQueueSize);
-#ifdef __RENDER_GPU_MODE__
+#ifdef __BUILD_GPU_RENDER_ENABLE__
                 return atomicAdd(&_size, 1);
 #else
                 return _size.fetch_add(1, std::memory_order_relaxed);
@@ -329,7 +327,7 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU
             int pop() {
                 assert(_size > 0);
-#ifdef __RENDER_GPU_MODE__
+#ifdef __BUILD_GPU_RENDER_ENABLE__
                 return atomicSub(&_size, 1);
 #else
                 return _size.fetch_sub(1, std::memory_order_relaxed);
@@ -339,7 +337,7 @@ namespace RENDER_NAMESPACE {
         private:
             int maxQueueSize = 0;
 
-#ifdef __RENDER_GPU_MODE__
+#ifdef __BUILD_GPU_RENDER_ENABLE__
             int _size = 0;
 #else
             std::atomic<int> _size{0};

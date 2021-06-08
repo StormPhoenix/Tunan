@@ -9,7 +9,7 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 
-#ifdef __RENDER_GPU_MODE__
+#ifdef __BUILD_GPU_RENDER_ENABLE__
 
 #include <string>
 #include <iostream>

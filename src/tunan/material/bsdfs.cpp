@@ -152,7 +152,6 @@ namespace RENDER_NAMESPACE {
                                Vector2F uv, BxDFType *sampleType, BxDFType type) {
             bool matched = _bxdf.allIncludeOf(type);
             if (!matched) {
-                // 没有类型被匹配上
                 if (sampleType != nullptr) {
                     *sampleType = BxDFType(0);
                 }

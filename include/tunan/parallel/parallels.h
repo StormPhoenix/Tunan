@@ -8,7 +8,7 @@
 #include <tunan/common.h>
 #include <tunan/base/containers.h>
 
-#ifdef __RENDER_GPU_MODE__
+#ifdef __BUILD_GPU_RENDER_ENABLE__
 
 #include <cuda_runtime.h>
 #include <tunan/gpu/cuda_utils.h>
@@ -21,7 +21,7 @@
 namespace RENDER_NAMESPACE {
     namespace parallel {
 
-#ifdef __RENDER_GPU_MODE__
+#ifdef __BUILD_GPU_RENDER_ENABLE__
 
         template<typename F>
         __global__ void kernel1D(F func, int count) {
@@ -57,15 +57,15 @@ namespace RENDER_NAMESPACE {
 
         template<typename F>
         void parallelFor(F func, int count) {
-#ifdef __RENDER_GPU_MODE__
+#ifdef __BUILD_GPU_RENDER_ENABLE__
             gpuParallelFor(func, count);
 #endif
             // TODO unimplemented
         }
 
         template<typename F, typename QueueItem>
-        void parallelForQueue(F func, const base::Queue <QueueItem> *queue, size_t maxQueueSize) {
-#ifdef __RENDER_GPU_MODE__
+        void parallelForQueue(F func, base::Queue <QueueItem> *queue, size_t maxQueueSize) {
+#ifdef __BUILD_GPU_RENDER_ENABLE__
             auto f = [=] RENDER_GPU(int idx) mutable {
                 if (idx >= queue->size()) {
                     return;

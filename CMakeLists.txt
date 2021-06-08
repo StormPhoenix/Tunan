@@ -59,7 +59,7 @@ if (CUDA_FOUND AND CUDA_FOUND AND START_CUDA)
     endif (BIN2C)
 
     set(BUILD_GPU_ENABLED true)
-    add_definitions(-D __RENDER_GPU_MODE__)
+    add_definitions(-D __BUILD_GPU_RENDER_ENABLE__)
     message(STATUS "Build in GPU Mode.")
 endif (CUDA_FOUND AND CUDA_FOUND AND START_CUDA)
 
