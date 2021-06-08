@@ -125,8 +125,9 @@ set(TuNan_SRCS
         src/tunan/material/materials.cpp
         src/tunan/material/Material.cpp
         src/tunan/material/bsdfs.cpp
-        src/tunan/scene/OptixIntersectable.cpp
         src/tunan/scene/Ray.cpp
+        src/tunan/scene/shapes.cpp
+        src/tunan/scene/lights.cpp
         src/tunan/scene/Camera.cpp
         src/tunan/scene/importers.cpp
         src/tunan/scene/scene_data.cpp
@@ -164,9 +165,9 @@ if (BUILD_GPU_ENABLED)
             ${TuNan_UTIL_SRCS}
             src/tunan/utils/memory/CUDAResource.cpp)
 
-#    set(TuNan_SRCS
-#            ${TuNan_SRCS}
-#            src/tunan/scene/OptixIntersectable.cpp)
+    set(TuNan_SRCS
+            ${TuNan_SRCS}
+            src/tunan/scene/OptixIntersectable.cpp)
 
     set_source_files_properties(
             include/tunan/utils/TaggedPointer.h

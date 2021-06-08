@@ -5,10 +5,12 @@
 #ifndef TUNAN_SCENE_DATA_H
 #define TUNAN_SCENE_DATA_H
 
-#include <tunan/material/Material.h>
 #include <tunan/math.h>
 #include <tunan/common.h>
+#include <tunan/scene/lights.h>
 #include <tunan/base/transform.h>
+#include <tunan/material/Material.h>
+#include <tunan/utils/MemoryAllocator.h>
 
 #include <string>
 #include <vector>
@@ -19,6 +21,8 @@ namespace RENDER_NAMESPACE {
 
     typedef struct ShapeEntity {
         ShapeEntity() = default;
+
+        void createAreaLights(const Spectrum &radiance, utils::MemoryAllocator &allocator);
 
         int nVertices = 0;
         Point3F *vertices = nullptr;
@@ -37,6 +41,7 @@ namespace RENDER_NAMESPACE {
         bool faceNormal = false;
         Material material;
         base::Transform toWorld;
+        std::vector<DiffuseAreaLight *> areaLights;
 //        std::string materialName = "";
 //        int materialIndex = -1;
     } ShapeEntity;
@@ -81,6 +86,7 @@ namespace RENDER_NAMESPACE {
 
         std::vector<Material> materials;
         std::map<std::string, Material> materialMap;
+        std::vector<Light> lights;
     } SceneData;
 }
 

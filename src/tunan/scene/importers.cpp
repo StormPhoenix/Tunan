@@ -647,22 +647,26 @@ namespace RENDER_NAMESPACE {
             ShapeEntity &entity = sceneData.entities.back();
             Material material = parseInfo.currentMaterial;
             entity.material = material;
+
 //            Medium::Ptr exteriorMedium = parseInfo.currentExteriorMedium;
 //            Medium::Ptr interiorMedium = parseInfo.currentInteriorMedium;
 
-/*
             Spectrum radiance(0.0);
             if (parseInfo.hasAreaLight) {
                 auto radianceType = parseInfo.getType("radiance");
                 if (radianceType == XmlAttrVal::Attr_Spectrum) {
-                    radiance = parseInfo.getSpectrumValue("radiance", 0);
+                    radiance = parseInfo.getSpectrumValue("radiance", Spectrum(0));
                 } else {
                     ASSERT(false, "Only support spectrum radiance for now.");
                 }
+                entity.createAreaLights(radiance, allocator);
+                for (int i = 0; i < entity.areaLights.size(); i++) {
+                    sceneData.lights.push_back(entity.areaLights[i]);
+                }
             }
-            */
 
 /*
+ * TODO medium
             for (auto it = shapes->begin(); it != shapes->end(); it++) {
                 AreaLight::Ptr light = nullptr;
                 if (parseInfo.hasAreaLight) {
@@ -744,10 +748,70 @@ namespace RENDER_NAMESPACE {
             }
         }
 
+        static void handleTagEmitter(pugi::xml_node &node, XmlParseInfo &info, XmlParseInfo &parent) {
+            std::string type = node.attribute("type").value();
+            if (type == "area") {
+                parent.hasAreaLight = true;
+                auto radianceType = info.getType("radiance");
+                if (radianceType == XmlAttrVal::Attr_Spectrum) {
+                    parent.set("radiance", info.get("radiance"));
+                } else {
+                    ASSERT(false, "Only support spectrum type radiance.");
+                }
+                std::cout << "\tCreate light: area light" << std::endl;
+                /*
+            } else if (type == "point") {
+                transform::Transform toWorldMat = info.getTransformValue("toWorld", Transform());
+                std::shared_ptr<transform::Transform> toWorld = std::make_shared<transform::Transform>(toWorldMat);
+                Spectrum intensity = info.getSpectrumValue("intensity", 0);
+                Light::Ptr pointLight = std::make_shared<PointLight>(intensity, toWorld, MediumInterface(nullptr,
+                                                                                                         nullptr));
+                _scene->addLight(pointLight);
+                std::cout << "\tCreate light: point light" << std::endl;
+            } else if (type == "spot") {
+                transform::Transform toWorldMat = info.getTransformValue("toWorld", Transform());
+                std::shared_ptr<transform::Transform> toWorld = std::make_shared<transform::Transform>(toWorldMat);
+                Spectrum intensity = info.getSpectrumValue("intensity", Spectrum(0));
+                Float totalAngle = info.getFloatValue("totalAngle", 60.);
+                Float falloffAngle = info.getFloatValue("falloffAngle", 50.);
+                Light::Ptr spotLight = std::make_shared<SpotLight>(
+                        intensity, toWorld,
+                        MediumInterface(nullptr, nullptr),
+                        falloffAngle, totalAngle);
+                _scene->addLight(spotLight);
+                std::cout << "\tCreate light: spot light" << std::endl;
+            } else if (type == "envmap") {
+                transform::Transform toWorldMat = info.getTransformValue("toWorld", Transform());
+                std::shared_ptr<transform::Transform> toWorld = toWorldMat.ptr();
 
-        static void
-        handleXmlNode(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parentParseInfo,
-                      SceneData &sceneData, MemoryAllocator &allocator) {
+                ASSERT(info.attrExists("filename"), "Environment light type should has envmap. ");
+                std::string envmapPath = info.getStringValue("filename", "");
+
+                EnvironmentLight::Ptr envLight = std::make_shared<EnvironmentLight>(1., _inputSceneDir + envmapPath,
+                                                                                    MediumInterface(nullptr,
+                                                                                                    nullptr),
+                                                                                    toWorld);
+                _scene->addLight(envLight);
+                _scene->addEnvironmentLight(envLight);
+                std::cout << "\tCreate environment light. " << std::endl;
+            } else if (type == "sunsky") {
+                ASSERT(info.attrExists("sunDirection") && info.attrExists("intensity"),
+                       "Sunsky parameter incomplete. ");
+                ASSERT(info.getType("intensity") == XmlAttrVal::Attr_Spectrum,
+                       "<emitter> Only support spectrum intensity. ");
+                Spectrum intensity = info.getSpectrumValue("intensity", Spectrum(0.0));
+                Vector3F sunDirection = -info.getVectorValue("sunDirection", Vector3F(0, 1, 0));
+                SunLight::Ptr sunLight = std::make_shared<SunLight>(intensity, sunDirection);
+                _scene->addLight(sunLight);
+                std::cout << "\tCreate sun light. " << std::endl;
+                 */
+            } else {
+                ASSERT(false, "Emitter type not supported: <" + type + ">. ");
+            }
+        }
+
+        static void handleXmlNode(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parentParseInfo,
+                                  SceneData &sceneData, MemoryAllocator &allocator) {
             TagType tagType = nodeTypeMap[node.name()];
             switch (tagType) {
 //                case Tag_Mode:
@@ -800,9 +864,9 @@ namespace RENDER_NAMESPACE {
                 case Tag_RGB:
                     handleTagRGB(node, parentParseInfo);
                     break;
-//                case Tag_Emitter:
-//                    handleTagEmitter(node, parseInfo, parentParseInfo);
-//                    break;
+                case Tag_Emitter:
+                    handleTagEmitter(node, parseInfo, parentParseInfo);
+                    break;
                 case Tag_LookAt:
                     handleTagLookAt(node, parentParseInfo);
                     break;

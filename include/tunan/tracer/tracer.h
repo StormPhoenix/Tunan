@@ -25,6 +25,15 @@ namespace RENDER_NAMESPACE {
             bool specularBounce = false;
         } RayDetails;
 
+        typedef struct ShadowRayDetails {
+            Float lightPdf;
+            Float scatterPdf;
+            Float sampleLightPdf;
+            int pixelIndex;
+            Spectrum L;
+            Spectrum beta;
+        } ShadowRayDetails;
+
         typedef struct MaterialEvaDetails {
             // TODO
             int bounce;
@@ -46,10 +55,10 @@ namespace RENDER_NAMESPACE {
         } RaySamples;
 
         typedef struct PixelState {
-            Spectrum L;
-            Spectrum beta;
             int pixelX, pixelY;
             RaySamples raySamples;
+            Spectrum L;
+            Spectrum beta;
         } PixelState;
 
         typedef struct AreaLightHitDetails {
@@ -58,6 +67,7 @@ namespace RENDER_NAMESPACE {
 
         typedef base::Queue <RayDetails> RayQueue;
         typedef base::Queue <RayDetails> MissQueue;
+        typedef base::Queue <ShadowRayDetails> ShadowRayQueue;
         typedef base::Queue <MaterialEvaDetails> MaterialEvaQueue;
         typedef base::Queue <MediaEvaDetails> MediaEvaQueue;
         typedef base::Queue <AreaLightHitDetails> AreaLightHitQueue;

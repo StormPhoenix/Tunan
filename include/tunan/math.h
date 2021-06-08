@@ -243,6 +243,35 @@ namespace RENDER_NAMESPACE {
             }
             return bits2float(bits);
         }
+
+        RENDER_CPU_GPU
+        inline Float maxAbsComponent(const Vector3F v) {
+            Float maxValue = std::abs(v[0]);
+            for (int i = 1; i < 3; i++) {
+                if (std::abs(v[i]) > maxValue) {
+                    maxValue = std::abs(v[i]);
+                }
+            }
+            return maxValue;
+        }
+
+        RENDER_CPU_GPU
+        inline int maxAbsComponentIndex(const Vector3F v) {
+            Float maxValue = std::abs(v[0]);
+            int axis = 0;
+            for (int i = 1; i < 3; i++) {
+                if (std::abs(v[i]) > maxValue) {
+                    maxValue = std::abs(v[i]);
+                    axis = i;
+                }
+            }
+            return axis;
+        }
+
+        RENDER_CPU_GPU
+        inline Vector3F swapComponent(const Vector3F v, int x, int y, int z) {
+            return Vector3F(v[x], v[y], v[z]);
+        }
     }
 }
 

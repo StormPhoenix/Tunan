@@ -79,6 +79,13 @@ namespace RENDER_NAMESPACE {
         RENDER_CPU_GPU Vector2F diskUniformSampling(const Point2F &uv, Float radius = 1.);
 
         RENDER_CPU_GPU Vector3F hemiCosineSampling(const Vector2F &uv);
+
+        RENDER_CPU_GPU
+        inline Vector2F triangleUniformSampling(Vector2F uv) {
+            Float u = 1 - std::sqrt(uv[0]);
+            Float v = uv[1] * sqrt(uv[0]);
+            return Vector2F(u, v);
+        }
     }
 }
 
