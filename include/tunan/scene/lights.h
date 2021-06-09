@@ -30,13 +30,13 @@ namespace RENDER_NAMESPACE {
                          const MediumInterface *mediumBoundary, bool twoSided = false);
 
         RENDER_CPU_GPU
-        Spectrum sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv);
-
-        RENDER_CPU_GPU
         Spectrum L(const Interaction &interaction, const Vector3F &wo) const;
 
         RENDER_CPU_GPU
         Float pdfLi(const Interaction &eye, const Vector3F &dir);
+
+        RENDER_CPU_GPU
+        Spectrum sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv, Interaction *target);
 
         RENDER_CPU_GPU
         LightSourceType getType() const;
@@ -47,6 +47,7 @@ namespace RENDER_NAMESPACE {
         Spectrum _radiance;
         LightSourceType _type = Area;
         const MediumInterface *_mediumInterface = nullptr;
+
     };
 
     class Light : public utils::TaggedPointer<DiffuseAreaLight> {
@@ -54,7 +55,7 @@ namespace RENDER_NAMESPACE {
         using TaggedPointer::TaggedPointer;
 
         RENDER_CPU_GPU
-        Spectrum sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv);
+        Spectrum sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv, Interaction *target);
 
         RENDER_CPU_GPU
         Float pdfLi(const Interaction &eye, const Vector3F &direction);

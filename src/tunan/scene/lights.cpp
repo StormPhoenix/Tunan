@@ -11,11 +11,18 @@ namespace RENDER_NAMESPACE {
             _radiance(radiance), _shape(shape), _type(Area), _mediumInterface(mediumInterface), _twoSided(twoSided) {}
 
     RENDER_CPU_GPU
-    Spectrum DiffuseAreaLight::sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv) {
+    Spectrum DiffuseAreaLight::sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf,
+                                        Vector2F uv, Interaction *target) {
         assert(!_shape.nullable());
         // 从 eye 出发采样一条射线，返回与 shape 的交点
         SurfaceInteraction si = _shape.sample(eye.p, pdf, uv);
         (*wi) = NORMALIZE(si.p - eye.p);
+        if (target != nullptr) {
+            target->p = si.p;
+            target->ng = si.ng;
+            target->wo = -(*wi);
+            target->error = si.error;
+        }
         return L(si, -(*wi));
     }
 
@@ -37,9 +44,9 @@ namespace RENDER_NAMESPACE {
     }
 
     RENDER_CPU_GPU
-    Spectrum Light::sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv) {
+    Spectrum Light::sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv, Interaction *target) {
         auto func = [&](auto ptr) {
-            return ptr->sampleLi(eye, wi, pdf, uv);
+            return ptr->sampleLi(eye, wi, pdf, uv, target);
         };
         return proxyCall(func);
     }

@@ -61,8 +61,6 @@ namespace RENDER_NAMESPACE {
         RENDER_CPU_GPU
         Spectrum We(const Ray &ray, Point2F *const filmPosition) const;
 
-        // TODO delete
-//    private:
     public:
         Vector3F _origin;
         Vector3F _front;

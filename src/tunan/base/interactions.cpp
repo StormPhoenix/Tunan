@@ -32,5 +32,19 @@ namespace RENDER_NAMESPACE {
             Vector3F origin = offsetOrigin(p, error, ng, direction);
             return Ray(origin, NORMALIZE(direction));
         }
+
+        RENDER_CPU_GPU
+        Ray SurfaceInteraction::generateRayTo(const Interaction &target) const {
+            // check whether the ray direction is point to outside or inside
+            Vector3F pOrigin = offsetOrigin(p, error, ng, target.p - p);
+            Vector3F pTarget = offsetOrigin(target.p, target.error, target.ng, p - target.p);
+            const Vector3F direction = (pTarget - pOrigin);
+            Float step = LENGTH(direction);
+
+            // TODO medium
+            Ray ray = Ray(pOrigin, NORMALIZE(direction));
+            ray.setStep(step - ShadowEpsilon);
+            return ray;
+        }
     }
 }

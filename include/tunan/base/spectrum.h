@@ -14,7 +14,7 @@
 namespace RENDER_NAMESPACE {
     namespace base {
         using namespace math;
-        static const int SpectrumChannel = 3;
+        const int SpectrumChannel = 3;
 
         class Spectrum {
         public:

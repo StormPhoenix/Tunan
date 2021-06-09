@@ -13,12 +13,11 @@ namespace RENDER_NAMESPACE {
 
     class SceneIntersectable {
     public:
-        virtual void intersect(RayQueue *rayQueue, MissQueue *missQueue, MaterialEvaQueue *materialEvaQueue,
+        virtual void findClosestHit(RayQueue *rayQueue, MissQueue *missQueue, MaterialEvaQueue *materialEvaQueue,
                                MediaEvaQueue *mediaEvaQueue, AreaLightHitQueue *areaLightQueue,
                                PixelStateArray *pixelStateArray) = 0;
 
-        // TODO delete temporay for test
-        virtual void writeImage() = 0;
+        virtual void traceShadowRay(ShadowRayQueue *shadowRayQueue, PixelStateArray *pixelStateArray) = 0;
     };
 }
 

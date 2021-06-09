@@ -660,6 +660,7 @@ namespace RENDER_NAMESPACE {
                     ASSERT(false, "Only support spectrum radiance for now.");
                 }
                 entity.createAreaLights(radiance, allocator);
+                // TODO light creation move to importScene
                 if (sceneData.lights == nullptr) {
                     sceneData.lights = allocator.newObject<base::Vector<Light>>(allocator);
                 }

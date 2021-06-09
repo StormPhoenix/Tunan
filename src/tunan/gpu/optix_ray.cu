@@ -15,10 +15,10 @@ extern "C" {
 __constant__ RayParams params;
 }
 
-extern "C" __global__ void __raygen__findclosesthit() {
+extern "C" __global__ void __raygen__findClosestHit() {
 
-    uint3 launch_index = optixGetLaunchIndex();
-    RayDetails &r = (*params.rayQueue)[launch_index.x];
+    uint3 launchIndex = optixGetLaunchIndex();
+    RayDetails &r = (*params.rayQueue)[launchIndex.x];
     float3 ray_origin = make_float3(r.ray.getOrigin().x, r.ray.getOrigin().y, r.ray.getOrigin().z);
     float3 ray_direction = make_float3(r.ray.getDirection().x, r.ray.getDirection().y, r.ray.getDirection().z);
 
@@ -42,8 +42,8 @@ extern "C" __global__ void __closesthit__scene() {
     RayDetails &r = (*params.rayQueue)[optixGetLaunchIndex().x];
 
     const ClosestHitData *data = (const ClosestHitData *) optixGetSbtDataPointer();
-    SurfaceInteraction si = data->mesh->buildSurfaceInteraction(triangleIndex, barycentric.x,
-                                                                barycentric.y, -r.ray.getDirection());
+    SurfaceInteraction si = data->mesh->buildSurfaceInteraction(triangleIndex, 1 - barycentric.x - barycentric.y,
+                                                                barycentric.x, -r.ray.getDirection());
 
     if (data->areaLights != nullptr) {
         AreaLightHitDetails areaLightHitDetails;
@@ -62,45 +62,56 @@ extern "C" __global__ void __closesthit__scene() {
     materialEvaDetails.material = data->material;
 
     params.materialEvaQueue->enqueue(materialEvaDetails);
-
-    // TODO for testing
-    uchar3 t;
-    t.x = int((si.ng.x + 1.0) * 127.5);
-    t.y = int((si.ng.y + 1.0) * 127.5);
-    t.z = int((si.ng.z + 1.0) * 127.5);
-//    t.x = 255;
-//    t.y = 0;
-//    t.z = 0;
-    PixelState &state = (*params.pixelStateArray)[r.pixelIndex];
-//    params.outputImage[state.pixelY * 800 + state.pixelX] = t;
-    params.outputImage[state.pixelY * 1024 + state.pixelX] = t;
 }
 
 extern "C" __global__ void __miss__findclosesthit() {
     optixSetPayload_0(1);
-
-    // TODO for testing
-//    RayDetails &r = (*params.rayQueue)[optixGetLaunchIndex().x];
-//    uchar3 t;
-//    t.x = 0;
-//    t.y = 255;
-//    t.z = 0;
-//    PixelState &state = (*params.pixelStateArray)[r.pixelIndex];
-//    params.outputImage[state.pixelY * 800 + state.pixelX] = t;
-//    params.outputImage[state.pixelY * 1024 + state.pixelX] = t;
 }
 
 extern "C" __global__ void __anyhit__scene() {
     uint3 launch_index = optixGetLaunchIndex();
-//    Camera *camera = params.camera;
-//    int image_width = camera->getWidth();
-//    int image_height = camera->getHeight();
+}
 
-    // TODO delete
-//    uchar3 t;
-//    t.x = 200;
-//    t.y = 0;
-//    t.z = 0;
-//    t.w = 0;
-//    params.outputImage[launch_index.y * image_width + launch_index.x] = t;
+extern "C" __device__ float misWeight(int nSampleF, Float pdfF, int nSampleG, Float pdfG) {
+    Float f = nSampleF * pdfF;
+    Float g = nSampleG * pdfG;
+    return (f * f) / (g * g + f * f);
+}
+
+extern "C" __global__ void __raygen__shadowRay() {
+    uint3 launchIndex = optixGetLaunchIndex();
+    ShadowRayDetails &r = (*params.shadowRayQueue)[launchIndex.x];
+
+    // Tracing
+    unsigned int missed = 0;
+    float tMin = 1e-5f;
+    float tMax = r.tMax;
+    float3 ray_origin = make_float3(r.ray.getOrigin().x, r.ray.getOrigin().y, r.ray.getOrigin().z);
+    float3 ray_direction = make_float3(r.ray.getDirection().x, r.ray.getDirection().y, r.ray.getDirection().z);
+
+    optixTrace(params.traversable, ray_origin, ray_direction, tMin, tMax, 0.0f,
+               OptixVisibilityMask(255), OPTIX_RAY_FLAG_NONE, 0, 1, 0,
+               missed);
+
+    if (missed) {
+        // TODO handle medium transmittance
+        Spectrum L(0);
+        if (r.deltaType) {
+            L = r.beta * r.L / r.sampleLightPdf;
+        } else {
+            float weight = misWeight(1, r.sampleLightPdf, 1, r.scatterPdf);
+            L = r.beta * r.L * weight / r.sampleLightPdf;
+        }
+
+        PixelState &state = (*params.pixelStateArray)[r.pixelIndex];
+        state.L += L / r.lightPdf;
+    }
+}
+
+extern "C" __global__ void __anyhit__shadowRay() {
+    // Do nothing
+}
+
+extern "C" __global__ void __miss__shadowRay() {
+    optixSetPayload_0(1);
 }

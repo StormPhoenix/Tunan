@@ -7,6 +7,7 @@
 
 #include <tunan/common.h>
 #include <tunan/sampler/samplers.h>
+#include <tunan/scene/film.h>
 #include <tunan/scene/Camera.h>
 #include <tunan/scene/scene_data.h>
 #include <tunan/scene/SceneIntersectable.h>
@@ -42,13 +43,16 @@ namespace RENDER_NAMESPACE {
 
             void evaluateMissRays(int sampleIndex, int scanLine);
 
+            void updateFilm(int nCameraRays);
+
         protected:
             RayQueue *currentRayQueue(int depth);
 
             RayQueue *nextRayQueue(int depth);
 
         private:
-            Camera *_camera;
+            Film *_film = nullptr;
+            Camera *_camera = nullptr;
             Sampler _sampler;
             int _filmWidth, _filmHeight;
             int _maxQueueSize = 0;
@@ -56,6 +60,8 @@ namespace RENDER_NAMESPACE {
 
             // Pixels
             PixelStateArray *_pixelArray;
+            // Lights
+            base::Vector<Light> *_lights;
 
             // Queues
             RayQueue *_rayQueues[2];
@@ -63,12 +69,12 @@ namespace RENDER_NAMESPACE {
             MediaEvaQueue *_mediaEvaQueue;
             MaterialEvaQueue *_materialEvaQueue;
             AreaLightHitQueue *_areaLightEvaQueue;
+            ShadowRayQueue *_shadowRayQueue;
 
             // TODO temporay tracing config
             int _scanLines = 400;
             int _nIterations = 100;
 
-            // TODO extract base class {WorldIntersectable}
             SceneIntersectable *_world;
             MemoryAllocator &_allocator;
         };

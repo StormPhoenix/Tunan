@@ -205,7 +205,7 @@ namespace RENDER_NAMESPACE {
             wi = NORMALIZE(wi);
             Float cosTheta = ABS_DOT(-wi, si.ng);
             (*pdf) = density * (distance * distance) / cosTheta;
-            if (std::isinf(*pdf)) {
+            if (math::isInf(*pdf)) {
                 (*pdf) = 0.;
             }
         }

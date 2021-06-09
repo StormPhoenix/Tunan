@@ -22,11 +22,12 @@ namespace RENDER_NAMESPACE {
         MaterialEvaQueue *materialEvaQueue;
         AreaLightHitQueue *areaLightQueue;
         PixelStateArray *pixelStateArray;
-        uchar3 *outputImage;
+        ShadowRayQueue *shadowRayQueue;
         OptixTraversableHandle traversable;
     };
 
     struct RayGenData {
+        // TODO delete
         float r = 0.5;
     };
 
@@ -37,6 +38,7 @@ namespace RENDER_NAMESPACE {
     };
 
     struct MissData {
+        // TODO delete
         float b = 0.6;
     };
 }

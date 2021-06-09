@@ -126,6 +126,7 @@ set(TuNan_SRCS
         src/tunan/material/Material.cpp
         src/tunan/material/bsdfs.cpp
         src/tunan/scene/Ray.cpp
+        src/tunan/scene/film.cpp
         src/tunan/scene/shapes.cpp
         src/tunan/scene/lights.cpp
         src/tunan/scene/Camera.cpp

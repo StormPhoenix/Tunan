@@ -120,6 +120,8 @@ constexpr Float Inv_2Pi = 0.15915494309189533577;
 constexpr Float Inv_4Pi = 0.07957747154594766788;
 #endif // __BUILD_GPU_RENDER_ENABLE__
 
+constexpr Float ShadowEpsilon = 0.0001f;
+
 namespace RENDER_NAMESPACE {
     namespace math {
         template<typename T>
@@ -271,6 +273,17 @@ namespace RENDER_NAMESPACE {
         RENDER_CPU_GPU
         inline Vector3F swapComponent(const Vector3F v, int x, int y, int z) {
             return Vector3F(v[x], v[y], v[z]);
+        }
+
+        template<typename T, typename U, typename V>
+        RENDER_CPU_GPU inline constexpr T clamp(T x, U min, V max) {
+            if (x < min) {
+                return min;
+            }
+            if (x > max) {
+                return max;
+            }
+            return x;
         }
     }
 }

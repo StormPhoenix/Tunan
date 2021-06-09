@@ -30,14 +30,15 @@ namespace RENDER_NAMESPACE {
         OptixPipeline optixPipeline;
         OptixPipelineCompileOptions pipelineCompileOptions = {0};
         OptixProgramGroup raygenPG = 0;
-        // TODO rename
         OptixProgramGroup missPG = 0;
-        OptixProgramGroup closesthitPG = 0;
-        OptixShaderBindingTable sbt;
+        OptixProgramGroup closestHitPG = 0;
 
-        // TODO delete
-        CUdeviceptr d_vertices;
-        CUdeviceptr d_gas_output_buffer;
+        OptixProgramGroup raygenShadowRayPG = 0;
+        OptixProgramGroup anyHitShadowRayPG = 0;
+        OptixProgramGroup missShadowRayPG = 0;
+
+        OptixShaderBindingTable closeHitSbt;
+        OptixShaderBindingTable shadowRaySbt;
 
         OptixDeviceContext optixContext;
         CUstream cudaStream = 0;
@@ -51,7 +52,7 @@ namespace RENDER_NAMESPACE {
     };
 
     typedef SbtRecord<RayGenData> RaygenRecord;
-    typedef SbtRecord<ClosestHitData> ClosestHitRecord;
+    typedef SbtRecord<ClosestHitData> HitRecord;
     typedef SbtRecord<MissData> MissRecord;
 
     class OptixIntersectable : public SceneIntersectable {
@@ -60,11 +61,11 @@ namespace RENDER_NAMESPACE {
 
         void buildIntersectionStruct(SceneData &sceneData);
 
-        void intersect(RayQueue *rayQueue, MissQueue *missQueue, MaterialEvaQueue *materialEvaQueue,
-                       MediaEvaQueue *mediaEvaQueue, AreaLightHitQueue *areaLightQueue,
-                       PixelStateArray *pixelStateArray);
+        void findClosestHit(RayQueue *rayQueue, MissQueue *missQueue, MaterialEvaQueue *materialEvaQueue,
+                            MediaEvaQueue *mediaEvaQueue, AreaLightHitQueue *areaLightQueue,
+                            PixelStateArray *pixelStateArray) override;
 
-        void writeImage() override;
+        void traceShadowRay(ShadowRayQueue *shadowRayQueue, PixelStateArray *pixelStateArray) override;
 
     private:
         void initParams(SceneData &sceneData);
@@ -81,19 +82,19 @@ namespace RENDER_NAMESPACE {
 
         void createPipeline();
 
-        OptixTraversableHandle createTriangleGAS(SceneData &data, OptixProgramGroup &closestHitPG);
+        OptixTraversableHandle createTriangleGAS(SceneData &data, OptixProgramGroup &closestHitPG,
+                                                 OptixProgramGroup &shadowRayHitPG);
 
         OptixTraversableHandle buildBVH(const std::vector<OptixBuildInput> &buildInputs);
 
     private:
-        // TODO delete
-        int filmWidth, filmHeight;
         OptiXState state;
         // Memory allocator
         MemoryAllocator &allocator;
         uint64_t buildBVHBytes = 0;
-        // Closest hit SBT records
-        base::Vector<ClosestHitRecord> closestHitRecords;
+        // SBT records
+        base::Vector<HitRecord> closestHitRecords;
+        base::Vector<HitRecord> shadowRayRecords;
     };
 }
 
