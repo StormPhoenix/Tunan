@@ -26,7 +26,7 @@ namespace RENDER_NAMESPACE {
 
     class DiffuseAreaLight {
     public:
-        DiffuseAreaLight(const Spectrum &intensity, Shape shape,
+        DiffuseAreaLight(const Spectrum &radiance, Shape shape,
                          const MediumInterface *mediumBoundary, bool twoSided = false);
 
         RENDER_CPU_GPU
@@ -44,7 +44,7 @@ namespace RENDER_NAMESPACE {
     protected:
         Shape _shape;
         bool _twoSided = false;
-        Spectrum _intensity;
+        Spectrum _radiance;
         LightSourceType _type = Area;
         const MediumInterface *_mediumInterface = nullptr;
     };

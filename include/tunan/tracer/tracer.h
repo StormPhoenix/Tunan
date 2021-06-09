@@ -8,6 +8,7 @@
 #include <tunan/math.h>
 #include <tunan/common.h>
 #include <tunan/scene/Ray.h>
+#include <tunan/scene/lights.h>
 #include <tunan/material/Material.h>
 #include <tunan/base/spectrum.h>
 #include <tunan/base/containers.h>
@@ -62,7 +63,11 @@ namespace RENDER_NAMESPACE {
         } PixelState;
 
         typedef struct AreaLightHitDetails {
-            // TODO
+            int bounce;
+            bool specularBounce;
+            int pixelIndex;
+            DiffuseAreaLight *areaLight = nullptr;
+            SurfaceInteraction si;
         } AreaLightHitDetails;
 
         typedef base::Queue <RayDetails> RayQueue;

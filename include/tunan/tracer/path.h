@@ -33,12 +33,14 @@ namespace RENDER_NAMESPACE {
             template<typename SamplerType>
             void generateRaySamples(int sampleIndex, int bounce);
 
-            void evaluateMissRays(int sampleIndex, int scanLine);
-
             void evaluateMaterialBSDF(int bounce);
 
             template<typename MaterialType>
             void evaluateMaterialBSDF(int bounce);
+
+            void evaluateAreaLightQueue();
+
+            void evaluateMissRays(int sampleIndex, int scanLine);
 
         protected:
             RayQueue *currentRayQueue(int depth);

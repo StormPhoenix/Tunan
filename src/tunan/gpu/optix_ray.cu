@@ -45,6 +45,16 @@ extern "C" __global__ void __closesthit__scene() {
     SurfaceInteraction si = data->mesh->buildSurfaceInteraction(triangleIndex, barycentric.x,
                                                                 barycentric.y, -r.ray.getDirection());
 
+    if (data->areaLights != nullptr) {
+        AreaLightHitDetails areaLightHitDetails;
+        areaLightHitDetails.areaLight = data->areaLights + triangleIndex;
+        areaLightHitDetails.pixelIndex = r.pixelIndex;
+        areaLightHitDetails.bounce = r.bounce;
+        areaLightHitDetails.si = si;
+        areaLightHitDetails.specularBounce = r.specularBounce;
+        params.areaLightQueue->enqueue(areaLightHitDetails);
+    }
+
     MaterialEvaDetails materialEvaDetails;
     materialEvaDetails.bounce = r.bounce;
     materialEvaDetails.pixelIndex = r.pixelIndex;

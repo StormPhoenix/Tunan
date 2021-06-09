@@ -20,6 +20,7 @@ namespace RENDER_NAMESPACE {
         RayQueue *rayQueue;
         MissQueue *missQueue;
         MaterialEvaQueue *materialEvaQueue;
+        AreaLightHitQueue *areaLightQueue;
         PixelStateArray *pixelStateArray;
         uchar3 *outputImage;
         OptixTraversableHandle traversable;

@@ -6,9 +6,9 @@
 
 namespace RENDER_NAMESPACE {
 
-    DiffuseAreaLight::DiffuseAreaLight(const Spectrum &intensity, Shape shape,
+    DiffuseAreaLight::DiffuseAreaLight(const Spectrum &radiance, Shape shape,
                                        const MediumInterface *mediumInterface, bool twoSided) :
-            _intensity(intensity), _shape(shape), _type(Area), _mediumInterface(mediumInterface), _twoSided(twoSided) {}
+            _radiance(radiance), _shape(shape), _type(Area), _mediumInterface(mediumInterface), _twoSided(twoSided) {}
 
     RENDER_CPU_GPU
     Spectrum DiffuseAreaLight::sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv) {
@@ -22,7 +22,7 @@ namespace RENDER_NAMESPACE {
     RENDER_CPU_GPU
     Spectrum DiffuseAreaLight::L(const Interaction &interaction, const Vector3F &wo) const {
         Float cosTheta = DOT(interaction.ng, wo);
-        return (_twoSided || cosTheta > 0) ? _intensity : Spectrum(0.0);
+        return (_twoSided || cosTheta > 0) ? _radiance : Spectrum(0.0);
     }
 
     RENDER_CPU_GPU

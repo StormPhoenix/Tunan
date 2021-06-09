@@ -59,6 +59,7 @@ namespace RENDER_NAMESPACE {
                     for (int bounce = 0; bounce < _maxBounce; bounce++) {
                         _missQueue->reset();
                         _materialEvaQueue->reset();
+                        _areaLightEvaQueue->reset();
                         nextRayQueue(bounce)->reset();
 
                         generateRaySamples(sampleIndex, bounce);
@@ -66,8 +67,9 @@ namespace RENDER_NAMESPACE {
                                           _mediaEvaQueue, _areaLightEvaQueue, _pixelArray);
                         // TODO Handle media queue
                         // TODO Handle area light queue
-                        // TODO
+                        // TODO Handle missing queue
 //                        evaluateMissRays(sampleIndex, row);
+                        evaluateAreaLightQueue();
                         // TODO
                         evaluateMaterialBSDF(bounce);
                     }
@@ -86,6 +88,17 @@ namespace RENDER_NAMESPACE {
             PathTracer *tracer;
             int bounce;
         } MaterialEvaWrapper;
+
+        void PathTracer::evaluateAreaLightQueue() {
+            auto func = RENDER_CPU_GPU_LAMBDA(AreaLightHitDetails &m) {
+                if (m.bounce == 0 || m.specularBounce) {
+                    Spectrum L = m.areaLight->L(m.si, m.si.wo);
+                    PixelState &state = (*_pixelArray)[m.pixelIndex];
+                    state.L += state.beta * L;
+                }
+            };
+            parallel::parallelForQueue(func, _areaLightEvaQueue, _maxQueueSize);
+        }
 
         void PathTracer::evaluateMaterialBSDF(int bounce) {
             forEachType(MaterialEvaWrapper({this, bounce}), Material::Types());
@@ -108,7 +121,6 @@ namespace RENDER_NAMESPACE {
                     // TODO sample from light
                 }
 
-//                printf("ss");
                 // sample direction
                 PixelState &state = (*_pixelArray)[m.pixelIndex];
                 Vector3F wi;

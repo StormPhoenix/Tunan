@@ -272,12 +272,13 @@ namespace RENDER_NAMESPACE {
     }
 
     void OptixIntersectable::intersect(RayQueue *rayQueue, MissQueue *missQueue, MaterialEvaQueue *materialEvaQueue,
-                                       MediaEvaQueue *mediaEvaQueue, AreaLightHitQueue *areaLightHitQueue,
+                                       MediaEvaQueue *mediaEvaQueue, AreaLightHitQueue *areaLightQueue,
                                        PixelStateArray *pixelStateArray) {
         state.params.rayQueue = rayQueue;
         state.params.missQueue = missQueue;
-        state.params.pixelStateArray = pixelStateArray;
         state.params.materialEvaQueue = materialEvaQueue;
+        state.params.areaLightQueue = areaLightQueue;
+        state.params.pixelStateArray = pixelStateArray;
 
         void *deviceParams;
         CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>( &deviceParams ), sizeof(RayParams)));
