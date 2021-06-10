@@ -104,7 +104,7 @@ namespace RENDER_NAMESPACE {
                 *pdf = 1 - reflectProb;
                 Spectrum f = _transmittance * (1.0 - reflectProb) / std::abs(wi->y);
                 if (_mode == RADIANCE) {
-                    f *= std::pow(refraction, 2);
+                    f *= (refraction * refraction);
                 }
                 if (sampleType != nullptr) {
                     *sampleType = BxDFType(BSDF_SPECULAR | BSDF_TRANSMISSION);

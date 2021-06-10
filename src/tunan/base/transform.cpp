@@ -37,11 +37,12 @@ namespace RENDER_NAMESPACE {
         }
 
         RENDER_CPU_GPU
-        Vector3F Transform::transformNormal(const Vector3F &n) const {
+        Vector3F Transform::transformNormal(const Normal3F &n) const {
+            Normal3F normal = NORMALIZE(n);
             if (_identity) {
-                return n;
+                return normal;
             }
-            Vector3F ret = INVERSE_TRANSPOSE(_transformMatrix) * Vector4d(n, 0.0f);
+            Vector3F ret = INVERSE_TRANSPOSE(_transformMatrix) * Vector4d(normal, 0.0f);
             return NORMALIZE(ret);
         }
 

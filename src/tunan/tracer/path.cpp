@@ -114,12 +114,10 @@ namespace RENDER_NAMESPACE {
         }
 
         void PathTracer::updateFilm(int nCameraRays) {
-            auto func = RENDER_CPU_GPU_LAMBDA(int
-            idx) {
+            auto func = RENDER_CPU_GPU_LAMBDA(int idx) {
                 PixelState &state = (*_pixelArray)[idx];
                 int pixelX = state.pixelX;
                 int pixelY = state.pixelY;
-
                 _film->addSpectrum(state.L, pixelY, pixelX);
             };
             parallel::parallelFor(func, nCameraRays);
@@ -206,7 +204,6 @@ namespace RENDER_NAMESPACE {
                 if (f.isBlack() || pdf == 0.) {
                     return;
                 }
-
                 // evaluate beta
                 Float cosTheta = ABS_DOT(m.si.ns, NORMALIZE(wi));
                 state.beta *= (f * cosTheta / pdf);

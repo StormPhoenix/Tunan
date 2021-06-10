@@ -16,10 +16,13 @@ namespace RENDER_NAMESPACE {
             if (cosThetaI < 0) {
                 // Traver form inner
                 cosThetaI = std::abs(cosThetaI);
-                std::swap(etaI, etaT);
+                Float tmp = etaI;
+                etaI = etaT;
+                etaT = tmp;
             }
 
-            Float sinThetaI = std::sqrt((std::max)(Float(0.), Float(1 - std::pow(cosThetaI, 2))));
+            Float sinThetaI2 = std::max(Float(0.), Float(1 - cosThetaI * cosThetaI));
+            Float sinThetaI = std::sqrt(sinThetaI2);
             Float sinThetaT = sinThetaI * (etaI / etaT);
 
             if (sinThetaT >= 1) {
@@ -27,15 +30,13 @@ namespace RENDER_NAMESPACE {
                 return 1.0f;
             }
 
-            Float cosThetaT = std::sqrt((std::max)(Float(0.), Float(1 - std::pow(sinThetaT, 2))));
-            // 计算 R_parallel
-            Float parallelR = ((etaT * cosThetaI) - (etaI * cosThetaT)) /
-                              ((etaT * cosThetaI) + (etaI * cosThetaT));
-            Float perpendicularR = ((etaI * cosThetaI) - (etaT * cosThetaT)) /
-                                   ((etaI * cosThetaI) + (etaT * cosThetaT));
+            Float cosThetaT2 = std::max(Float(0.), Float(1.0 - sinThetaT * sinThetaT));
+            Float cosThetaT = std::sqrt(cosThetaT2);
+
+            Float parallelR = ((etaT * cosThetaI) - (etaI * cosThetaT)) / ((etaT * cosThetaI) + (etaI * cosThetaT));
+            Float perpendicularR = ((etaI * cosThetaI) - (etaT * cosThetaT)) /((etaI * cosThetaI) + (etaT * cosThetaT));
             return 0.5 * (parallelR * parallelR + perpendicularR * perpendicularR);
         }
-
     }
 }
 

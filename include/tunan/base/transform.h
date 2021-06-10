@@ -25,7 +25,7 @@ namespace RENDER_NAMESPACE {
             Vector3F transformVector(const Vector3F &v) const;
 
             RENDER_CPU_GPU
-            Vector3F transformNormal(const Vector3F &n) const;
+            Vector3F transformNormal(const Normal3F &n) const;
 
             RENDER_CPU_GPU
             Matrix4F mat() const;
