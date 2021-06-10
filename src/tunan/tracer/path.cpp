@@ -236,8 +236,8 @@ namespace RENDER_NAMESPACE {
                 int bounce = r.bounce;
                 int pixelIndex = r.pixelIndex;
                 // TODO very important
-                // 2 for CameraSamples
-                int dimension = 2 + (3 + 3) * bounce;
+                // 4 for CameraSamples
+                int dimension = 4 + (3 + 3) * bounce;
 
                 PixelState &pixelState = (*_pixelArray)[pixelIndex];
 
@@ -279,6 +279,7 @@ namespace RENDER_NAMESPACE {
 
                 CameraSamples cs;
                 cs.uvLens = sampler.sample2D();
+                cs.pixelJitter = sampler.sample2D();
 
                 RayDetails rayDetails;
                 rayDetails.ray = _camera->generateRayDifferential(pixelX, pixelY, cs);

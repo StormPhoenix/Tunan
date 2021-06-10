@@ -26,9 +26,11 @@ To be continued ...
 ## Processing
 
 - [ ] Material
-    - [ ] ConstantTexture / ImageTexture
+    - [x] ConstantTexture
+    - [ ] ImageTexture
     - [x] LambertianMaterial
-    - [ ] DielectricMaterial
+    - [x] DielectricMaterial
+    - [x] MirrorMaterial
     - [ ] MicrofacetMaterial
     - [ ] OrenLayerMaterial
     

@@ -14,6 +14,7 @@ namespace RENDER_NAMESPACE {
     namespace sampler {
         typedef struct CameraSamples {
             Point2F uvLens;
+            Point2F pixelJitter;
         } CameraSamples;
 
         class IndependentSampler {

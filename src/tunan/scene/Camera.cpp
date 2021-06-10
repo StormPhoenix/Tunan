@@ -57,8 +57,8 @@ namespace RENDER_NAMESPACE {
 
     RENDER_CPU_GPU
     Ray Camera::generateRayDifferential(Float pixelX, Float pixelY, const CameraSamples &cameraSamples) const {
-        Float x = pixelX;
-        Float y = pixelY;
+        Float x = pixelX + cameraSamples.pixelJitter[0] - 0.5f;
+        Float y = pixelY + cameraSamples.pixelJitter[1] - 0.5f;
 
         // Camera space
         Point3F pOrigin = Point3F(0, 0, 0);
