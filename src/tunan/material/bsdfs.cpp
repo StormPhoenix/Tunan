@@ -46,11 +46,6 @@ namespace RENDER_NAMESPACE {
         }
 
         RENDER_CPU_GPU
-        BxDFType LambertianBxDF::type() const {
-            return _type;
-        }
-
-        RENDER_CPU_GPU
         FresnelSpecularBxDF::FresnelSpecularBxDF() :
                 _type(BxDFType(BSDF_SPECULAR | BSDF_REFLECTION | BSDF_TRANSMISSION)) {}
 
@@ -121,6 +116,41 @@ namespace RENDER_NAMESPACE {
         RENDER_CPU_GPU
         Float FresnelSpecularBxDF::samplePdf(const Vector3F &wo, const Vector3F &wi) const {
             return 0.0;
+        }
+
+        RENDER_CPU_GPU
+        SpecularReflectionBxDF::SpecularReflectionBxDF() :
+                _type(BxDFType(BSDF_SPECULAR | BSDF_REFLECTION)) {}
+
+        RENDER_CPU_GPU
+        SpecularReflectionBxDF::SpecularReflectionBxDF(const Spectrum &Ks) :
+                _type(BxDFType(BSDF_SPECULAR | BSDF_REFLECTION)),
+                _Ks(Ks) {}
+
+        RENDER_CPU_GPU
+        Spectrum SpecularReflectionBxDF::f(const Vector3F &wo, const Vector3F &wi) const {
+            return Spectrum(0.0f);
+        }
+
+        RENDER_CPU_GPU
+        Spectrum SpecularReflectionBxDF::sampleF(const Vector3F &wo, Vector3F *wi, Float *pdf,
+                                                 Vector2F uv, BxDFType *sampleType) {
+            *wi = Vector3F(-wo.x, wo.y, -wo.z);
+            *pdf = 1;
+            if (sampleType != nullptr) {
+                *sampleType = BxDFType(BSDF_SPECULAR | BSDF_REFLECTION);
+            }
+
+            Float cosTheta = std::abs((*wi).y);
+            if (cosTheta == 0.) {
+                return Spectrum(0.);
+            }
+            return _Ks / cosTheta;
+        }
+
+        RENDER_CPU_GPU
+        Float SpecularReflectionBxDF::samplePdf(const Vector3F &wo, const Vector3F &wi) const {
+            return 0;
         }
 
         RENDER_CPU_GPU

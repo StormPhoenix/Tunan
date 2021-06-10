@@ -608,6 +608,9 @@ namespace RENDER_NAMESPACE {
             return material;
         }
 
+        Material createMirrorMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
+            return allocator.newObject<Mirror>();
+        }
 
         void handleTagBSDF(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parent,
                            SceneData &sceneData, MemoryAllocator &allocator) {
@@ -619,9 +622,9 @@ namespace RENDER_NAMESPACE {
                 material = createDiffuseMaterial(parseInfo, allocator);
             } else if (type == "dielectric") {
                 material = createDielectricMaterial(parseInfo, allocator);
-                /*
             } else if (type == "mirror") {
                 material = createMirrorMaterial(parseInfo);
+                /*
             } else if (type == "glass") {
                 material = createGlassMaterial(parseInfo);
             } else if (type == "roughconductor" || type == "conductor") {

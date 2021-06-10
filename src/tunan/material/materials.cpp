@@ -48,6 +48,21 @@ namespace RENDER_NAMESPACE {
             }
         }
 
+        Mirror::Mirror() {}
+
+        Mirror::Mirror(SpectrumTexture &Ks) : _Ks(Ks) {}
+
+        RENDER_CPU_GPU
+        BSDF Mirror::evaluateBSDF(SurfaceInteraction &si, SpecularReflectionBxDF *bxdf, TransportMode mode) {
+            BSDF bsdf = BSDF(si.ng, si.ns, si.wo);
+            if (_Ks.nullable()) {
+                (*bxdf) = SpecularReflectionBxDF(Spectrum(1.0));
+            } else {
+                (*bxdf) = SpecularReflectionBxDF(_Ks.evaluate(si));
+            }
+            bsdf.setBxDF(bxdf);
+        }
+
         RENDER_CPU_GPU
         inline bool Material::isSpecular() {
             auto func = [&](auto ptr) { return ptr->isSpecular(); };

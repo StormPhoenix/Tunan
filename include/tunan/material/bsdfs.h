@@ -47,7 +47,9 @@ namespace RENDER_NAMESPACE {
             inline Float samplePdf(const Vector3F &wo, const Vector3F &wi) const;
 
             RENDER_CPU_GPU
-            inline BxDFType type() const;
+            inline BxDFType type() const {
+                return _type;
+            }
 
             RENDER_CPU_GPU
             inline ~LambertianBxDF() {}
@@ -79,7 +81,9 @@ namespace RENDER_NAMESPACE {
             inline Float samplePdf(const Vector3F &wo, const Vector3F &wi) const;
 
             RENDER_CPU_GPU
-            inline BxDFType type() const;
+            inline BxDFType type() const {
+                return _type;
+            }
 
             RENDER_CPU_GPU
             inline ~FresnelSpecularBxDF() {}
@@ -92,6 +96,38 @@ namespace RENDER_NAMESPACE {
             TransportMode _mode;
             BxDFType _type;
         };
+
+        class SpecularReflectionBxDF {
+        public:
+            RENDER_CPU_GPU
+            SpecularReflectionBxDF();
+
+            RENDER_CPU_GPU
+            SpecularReflectionBxDF(const Spectrum &Ks);
+
+            RENDER_CPU_GPU
+            Spectrum f(const Vector3F &wo, const Vector3F &wi) const;
+
+            RENDER_CPU_GPU
+            Spectrum sampleF(const Vector3F &wo, Vector3F *wi, Float *pdf,
+                             Vector2F uv, BxDFType *sampleType);
+
+            RENDER_CPU_GPU
+            Float samplePdf(const Vector3F &wo, const Vector3F &wi) const;
+
+            RENDER_CPU_GPU
+            inline BxDFType type() const {
+                return _type;
+            }
+
+            RENDER_CPU_GPU
+            inline ~SpecularReflectionBxDF() {}
+
+        private:
+            Spectrum _Ks;
+            BxDFType _type;
+        };
+
 
         class BxDF : public TaggedPointer<LambertianBxDF, FresnelSpecularBxDF> {
         public:

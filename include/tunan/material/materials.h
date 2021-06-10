@@ -58,6 +58,27 @@ namespace RENDER_NAMESPACE {
             SpectrumTexture _T;
         };
 
+        class Mirror {
+        public:
+            using MaterialBxDF = SpecularReflectionBxDF;
+
+            Mirror();
+
+            Mirror(SpectrumTexture &Ks);
+
+            RENDER_CPU_GPU
+            inline bool isSpecular() const {
+                return true;
+            }
+
+            RENDER_CPU_GPU
+            BSDF evaluateBSDF(SurfaceInteraction &si, SpecularReflectionBxDF *bxdf,
+                              TransportMode mode = TransportMode::RADIANCE);
+
+        private:
+            SpectrumTexture _Ks;
+        };
+
 
         class Material : public TaggedPointer<Lambertian, Dielectric> {
         public:
