@@ -46,6 +46,7 @@ namespace RENDER_NAMESPACE {
                 insect.bsdf->addBXDF(ALLOC(memoryArena, BXDFMicrofacet)(Kr, Kt, _etaI, _etaT, distribution, mode));
                  */
             }
+            return bsdf;
         }
 
         Mirror::Mirror() {}
@@ -61,6 +62,7 @@ namespace RENDER_NAMESPACE {
                 (*bxdf) = SpecularReflectionBxDF(_Ks.evaluate(si));
             }
             bsdf.setBxDF(bxdf);
+            return bsdf;
         }
 
         RENDER_CPU_GPU

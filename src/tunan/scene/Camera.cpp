@@ -60,17 +60,16 @@ namespace RENDER_NAMESPACE {
         Float x = pixelX + cameraSamples.pixelJitter[0] - 0.5f;
         Float y = pixelY + cameraSamples.pixelJitter[1] - 0.5f;
 
-        // Camera space
+        // Sample camera ray in camera space
         Point3F pOrigin = Point3F(0, 0, 0);
         if (_lensRadius > 0) {
             Vector2F diskSample = sampler::diskUniformSampling(cameraSamples.uvLens, _lensRadius);
             pOrigin = Point3F(diskSample.x, diskSample.y, 0);
         }
-
         Point3F pTarget = _rasterToCamera.transformPoint(Point3F(x, y, 0));
         Vector3F rayDir = NORMALIZE(pTarget - pOrigin);
 
-        // Convert to world space
+        // Convert camera ray to world space
         Point3F pOriginWorld = _cameraToWorld.transformPoint(pOrigin);
         Vector3F pDirWorld = NORMALIZE(_cameraToWorld.transformVector(rayDir));
 

@@ -129,7 +129,7 @@ namespace RENDER_NAMESPACE {
         };
 
 
-        class BxDF : public TaggedPointer<LambertianBxDF, FresnelSpecularBxDF> {
+        class BxDF : public TaggedPointer<LambertianBxDF, FresnelSpecularBxDF, SpecularReflectionBxDF> {
         public:
             using TaggedPointer::TaggedPointer;
 

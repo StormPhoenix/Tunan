@@ -15,13 +15,9 @@
 
 namespace RENDER_NAMESPACE {
     namespace material {
-        using utils::TaggedPointer;
-        using utils::MemoryAllocator;
-
-        using base::Spectrum;
-        using base::SurfaceInteraction;
-
+        using namespace base;
         using namespace bsdf;
+        using namespace utils;
 
         class Lambertian {
         public:
@@ -74,13 +70,11 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU
             BSDF evaluateBSDF(SurfaceInteraction &si, SpecularReflectionBxDF *bxdf,
                               TransportMode mode = TransportMode::RADIANCE);
-
         private:
             SpectrumTexture _Ks;
         };
 
-
-        class Material : public TaggedPointer<Lambertian, Dielectric> {
+        class Material : public TaggedPointer<Lambertian, Dielectric, Mirror> {
         public:
             using TaggedPointer::TaggedPointer;
 

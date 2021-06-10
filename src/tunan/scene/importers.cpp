@@ -623,7 +623,7 @@ namespace RENDER_NAMESPACE {
             } else if (type == "dielectric") {
                 material = createDielectricMaterial(parseInfo, allocator);
             } else if (type == "mirror") {
-                material = createMirrorMaterial(parseInfo);
+                material = createMirrorMaterial(parseInfo, allocator);
                 /*
             } else if (type == "glass") {
                 material = createGlassMaterial(parseInfo);
