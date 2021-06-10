@@ -9,6 +9,7 @@
 #include <tunan/base/spectrum.h>
 #include <tunan/base/interactions.h>
 #include <tunan/material/bsdfs.h>
+#include <tunan/material/textures.h>
 #include <tunan/utils/TaggedPointer.h>
 #include <tunan/utils/MemoryAllocator.h>
 
@@ -28,7 +29,7 @@ namespace RENDER_NAMESPACE {
         public:
             using MaterialBxDF = LambertianBxDF;
 
-            Lambertian(Spectrum Kd) : _Kd(Kd) {}
+            Lambertian(SpectrumTexture Kd) : _Kd(Kd) {}
 
             RENDER_CPU_GPU BSDF evaluateBSDF(SurfaceInteraction &si, LambertianBxDF *bxdf,
                                              TransportMode mode = TransportMode::RADIANCE);
@@ -38,7 +39,7 @@ namespace RENDER_NAMESPACE {
             }
 
         private:
-            Spectrum _Kd;
+            SpectrumTexture _Kd;
         };
 
         class Material : public TaggedPointer<Lambertian> {

@@ -12,6 +12,7 @@
 #include <tunan/utils/type_utils.h>
 
 #include <iostream>
+#include <sstream>
 
 #ifdef __BUILD_GPU_RENDER_ENABLE__
 
@@ -24,6 +25,14 @@ namespace RENDER_NAMESPACE {
         using sampler::SamplerFactory;
         using namespace bsdf;
 
+        void printDetails(PTParameters &params) {
+            // Print config info
+            std::cout << std::endl << "Using render type: PT" << std::endl;
+            std::cout << "Max depth: " << params.maxBounce << std::endl;
+            std::cout << "Sample number: " << params.nIterations << std::endl;
+            std::cout << "Size: (" << params.filmWidth << ", " << params.filmHeight << ")" << std::endl;
+        }
+
         PathTracer::PathTracer(SceneData &parsedScene, MemoryAllocator &allocator) :
                 _allocator(allocator) {
 #ifdef __BUILD_GPU_RENDER_ENABLE__
@@ -31,15 +40,19 @@ namespace RENDER_NAMESPACE {
 #else
             // TODO cpu scene intersectable
 #endif
-            _filmWidth = parsedScene.width;
-            _filmHeight = parsedScene.height;
-            _camera = allocator.newObject<Camera>(parsedScene.cameraToWorld, parsedScene.fov, _filmWidth, _filmHeight);
-            _sampler = SamplerFactory::newSampler(parsedScene.sampleNum, _allocator);
-            _nIterations = parsedScene.sampleNum;
-            _maxBounce = parsedScene.maxDepth;
+            params.filmWidth = parsedScene.width;
+            params.filmHeight = parsedScene.height;
+            params.maxBounce = parsedScene.maxDepth;
+            params.nIterations = parsedScene.sampleNum;
+            params.filename = parsedScene.filename;
+
+            _camera = allocator.newObject<Camera>(parsedScene.cameraToWorld, parsedScene.fov,
+                                                  params.filmWidth, params.filmHeight);
+            _sampler = SamplerFactory::newSampler(params.nIterations, _allocator);
+
 
             // Initialize queues
-            _maxQueueSize = _filmWidth * _scanLines;
+            _maxQueueSize = params.filmWidth * params.scanLines;
             _rayQueues[0] = allocator.newObject<RayQueue>(_maxQueueSize, allocator);
             _rayQueues[1] = allocator.newObject<RayQueue>(_maxQueueSize, allocator);
             _missQueue = allocator.newObject<MissQueue>(_maxQueueSize, allocator);
@@ -51,18 +64,19 @@ namespace RENDER_NAMESPACE {
             _pixelArray = allocator.newObject<PixelStateArray>(allocator);
             _pixelArray->reset(_maxQueueSize);
 
-            _film = allocator.newObject<Film>(_filmWidth, _filmHeight, allocator);
+            _film = allocator.newObject<Film>(params.filmWidth, params.filmHeight, allocator);
             _lights = parsedScene.lights;
         }
 
         void PathTracer::render() {
-            for (int sampleIndex = 0; sampleIndex < _nIterations; sampleIndex++) {
-                for (int row = 0; row < _filmHeight; row += _scanLines) {
+            printDetails(params);
+            for (int sampleIndex = 0; sampleIndex < params.nIterations; sampleIndex++) {
+                for (int row = 0; row < params.filmHeight; row += params.scanLines) {
                     // TODO other queues also need resets
                     currentRayQueue(0)->reset();
                     generateCameraRays(sampleIndex, row);
                     int nCameraRays = currentRayQueue(0)->size();
-                    for (int bounce = 0; bounce < _maxBounce; bounce++) {
+                    for (int bounce = 0; bounce < params.maxBounce; bounce++) {
                         if (currentRayQueue(bounce)->size() == 0) {
                             break;
                         }
@@ -84,13 +98,19 @@ namespace RENDER_NAMESPACE {
                     }
                     updateFilm(nCameraRays);
                 }
-                // TODO display
-                if (sampleIndex % 10 == 0) {
-                    std::cout << sampleIndex << std::endl;
+
+                // Write image frequently
+                if ((params.writeFrequency > 0 && (sampleIndex + 1) % params.writeFrequency == 0)) {
+                    Float sampleWeight = 1.0 / (sampleIndex + 1);
+                    std::string prefix;
+                    std::stringstream ss;
+                    ss << "SSP" << sampleIndex + 1 << "_";
+                    ss >> prefix;
+
+                    _film->writeImage((prefix + params.filename).c_str(), sampleWeight);
                 }
             }
-            std::string filename = "test1.png";
-            _film->writeImage(filename.c_str(), 1.0 / _nIterations);
+            _film->writeImage(params.filename.c_str(), 1.0 / params.nIterations);
         }
 
         void PathTracer::updateFilm(int nCameraRays) {
@@ -244,13 +264,12 @@ namespace RENDER_NAMESPACE {
         template<typename SamplerType>
         void PathTracer::generateCameraRays(int sampleIndex, int scanLine) {
             RayQueue *rayQueue = currentRayQueue(0);
-            auto func = RENDER_CPU_GPU_LAMBDA(int
-            idx) {
-                int pixelY = idx / _filmWidth + scanLine;
-                int pixelX = idx % _filmWidth;
+            auto func = RENDER_CPU_GPU_LAMBDA(int idx) {
+                int pixelY = idx / params.filmWidth + scanLine;
+                int pixelX = idx % params.filmWidth;
 
-                if (pixelY < 0 || pixelY >= _filmHeight ||
-                    pixelX < 0 || pixelX >= _filmWidth) {
+                if (pixelY < 0 || pixelY >= params.filmHeight ||
+                    pixelX < 0 || pixelX >= params.filmWidth) {
                     return;
                 }
 

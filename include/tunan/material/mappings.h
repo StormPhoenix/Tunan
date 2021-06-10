@@ -57,6 +57,8 @@ namespace RENDER_NAMESPACE {
 
         class TextureMapping2D : public TaggedPointer<UVMapping2D, SphericalMapping2D> {
         public:
+            using TaggedPointer::TaggedPointer;
+
             RENDER_CPU_GPU
             Point2F map(const SurfaceInteraction &si);
         };

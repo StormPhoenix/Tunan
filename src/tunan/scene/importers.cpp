@@ -566,19 +566,17 @@ namespace RENDER_NAMESPACE {
 
         const Material createDiffuseMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
             Material material;
-
-            // TODO not support texture for now
             if (!info.attrExists("reflectance")) {
                 // Create default diffuse material
-//                Texture<Spectrum>::Ptr texture = std::make_shared<ConstantTexture<Spectrum>>(0.);
-//                material = _allocator.newObject<Lambertian>(texture);
-                material = allocator.newObject<Lambertian>(Spectrum(0));
+                SpectrumTexture texture = allocator.newObject<ConstantSpectrumTexture>(Spectrum(0.f));
+                material = allocator.newObject<Lambertian>(texture);
             } else {
                 auto type = info.getType("reflectance");
                 if (type == XmlAttrVal::Attr_Spectrum) {
                     Spectrum Kd = info.getSpectrumValue("reflectance", Spectrum(0));
-//                    Texture<Spectrum>::Ptr texture = std::make_shared<ConstantTexture<Spectrum>>(albedo);
-                    material = allocator.newObject<Lambertian>(Kd);
+                    SpectrumTexture texture = allocator.newObject<ConstantSpectrumTexture>(Spectrum(Kd));
+                    material = allocator.newObject<Lambertian>(texture);
+                    // TODO texture
 //                } else if (type == XmlAttrVal::Attr_SpectrumTexture) {
 //                    Texture<Spectrum>::Ptr texture = info.getSpectrumTextureValue("reflectance", nullptr);
 //                    ASSERT(texture, "Texture can't be nullptr. ");

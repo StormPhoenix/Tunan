@@ -40,8 +40,8 @@ To be continued ...
     - [ ] EnvironmentLight
     
 - [ ] 琐碎的小细节
-    - [ ] Frequency writing
-    - [ ] ParsedScene 属性管理
+    - [x] Frequency writing
+    - [x] ParsedScene 属性管理
     - [ ] Command line 输入
     
 - [ ] 对 empty material 的处理。如果不处理而是全部扔到 SurfaceInteractionQueue 里面，那么 empty material 的 intersecation 就会被忽略。

@@ -11,9 +11,7 @@ namespace RENDER_NAMESPACE {
 
         RENDER_CPU_GPU
         BSDF Lambertian::evaluateBSDF(SurfaceInteraction &si, LambertianBxDF *bxdf, TransportMode mode) {
-            // TODO delete
-//            Spectrum albedo = _Kd->evaluate(insect);
-            (*bxdf) = LambertianBxDF(_Kd);
+            (*bxdf) = LambertianBxDF(_Kd.evaluate(si));
             BSDF bsdf = BSDF(si.ng, si.ns, si.wo);
             bsdf.setBxDF(bxdf);
             return bsdf;

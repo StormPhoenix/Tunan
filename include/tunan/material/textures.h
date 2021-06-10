@@ -8,6 +8,7 @@
 #include <tunan/common.h>
 #include <tunan/base/spectrum.h>
 #include <tunan/base/interactions.h>
+#include <tunan/material/mappings.h>
 #include <tunan/utils/TaggedPointer.h>
 #include <tunan/utils/MemoryAllocator.h>
 
@@ -39,6 +40,20 @@ namespace RENDER_NAMESPACE {
             Spectrum _value;
         };
 
+        class ChessboardSpectrumTexture {
+        public:
+            ChessboardSpectrumTexture(const Spectrum &color1, const Spectrum &color2, Float uScale, Float vScale);
+
+            RENDER_CPU_GPU
+            Spectrum evaluate(const SurfaceInteraction &si);
+
+        private:
+            Spectrum _color1;
+            Spectrum _color2;
+            Float _uScale;
+            Float _vScale;
+        };
+
         class ConstantFloatTexture {
         public:
             ConstantFloatTexture() {
@@ -56,14 +71,32 @@ namespace RENDER_NAMESPACE {
             Float _value;
         };
 
-        class FloatTexture : public TaggedPointer<ConstantFloatTexture> {
+        class ChessboardFloatTexture {
         public:
+            ChessboardFloatTexture(Float color1, Float color2, Float uScale, Float vScale);
+
+            RENDER_CPU_GPU
+            Float evaluate(const SurfaceInteraction &si);
+
+        private:
+            Float _color1;
+            Float _color2;
+            Float _uScale;
+            Float _vScale;
+        };
+
+        class FloatTexture : public TaggedPointer<ConstantFloatTexture, ChessboardFloatTexture> {
+        public:
+            using TaggedPointer::TaggedPointer;
+
             RENDER_CPU_GPU
             Float evaluate(const SurfaceInteraction &si);
         };
 
-        class SpectrumTexture : public TaggedPointer<ConstantSpectrumTexture> {
+        class SpectrumTexture : public TaggedPointer<ConstantSpectrumTexture, ChessboardSpectrumTexture> {
         public:
+            using TaggedPointer::TaggedPointer;
+
             RENDER_CPU_GPU
             Spectrum evaluate(const SurfaceInteraction &si);
         };

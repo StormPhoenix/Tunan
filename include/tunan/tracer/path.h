@@ -18,6 +18,15 @@ namespace RENDER_NAMESPACE {
     namespace tracer {
         using sampler::Sampler;
 
+        typedef struct PTParameters {
+            std::string filename;
+            int scanLines = 400;
+            int nIterations = 100;
+            int maxBounce = 12;
+            int filmWidth, filmHeight;
+            int writeFrequency = 100;
+        } PTParameters;
+
         class PathTracer {
         public:
             PathTracer(SceneData &parsedScene, MemoryAllocator &allocator);
@@ -54,9 +63,7 @@ namespace RENDER_NAMESPACE {
             Film *_film = nullptr;
             Camera *_camera = nullptr;
             Sampler _sampler;
-            int _filmWidth, _filmHeight;
             int _maxQueueSize = 0;
-            int _maxBounce = 0;
 
             // Pixels
             PixelStateArray *_pixelArray;
@@ -71,9 +78,7 @@ namespace RENDER_NAMESPACE {
             AreaLightHitQueue *_areaLightEvaQueue;
             ShadowRayQueue *_shadowRayQueue;
 
-            // TODO temporay tracing config
-            int _scanLines = 400;
-            int _nIterations = 100;
+            PTParameters params;
 
             SceneIntersectable *_world;
             MemoryAllocator &_allocator;
