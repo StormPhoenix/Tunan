@@ -18,5 +18,12 @@ namespace RENDER_NAMESPACE {
             bsdf.setBxDF(bxdf);
             return bsdf;
         }
+
+
+        RENDER_CPU_GPU
+        inline bool Material::isSpecular() {
+            auto func = [&](auto ptr) { return ptr->isSpecular(); };
+            return proxyCall(func);
+        }
     }
 }

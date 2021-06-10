@@ -9,7 +9,7 @@
 #include <tunan/tracer/tracer.h>
 #include <tunan/gpu/optix_ray.h>
 #include <tunan/base/containers.h>
-#include <tunan/material/Material.h>
+#include <tunan/material/material.h>
 #include <tunan/scene/scene_data.h>
 #include <tunan/scene/SceneIntersectable.h>
 #include <tunan/utils/MemoryAllocator.h>

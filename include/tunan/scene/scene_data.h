@@ -10,7 +10,7 @@
 #include <tunan/scene/lights.h>
 #include <tunan/base/transform.h>
 #include <tunan/base/containers.h>
-#include <tunan/material/Material.h>
+#include <tunan/material/material.h>
 #include <tunan/utils/MemoryAllocator.h>
 
 #include <string>

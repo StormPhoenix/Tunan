@@ -123,8 +123,9 @@ set(TuNan_SRCS
         src/tunan/sampler/SamplerFactory.cpp
         src/tunan/sampler/samplers.cpp
         src/tunan/material/materials.cpp
-        src/tunan/material/Material.cpp
         src/tunan/material/bsdfs.cpp
+        src/tunan/material/textures.cpp
+        src/tunan/material/mappings.cpp
         src/tunan/scene/Ray.cpp
         src/tunan/scene/film.cpp
         src/tunan/scene/shapes.cpp

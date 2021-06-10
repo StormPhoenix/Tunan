@@ -18,17 +18,16 @@ namespace RENDER_NAMESPACE {
             Interaction() = default;
 
             RENDER_CPU_GPU
-            Interaction(Point3F p, Normal3F ng, Vector3F wo, Point2F uv)
-                    : p(p), ng(ng), uv(uv), wo(NORMALIZE(wo)), error(0) {}
+            Interaction(Point3F p, Normal3F ng, Vector3F wo)
+                    : p(p), ng(ng), wo(NORMALIZE(wo)), error(0) {}
 
             RENDER_CPU_GPU
-            Interaction(Point3F p, Normal3F ng, Vector3F wo, Point2F uv, Vector3F error)
-                    : p(p), ng(ng), uv(uv), wo(NORMALIZE(wo)), error(error) {}
+            Interaction(Point3F p, Normal3F ng, Vector3F wo, Vector3F error)
+                    : p(p), ng(ng), wo(NORMALIZE(wo)), error(error) {}
 
             Point3F p;
             Vector3F wo;
             Normal3F ng;
-            Point2F uv;
             Vector3F error;
             const MediumInterface *mediumInterface = nullptr;
         };
@@ -40,7 +39,7 @@ namespace RENDER_NAMESPACE {
 
             RENDER_CPU_GPU
             SurfaceInteraction(Point3F p, Normal3F ng, Normal3F ns, Vector3F wo, Point2F st, Vector3F error)
-                    : Interaction(p, ng, wo, st, error), ns(ns) {}
+                    : Interaction(p, ng, wo, error), ns(ns), uv(st) {}
 
             RENDER_CPU_GPU
             Ray generateRay(const Vector3F &direction) const;
@@ -48,6 +47,7 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU
             Ray generateRayTo(const Interaction &target) const;
 
+            Point2F uv;
             Normal3F ns;
         };
     }

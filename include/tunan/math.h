@@ -13,10 +13,18 @@
 
 #endif
 
+#if !defined(RENDER_GPU_CODE)
+
+#include <cstring>
+
+#endif
+
 #include <ext/glm/glm.hpp>
 #include <ext/glm/gtc/matrix_transform.hpp>
 #include <ext/glm/gtc/matrix_inverse.hpp>
 #include <ext/glm/gtx/compatibility.hpp>
+
+#include <algorithm>
 
 using Vector2d = glm::dvec2;
 using Vector2f = glm::vec2;
@@ -284,6 +292,87 @@ namespace RENDER_NAMESPACE {
                 return max;
             }
             return x;
+        }
+
+        namespace local_coord {
+            RENDER_CPU_GPU
+            inline Float vectorTheta(const Vector3F &dir) {
+                return std::acos(clamp(dir.y, -1, 1));
+            }
+
+            RENDER_CPU_GPU
+            inline Float vectorPhi(const Vector3F &dir) {
+                Float phi = std::atan2(dir.z, dir.x);
+                if (phi < 0) {
+                    phi += 2 * Pi;
+                }
+                return phi;
+            }
+
+            RENDER_CPU_GPU
+            inline Float vectorCosTheta(const Vector3F &v) {
+                return v.y;
+            }
+
+            RENDER_CPU_GPU
+            inline Float vectorAbsCosTheta(const Vector3F &v) {
+                return std::abs(v.y);
+            }
+
+            RENDER_CPU_GPU
+            inline Float vectorCosTheta2(const Vector3F &v) {
+                return v.y * v.y;
+            }
+
+            RENDER_CPU_GPU
+            inline Float vectorSinTheta2(const Vector3F &v) {
+                return std::max(Float(0.), 1 - vectorCosTheta2(v));
+            }
+
+            RENDER_CPU_GPU
+            inline Float vectorSinTheta(const Vector3F &v) {
+                return std::sqrt(vectorSinTheta2(v));
+            }
+
+            RENDER_CPU_GPU
+            inline Float vectorTanTheta(const Vector3F &v) {
+                return vectorSinTheta(v) / vectorCosTheta(v);
+            }
+
+            RENDER_CPU_GPU
+            inline Float vectorTanTheta2(const Vector3F &v) {
+                return vectorSinTheta2(v) / vectorCosTheta2(v);
+            }
+
+            RENDER_CPU_GPU
+            inline Float vectorCosPhi(const Vector3F &v) {
+                Float sin = vectorSinTheta(v);
+                if (sin == 0) {
+                    return 0.;
+                }
+                return clamp<Float, Float, Float>(v.x / sin, -1, 1);
+            }
+
+            RENDER_CPU_GPU
+            inline Float vectorSinPhi(const Vector3F &v) {
+                Float sin = vectorSinTheta(v);
+                if (sin == 0) {
+                    return 0.;
+                }
+                return clamp<Float, Float, Float>(v.z / sin, -1, 1);
+            }
+
+            RENDER_CPU_GPU
+            inline Float vectorSinPhi2(const Vector3F &v) {
+                Float sin = vectorSinPhi(v);
+                return sin * sin;
+            }
+
+            RENDER_CPU_GPU
+            inline Float vectorCosPhi2(const Vector3F &v) {
+                Float cos = vectorCosPhi(v);
+                return cos * cos;
+            }
         }
     }
 }

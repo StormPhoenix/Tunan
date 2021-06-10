@@ -9,14 +9,19 @@
 #include <tunan/base/spectrum.h>
 #include <tunan/base/interactions.h>
 #include <tunan/material/bsdfs.h>
-#include <tunan/material/Material.h>
+#include <tunan/utils/TaggedPointer.h>
 #include <tunan/utils/MemoryAllocator.h>
 
 namespace RENDER_NAMESPACE {
     namespace material {
+        using utils::TaggedPointer;
         using utils::MemoryAllocator;
+
         using base::Spectrum;
         using base::SurfaceInteraction;
+
+        using bsdf::BSDF;
+        using bsdf::TransportMode;
         using bsdf::LambertianBxDF;
 
         class Lambertian {
@@ -36,6 +41,12 @@ namespace RENDER_NAMESPACE {
             Spectrum _Kd;
         };
 
+        class Material : public TaggedPointer<Lambertian> {
+        public:
+            using TaggedPointer::TaggedPointer;
+
+            RENDER_CPU_GPU inline bool isSpecular();
+        };
     }
 }
 

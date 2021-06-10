@@ -9,7 +9,7 @@
 #include <tunan/common.h>
 #include <tunan/scene/Ray.h>
 #include <tunan/scene/lights.h>
-#include <tunan/material/Material.h>
+#include <tunan/material/material.h>
 #include <tunan/base/spectrum.h>
 #include <tunan/base/containers.h>
 #include <tunan/base/interactions.h>
