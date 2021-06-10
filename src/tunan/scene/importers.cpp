@@ -601,7 +601,6 @@ namespace RENDER_NAMESPACE {
             Float intIOR = info.getFloatValue("intIOR", 1.5);
             // thetaI
             Float extIOR = info.getFloatValue("extIOR", 1.0);
-            // 临时用 1.0 spectrum 代替
             SpectrumTexture texR = allocator.newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
             SpectrumTexture texT = allocator.newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
             material = allocator.newObject<Dielectric>(texR, texT, extIOR, intIOR, roughness);
@@ -610,6 +609,14 @@ namespace RENDER_NAMESPACE {
 
         Material createMirrorMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
             return allocator.newObject<Mirror>();
+        }
+
+        Material createGlassMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
+            Float extIOR = 1.;
+            Float intIOR = 1.5;
+            SpectrumTexture texR = allocator.newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
+            SpectrumTexture texT = allocator.newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
+            return allocator.newObject<Dielectric>(texR, texT, extIOR, intIOR);
         }
 
         void handleTagBSDF(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parent,
@@ -624,9 +631,9 @@ namespace RENDER_NAMESPACE {
                 material = createDielectricMaterial(parseInfo, allocator);
             } else if (type == "mirror") {
                 material = createMirrorMaterial(parseInfo, allocator);
-                /*
             } else if (type == "glass") {
-                material = createGlassMaterial(parseInfo);
+                material = createGlassMaterial(parseInfo, allocator);
+                /*
             } else if (type == "roughconductor" || type == "conductor") {
                 material = createRoughConductorMaterial(parseInfo);
             } else if (type == "twosided") {

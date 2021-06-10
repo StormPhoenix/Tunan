@@ -106,8 +106,8 @@ namespace RENDER_NAMESPACE {
                     std::stringstream ss;
                     ss << "SSP" << sampleIndex + 1 << "_";
                     ss >> prefix;
-
                     _film->writeImage((prefix + params.filename).c_str(), sampleWeight);
+                    std::cout << "\r" << float(sampleIndex + 1) * 100 / (params.nIterations) << " %" << std::flush;
                 }
             }
             _film->writeImage(params.filename.c_str(), 1.0 / params.nIterations);
