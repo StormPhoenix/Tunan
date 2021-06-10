@@ -57,7 +57,43 @@ namespace RENDER_NAMESPACE {
             BxDFType _type;
         };
 
-        class BxDF : public TaggedPointer<LambertianBxDF> {
+        class FresnelSpecularBxDF {
+        public:
+            RENDER_CPU_GPU
+            FresnelSpecularBxDF();
+
+            RENDER_CPU_GPU
+            FresnelSpecularBxDF(const Spectrum &reflectance,
+                                const Spectrum &transmittance,
+                                Float thetaI, Float thetaT,
+                                TransportMode mode = TransportMode::RADIANCE);
+
+            RENDER_CPU_GPU
+            Spectrum f(const Vector3F &wo, const Vector3F &wi) const;
+
+            RENDER_CPU_GPU
+            inline Spectrum sampleF(const Vector3F &wo, Vector3F *wi, Float *pdf,
+                                    Vector2F uv, BxDFType *sampleType);
+
+            RENDER_CPU_GPU
+            inline Float samplePdf(const Vector3F &wo, const Vector3F &wi) const;
+
+            RENDER_CPU_GPU
+            inline BxDFType type() const;
+
+            RENDER_CPU_GPU
+            inline ~FresnelSpecularBxDF() {}
+
+        private:
+            Float _thetaI;
+            Float _thetaT;
+            Spectrum _reflectance;
+            Spectrum _transmittance;
+            TransportMode _mode;
+            BxDFType _type;
+        };
+
+        class BxDF : public TaggedPointer<LambertianBxDF, FresnelSpecularBxDF> {
         public:
             using TaggedPointer::TaggedPointer;
 

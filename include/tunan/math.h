@@ -294,6 +294,22 @@ namespace RENDER_NAMESPACE {
             return x;
         }
 
+        RENDER_CPU_GPU
+        inline bool refract(const Vector3F &wo, const Normal3F &normal, Float refraction, Vector3F *wi) {
+            Float cosineThetaI = DOT(wo, normal);
+            Float sineThetaI = std::sqrt((std::max)(Float(0.), 1 - cosineThetaI * cosineThetaI));
+            Float sineThetaT = refraction * sineThetaI;
+            if (sineThetaT >= 1) {
+                // Can't do refraction
+                return false;
+            }
+
+            Float cosineThetaT = std::sqrt((std::max)(Float(0.), 1 - sineThetaT * sineThetaT));
+            *wi = refraction * (-wo) + (refraction * cosineThetaI - cosineThetaT) * normal;
+            return true;
+        }
+
+
         namespace local_coord {
             RENDER_CPU_GPU
             inline Float vectorTheta(const Vector3F &dir) {

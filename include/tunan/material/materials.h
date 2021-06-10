@@ -21,9 +21,7 @@ namespace RENDER_NAMESPACE {
         using base::Spectrum;
         using base::SurfaceInteraction;
 
-        using bsdf::BSDF;
-        using bsdf::TransportMode;
-        using bsdf::LambertianBxDF;
+        using namespace bsdf;
 
         class Lambertian {
         public:
@@ -34,7 +32,7 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU BSDF evaluateBSDF(SurfaceInteraction &si, LambertianBxDF *bxdf,
                                              TransportMode mode = TransportMode::RADIANCE);
 
-            RENDER_CPU_GPU bool isSpecular() {
+            RENDER_CPU_GPU inline bool isSpecular() {
                 return false;
             }
 
@@ -42,7 +40,26 @@ namespace RENDER_NAMESPACE {
             SpectrumTexture _Kd;
         };
 
-        class Material : public TaggedPointer<Lambertian> {
+        class Dielectric {
+        public:
+            using MaterialBxDF = FresnelSpecularBxDF;
+
+            Dielectric(SpectrumTexture R, SpectrumTexture T, Float etaI, Float etaT, Float roughness = 0.f);
+
+            RENDER_CPU_GPU bool isSpecular() const;
+
+            RENDER_CPU_GPU BSDF evaluateBSDF(SurfaceInteraction &si, FresnelSpecularBxDF *bxdf,
+                                             TransportMode mode = TransportMode::RADIANCE);
+
+        private:
+            Float _roughness;
+            Float _etaI, _etaT;
+            SpectrumTexture _R;
+            SpectrumTexture _T;
+        };
+
+
+        class Material : public TaggedPointer<Lambertian, Dielectric> {
         public:
             using TaggedPointer::TaggedPointer;
 

@@ -564,42 +564,62 @@ namespace RENDER_NAMESPACE {
             return;
         }
 
-        const Material createDiffuseMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
-            Material material;
-            if (!info.attrExists("reflectance")) {
-                // Create default diffuse material
-                SpectrumTexture texture = allocator.newObject<ConstantSpectrumTexture>(Spectrum(0.f));
-                material = allocator.newObject<Lambertian>(texture);
-            } else {
-                auto type = info.getType("reflectance");
-                if (type == XmlAttrVal::Attr_Spectrum) {
-                    Spectrum Kd = info.getSpectrumValue("reflectance", Spectrum(0));
-                    SpectrumTexture texture = allocator.newObject<ConstantSpectrumTexture>(Spectrum(Kd));
+         Material createDiffuseMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
+             Material material;
+             if (!info.attrExists("reflectance")) {
+                 // Create default diffuse material
+                 SpectrumTexture texture = allocator.newObject<ConstantSpectrumTexture>(Spectrum(0.f));
+                 material = allocator.newObject<Lambertian>(texture);
+             } else {
+                 auto type = info.getType("reflectance");
+                 if (type == XmlAttrVal::Attr_Spectrum) {
+                     Spectrum Kd = info.getSpectrumValue("reflectance", Spectrum(0));
+                     SpectrumTexture texture = allocator.newObject<ConstantSpectrumTexture>(Spectrum(Kd));
                     material = allocator.newObject<Lambertian>(texture);
                     // TODO texture
 //                } else if (type == XmlAttrVal::Attr_SpectrumTexture) {
 //                    Texture<Spectrum>::Ptr texture = info.getSpectrumTextureValue("reflectance", nullptr);
 //                    ASSERT(texture, "Texture can't be nullptr. ");
 //                    material = _allocator.newObject<Lambertian>(texture);
-                } else {
-                    // TODO
-                    ASSERT(false, "Reflectance type not supported .");
-                }
-            }
+                 } else {
+                     // TODO
+                     ASSERT(false, "Reflectance type not supported .");
+                 }
+             }
+             return material;
+         }
+
+        Material createDielectricMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
+            Material material;
+            auto intIORType = info.getType("intIOR");
+            auto extIORType = info.getType("extIOR");
+            ASSERT(intIORType == XmlAttrVal::Attr_Float && extIORType == XmlAttrVal::Attr_Float,
+                   "Only support float type IOR for now");
+
+            Float roughness = info.getFloatValue("alpha", 0.0);
+            // thetaT
+            Float intIOR = info.getFloatValue("intIOR", 1.5);
+            // thetaI
+            Float extIOR = info.getFloatValue("extIOR", 1.0);
+            // 临时用 1.0 spectrum 代替
+            SpectrumTexture texR = allocator.newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
+            SpectrumTexture texT = allocator.newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
+            material = allocator.newObject<Dielectric>(texR, texT, extIOR, intIOR, roughness);
             return material;
         }
 
+
         void handleTagBSDF(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parent,
-                                  SceneData &sceneData, MemoryAllocator &allocator) {
+                           SceneData &sceneData, MemoryAllocator &allocator) {
             std::string type = node.attribute("type").value();
             std::string id = node.attribute("id").value();
 
             Material material;
             if (type == "diffuse") {
                 material = createDiffuseMaterial(parseInfo, allocator);
-                /*
             } else if (type == "dielectric") {
-                material = createDielectricMaterial(parseInfo);
+                material = createDielectricMaterial(parseInfo, allocator);
+                /*
             } else if (type == "mirror") {
                 material = createMirrorMaterial(parseInfo);
             } else if (type == "glass") {

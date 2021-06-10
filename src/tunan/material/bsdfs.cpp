@@ -4,11 +4,12 @@
 
 #include <tunan/math.h>
 #include <tunan/material/bsdfs.h>
+#include <tunan/material/fresnels.h>
 #include <tunan/sampler/samplers.h>
 
 namespace RENDER_NAMESPACE {
     namespace bsdf {
-        RENDER_CPU_GPU
+
         LambertianBxDF::LambertianBxDF() :
                 _type(BxDFType(BSDF_DIFFUSE | BSDF_REFLECTION)), _Kd(0) {}
 
@@ -47,6 +48,79 @@ namespace RENDER_NAMESPACE {
         RENDER_CPU_GPU
         BxDFType LambertianBxDF::type() const {
             return _type;
+        }
+
+        RENDER_CPU_GPU
+        FresnelSpecularBxDF::FresnelSpecularBxDF() :
+                _type(BxDFType(BSDF_SPECULAR | BSDF_REFLECTION | BSDF_TRANSMISSION)) {}
+
+        RENDER_CPU_GPU
+        FresnelSpecularBxDF::FresnelSpecularBxDF(const Spectrum &reflectance, const Spectrum &transmittance,
+                                                 Float thetaI, Float thetaT, TransportMode mode) :
+                _type(BxDFType(BSDF_SPECULAR | BSDF_REFLECTION | BSDF_TRANSMISSION)),
+                _reflectance(reflectance), _transmittance(transmittance),
+                _thetaI(thetaI), _thetaT(thetaT), _mode(mode) {}
+
+        RENDER_CPU_GPU
+        Spectrum FresnelSpecularBxDF::f(const Vector3F &wo, const Vector3F &wi) const {
+            return Spectrum(0.0);
+        }
+
+        RENDER_CPU_GPU
+        Spectrum FresnelSpecularBxDF::sampleF(const Vector3F &wo, Vector3F *wi, Float *pdf,
+                                              Vector2F uv, BxDFType *sampleType) {
+            Float cosine = wo.y;
+            // compute reflect probability
+            Float reflectProb = fresnel::fresnelDielectric(cosine, _thetaI, _thetaT);
+            // reflect probability approximation
+//            Float reflectProb = math::schlick(cosine, _thetaI / _thetaT);
+
+            Float random = uv[0];
+            if (random < reflectProb) {
+                // do reflection
+                if (sampleType != nullptr) {
+                    *sampleType = BxDFType(BSDF_SPECULAR | BSDF_REFLECTION);
+                }
+                *wi = Vector3F(-wo.x, wo.y, -wo.z);
+                *pdf = reflectProb;
+                // f(p, w_o, w_i) / cos(theta(w_i))
+                if ((*wi).y == 0) {
+                    return Spectrum(0);
+                }
+                return reflectProb * _reflectance / abs(wi->y);
+            } else {
+                // refraction
+                Vector3F normal = Vector3F(0.0, 1.0, 0.0);
+                Float refraction;
+                if (wo.y > 0) {
+                    // Travel from outer
+                    refraction = _thetaI / _thetaT;
+                } else {
+                    // Travel from inner
+                    refraction = _thetaT / _thetaI;
+                    normal.y *= -1;
+                }
+
+                if (!math::refract(wo, normal, refraction, wi)) {
+                    // Totally reflection
+                    return Spectrum(0);
+                }
+
+                *pdf = 1 - reflectProb;
+                Spectrum f = _transmittance * (1.0 - reflectProb) / std::abs(wi->y);
+                if (_mode == RADIANCE) {
+                    f *= std::pow(refraction, 2);
+                }
+                if (sampleType != nullptr) {
+                    *sampleType = BxDFType(BSDF_SPECULAR | BSDF_TRANSMISSION);
+                }
+                return f;
+            }
+        }
+
+        RENDER_CPU_GPU
+        Float FresnelSpecularBxDF::samplePdf(const Vector3F &wo, const Vector3F &wi) const {
+            return 0.0;
         }
 
         RENDER_CPU_GPU
@@ -133,6 +207,10 @@ namespace RENDER_NAMESPACE {
 
         RENDER_CPU_GPU
         Spectrum BSDF::f(const Vector3F &worldWo, const Vector3F &worldWi, BxDFType type) const {
+            if (_bxdf.nullable()) {
+                return Spectrum(0.f);
+            }
+
             Vector3F wo = toObjectSpace(worldWo);
             Vector3F wi = toObjectSpace(worldWi);
 
@@ -150,6 +228,10 @@ namespace RENDER_NAMESPACE {
         RENDER_CPU_GPU
         Spectrum BSDF::sampleF(const Vector3F &worldWo, Vector3F *worldWi, Float *pdf,
                                Vector2F uv, BxDFType *sampleType, BxDFType type) {
+            if (_bxdf.nullable()) {
+                return Spectrum(0.f);
+            }
+
             bool matched = _bxdf.allIncludeOf(type);
             if (!matched) {
                 if (sampleType != nullptr) {
@@ -184,7 +266,7 @@ namespace RENDER_NAMESPACE {
 
         RENDER_CPU_GPU
         Float BSDF::samplePdf(const Vector3F &worldWo, const Vector3F &worldWi, BxDFType type) const {
-            if (_bxdf == nullptr) {
+            if (_bxdf.nullable()) {
                 return Float(0);
             }
 
@@ -198,7 +280,7 @@ namespace RENDER_NAMESPACE {
 
         RENDER_CPU_GPU
         int BSDF::allIncludeOf(BxDFType bxdfType) const {
-            if (_bxdf == nullptr) {
+            if (_bxdf.nullable()) {
                 return 0;
             }
             return _bxdf.allIncludeOf(bxdfType) ? 1 : 0;
@@ -206,7 +288,7 @@ namespace RENDER_NAMESPACE {
 
         RENDER_CPU_GPU
         int BSDF::hasAllOf(BxDFType bxdfType) const {
-            if (_bxdf == nullptr) {
+            if (_bxdf.nullable()) {
                 return 0;
             }
             return _bxdf.hasAllOf(bxdfType) ? 1 : 0;
@@ -214,7 +296,7 @@ namespace RENDER_NAMESPACE {
 
         RENDER_CPU_GPU
         int BSDF::hasAnyOf(const BxDFType bxdfType) const {
-            if (_bxdf == nullptr) {
+            if (_bxdf.nullable()) {
                 return 0;
             }
             return _bxdf.hasAnyOf(bxdfType) ? 1 : 0;
