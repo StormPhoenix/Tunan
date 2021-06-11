@@ -54,7 +54,7 @@ namespace RENDER_NAMESPACE {
 
 //            texcoords.resize(attrib.vertices.size() / 2);
             entity.nTexcoords = attrib.texcoords.size() / 2;
-            entity.texcoords = allocator.newObject<Point2F>(entity.nTexcoords);
+            entity.texcoords = allocator.allocateObjects<Point2F>(entity.nTexcoords);
             for (int i = 0; i < attrib.texcoords.size(); i += 2) {
                 Float x = attrib.texcoords[i];
                 Float y = attrib.texcoords[i + 1];
