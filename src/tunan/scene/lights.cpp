@@ -23,7 +23,7 @@ namespace RENDER_NAMESPACE {
         (*pdf) = 1.0;
 
         if (target != nullptr) {
-            target->p = eye.p;
+            target->p = _center;
             target->ng = -(*wi);
             target->wo = -(*wi);
             target->mediumInterface = _mediumInterface;

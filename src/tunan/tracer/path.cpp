@@ -182,16 +182,18 @@ namespace RENDER_NAMESPACE {
                             // TODO handle medium
                             Float cosTheta = ABS_DOT(m.si.ns, lightDirection);
                             ShadowRayDetails details;
-                            details.beta = state.beta * bsdf.f(m.si.wo, lightDirection) * cosTheta;
-                            details.scatterPdf = bsdf.samplePdf(m.si.wo, lightDirection);
-                            details.sampleLightPdf = samplePdf;
-                            details.deltaType = light.isDeltaType();
-                            details.pixelIndex = m.pixelIndex;
-                            details.L = Li;
                             details.ray = m.si.generateRayTo(target);
-                            details.tMax = details.ray.getStep();
-                            details.lightPdf = lightPdf;
-                            _shadowRayQueue->enqueue(details);
+                            if (details.ray.getStep() > details.ray.getMinStep()) {
+                                details.tMax = details.ray.getStep();
+                                details.beta = state.beta * bsdf.f(m.si.wo, lightDirection) * cosTheta;
+                                details.scatterPdf = bsdf.samplePdf(m.si.wo, lightDirection);
+                                details.sampleLightPdf = samplePdf;
+                                details.deltaType = light.isDeltaType();
+                                details.pixelIndex = m.pixelIndex;
+                                details.L = Li;
+                                details.lightPdf = lightPdf;
+                                _shadowRayQueue->enqueue(details);
+                            }
                         }
                     }
                 }

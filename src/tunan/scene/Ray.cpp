@@ -26,6 +26,7 @@ namespace RENDER_NAMESPACE {
     RENDER_CPU_GPU
     void Ray::setStep(Float step) {
         if (step < _minStep) {
+            _step = _minStep;
             return;
         }
         _step = step;

@@ -103,7 +103,7 @@ namespace RENDER_NAMESPACE {
 
     };
 
-    class Light : public utils::TaggedPointer<DiffuseAreaLight, PointLight> {
+    class Light : public utils::TaggedPointer<DiffuseAreaLight, PointLight, SpotLight> {
     public:
         using TaggedPointer::TaggedPointer;
 

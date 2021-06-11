@@ -688,10 +688,6 @@ namespace RENDER_NAMESPACE {
                     ASSERT(false, "Only support spectrum radiance for now.");
                 }
                 entity.createAreaLights(radiance, allocator);
-                // TODO light creation move to importScene
-                if (sceneData.lights == nullptr) {
-                    sceneData.lights = allocator.newObject<base::Vector<Light>>(allocator);
-                }
                 for (int i = 0; i < entity.nTriangles; i++) {
                     sceneData.lights->push_back(entity.areaLights + i);
                 }
@@ -922,6 +918,8 @@ namespace RENDER_NAMESPACE {
         void MitsubaSceneImporter::importScene(std::string sceneDirectory, SceneData &sceneData,
                                                MemoryAllocator &allocator) {
             sceneData.sceneDirectory = sceneDirectory;
+            sceneData.lights = allocator.newObject<base::Vector<Light>>(allocator);
+
             std::string xml_file = sceneDirectory + "scene.xml";
             std::cout << "Loading scene file: " << xml_file << std::endl;
 
@@ -942,7 +940,6 @@ namespace RENDER_NAMESPACE {
 //            }
 
             std::cout << "Loading finished. " << std::endl;
-//            return _scene;
         }
 
         MitsubaSceneImporter::MitsubaSceneImporter() {
