@@ -309,6 +309,10 @@ namespace RENDER_NAMESPACE {
             return true;
         }
 
+        RENDER_CPU_GPU
+        inline Float degreesToRadians(double degrees) {
+            return degrees * Pi / 180;
+        }
 
         namespace local_coord {
             RENDER_CPU_GPU

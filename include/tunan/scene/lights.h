@@ -23,6 +23,37 @@ namespace RENDER_NAMESPACE {
         Environment = 1 << 3
     } LightSourceType;
 
+    class SpotLight {
+    public:
+        SpotLight(const Spectrum &intensity, Transform lightToWorld, MediumInterface mediumBoundary,
+                  Float fallOffRange = 30, Float totalRange = 45);
+
+        RENDER_CPU_GPU
+        Spectrum sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf,
+                          Vector2F uv, Interaction *target);
+
+        RENDER_CPU_GPU
+        Float pdfLi(const Interaction &eye, const Vector3F &direction);
+
+        RENDER_CPU_GPU
+        inline LightSourceType getType() const {
+            return _type;
+        }
+
+    private:
+        RENDER_CPU_GPU
+        Spectrum fallOffWeight(const Vector3F &wo);
+
+    private:
+        LightSourceType _type;
+        Float _cosFallOffRange;
+        Float _cosTotalRange;
+        Spectrum _intensity;
+        Vector3F _center, _direction;
+        Transform _lightToWorld;
+        MediumInterface _mediumInterface;
+    };
+
     class PointLight {
     public:
         PointLight(const Spectrum &intensity, Transform lightToWorld, MediumInterface mediumInterface);
@@ -45,7 +76,6 @@ namespace RENDER_NAMESPACE {
         Transform _lightToWorld;
         MediumInterface _mediumInterface;
     };
-
 
     class DiffuseAreaLight {
     public:

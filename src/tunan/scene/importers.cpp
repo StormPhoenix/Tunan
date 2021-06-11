@@ -799,19 +799,16 @@ namespace RENDER_NAMESPACE {
                 Light pointLight = allocator.newObject<PointLight>(intensity, toWorld, MediumInterface());
                 sceneData.lights->push_back(pointLight);
                 std::cout << "\tCreate light: point light" << std::endl;
-                /*
             } else if (type == "spot") {
-                transform::Transform toWorldMat = info.getTransformValue("toWorld", Transform());
-                std::shared_ptr<transform::Transform> toWorld = std::make_shared<transform::Transform>(toWorldMat);
+                Transform toWorld = info.getTransformValue("toWorld", Transform());
                 Spectrum intensity = info.getSpectrumValue("intensity", Spectrum(0));
                 Float totalAngle = info.getFloatValue("totalAngle", 60.);
                 Float falloffAngle = info.getFloatValue("falloffAngle", 50.);
-                Light::Ptr spotLight = std::make_shared<SpotLight>(
-                        intensity, toWorld,
-                        MediumInterface(nullptr, nullptr),
-                        falloffAngle, totalAngle);
-                _scene->addLight(spotLight);
+                Light spotLight = allocator.newObject<SpotLight>(intensity, toWorld, MediumInterface(),
+                                                                 falloffAngle, totalAngle);
+                sceneData.lights->push_back(spotLight);
                 std::cout << "\tCreate light: spot light" << std::endl;
+                /*
             } else if (type == "envmap") {
                 transform::Transform toWorldMat = info.getTransformValue("toWorld", Transform());
                 std::shared_ptr<transform::Transform> toWorld = toWorldMat.ptr();

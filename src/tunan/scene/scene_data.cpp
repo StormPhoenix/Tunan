@@ -26,7 +26,7 @@ namespace RENDER_NAMESPACE {
             }
             Shape shape = allocator.newObject<Triangle>(p0, p1, p2, n0, n1, n2);
             // TODO medium
-            areaLights[i] = DiffuseAreaLight(radiance, shape, nullptr);
+            areaLights[i] = DiffuseAreaLight(radiance, shape, MediumInterface());
         }
     }
 }

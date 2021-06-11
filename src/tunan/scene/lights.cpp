@@ -5,6 +5,51 @@
 #include <tunan/scene/lights.h>
 
 namespace RENDER_NAMESPACE {
+    SpotLight::SpotLight(const Spectrum &intensity, Transform lightToWorld, MediumInterface mediumBoundary,
+                         Float fallOffRange, Float totalRange) :
+            _type(Delta_Position), _mediumInterface(mediumBoundary), _intensity(intensity),
+            _lightToWorld(lightToWorld) {
+        _center = _lightToWorld.transformPoint(Point3F(0));
+        _direction = NORMALIZE(_lightToWorld.transformVector(Vector3F(0, 1, 0)));
+
+        _cosFallOffRange = std::cos(math::degreesToRadians(fallOffRange));
+        _cosTotalRange = std::cos(math::degreesToRadians(totalRange));
+    }
+
+    RENDER_CPU_GPU
+    Spectrum SpotLight::sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf,
+                                 Vector2F uv, Interaction *target) {
+        (*wi) = NORMALIZE(_center - eye.p);
+        (*pdf) = 1.0;
+
+        if (target != nullptr) {
+            target->p = eye.p;
+            target->ng = -(*wi);
+            target->wo = -(*wi);
+            target->mediumInterface = _mediumInterface;
+            target->error = Vector3F(0);
+        }
+        Float distance = LENGTH(_center - eye.p);
+        return _intensity * fallOffWeight(-(*wi)) / (distance * distance);
+    }
+
+    RENDER_CPU_GPU
+    Float SpotLight::pdfLi(const Interaction &eye, const Vector3F &direction) {
+        return 0;
+    }
+
+    RENDER_CPU_GPU
+    Spectrum SpotLight::fallOffWeight(const Vector3F &wo) {
+        Float cosine = DOT(wo, _direction);
+        if (cosine < _cosTotalRange) {
+            return Spectrum(0);
+        } else if (cosine < _cosFallOffRange) {
+            Float fraction = (cosine - _cosTotalRange) / (_cosFallOffRange - _cosTotalRange);
+            return Spectrum(fraction * fraction * fraction * fraction);
+        } else {
+            return Spectrum(1.f);
+        }
+    }
 
     DiffuseAreaLight::DiffuseAreaLight(const Spectrum &radiance, Shape shape,
                                        MediumInterface mediumInterface, bool twoSided) :
@@ -55,12 +100,9 @@ namespace RENDER_NAMESPACE {
         (*wi) = NORMALIZE(_center - eye.p);
         (*pdf) = 1;
 
-        Vector3F samplePoint = _center;
-        Vector3F sampleDir = NORMALIZE(_center - eye.p);
-        Normal3F sampleNormal = -sampleDir;
         if (target != nullptr) {
-            target->p = samplePoint;
-            target->ng = sampleNormal;
+            target->p = _center;
+            target->ng = -(*wi);
             target->wo = -(*wi);
             target->error = Vector3F(0);
             target->mediumInterface = _mediumInterface;
