@@ -780,7 +780,9 @@ namespace RENDER_NAMESPACE {
             }
         }
 
-        static void handleTagEmitter(pugi::xml_node &node, XmlParseInfo &info, XmlParseInfo &parent) {
+        static void
+        handleTagEmitter(pugi::xml_node &node, XmlParseInfo &info, XmlParseInfo &parent,
+                         SceneData &sceneData, MemoryAllocator &allocator) {
             std::string type = node.attribute("type").value();
             if (type == "area") {
                 parent.hasAreaLight = true;
@@ -791,15 +793,13 @@ namespace RENDER_NAMESPACE {
                     ASSERT(false, "Only support spectrum type radiance.");
                 }
                 std::cout << "\tCreate light: area light" << std::endl;
-                /*
             } else if (type == "point") {
-                transform::Transform toWorldMat = info.getTransformValue("toWorld", Transform());
-                std::shared_ptr<transform::Transform> toWorld = std::make_shared<transform::Transform>(toWorldMat);
-                Spectrum intensity = info.getSpectrumValue("intensity", 0);
-                Light::Ptr pointLight = std::make_shared<PointLight>(intensity, toWorld, MediumInterface(nullptr,
-                                                                                                         nullptr));
-                _scene->addLight(pointLight);
+                Transform toWorld = info.getTransformValue("toWorld", Transform());
+                Spectrum intensity = info.getSpectrumValue("intensity", Spectrum(0));
+                Light pointLight = allocator.newObject<PointLight>(intensity, toWorld, MediumInterface());
+                sceneData.lights->push_back(pointLight);
                 std::cout << "\tCreate light: point light" << std::endl;
+                /*
             } else if (type == "spot") {
                 transform::Transform toWorldMat = info.getTransformValue("toWorld", Transform());
                 std::shared_ptr<transform::Transform> toWorld = std::make_shared<transform::Transform>(toWorldMat);
@@ -897,7 +897,7 @@ namespace RENDER_NAMESPACE {
                     handleTagRGB(node, parentParseInfo);
                     break;
                 case Tag_Emitter:
-                    handleTagEmitter(node, parseInfo, parentParseInfo);
+                    handleTagEmitter(node, parseInfo, parentParseInfo, sceneData, allocator);
                     break;
                 case Tag_LookAt:
                     handleTagLookAt(node, parentParseInfo);

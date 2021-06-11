@@ -9,13 +9,12 @@
 #include <tunan/scene/shapes.h>
 #include <tunan/base/mediums.h>
 #include <tunan/base/spectrum.h>
+#include <tunan/base/transform.h>
 #include <tunan/base/interactions.h>
 #include <tunan/utils/TaggedPointer.h>
 
 namespace RENDER_NAMESPACE {
-    using base::MediumInterface;
-    using base::Interaction;
-    using base::Spectrum;
+    using namespace base;
 
     typedef enum LightSourceType {
         Delta_Position = 1 << 0,
@@ -24,10 +23,34 @@ namespace RENDER_NAMESPACE {
         Environment = 1 << 3
     } LightSourceType;
 
+    class PointLight {
+    public:
+        PointLight(const Spectrum &intensity, Transform lightToWorld, MediumInterface mediumInterface);
+
+        RENDER_CPU_GPU
+        Spectrum sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv, Interaction *target);
+
+        RENDER_CPU_GPU
+        Float pdfLi(const Interaction &eye, const Vector3F &direction);
+
+        RENDER_CPU_GPU
+        inline LightSourceType getType() const {
+            return _type;
+        }
+
+    private:
+        LightSourceType _type;
+        Vector3F _center;
+        Spectrum _intensity;
+        Transform _lightToWorld;
+        MediumInterface _mediumInterface;
+    };
+
+
     class DiffuseAreaLight {
     public:
         DiffuseAreaLight(const Spectrum &radiance, Shape shape,
-                         const MediumInterface *mediumBoundary, bool twoSided = false);
+                         MediumInterface mediumInterface, bool twoSided = false);
 
         RENDER_CPU_GPU
         Spectrum L(const Interaction &interaction, const Vector3F &wo) const;
@@ -46,11 +69,11 @@ namespace RENDER_NAMESPACE {
         bool _twoSided = false;
         Spectrum _radiance;
         LightSourceType _type = Area;
-        const MediumInterface *_mediumInterface = nullptr;
+        MediumInterface _mediumInterface;
 
     };
 
-    class Light : public utils::TaggedPointer<DiffuseAreaLight> {
+    class Light : public utils::TaggedPointer<DiffuseAreaLight, PointLight> {
     public:
         using TaggedPointer::TaggedPointer;
 

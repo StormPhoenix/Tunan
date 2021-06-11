@@ -15,6 +15,9 @@ namespace RENDER_NAMESPACE {
         class MediumInterface {
         public:
             RENDER_CPU_GPU
+            MediumInterface() {}
+
+            RENDER_CPU_GPU
             MediumInterface(Medium m) : inside(m), outside(m) {}
 
             Medium inside, outside;

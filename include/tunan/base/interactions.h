@@ -29,7 +29,7 @@ namespace RENDER_NAMESPACE {
             Vector3F wo;
             Normal3F ng;
             Vector3F error;
-            const MediumInterface *mediumInterface = nullptr;
+            MediumInterface mediumInterface;
         };
 
         class SurfaceInteraction : public Interaction {
