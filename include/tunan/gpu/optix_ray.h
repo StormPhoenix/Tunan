@@ -7,8 +7,8 @@
 
 #include <optix.h>
 #include <tunan/tracer/tracer.h>
-#include <tunan/scene/TriangleMesh.h>
-#include <tunan/scene/Camera.h>
+#include <tunan/scene/meshes.h>
+#include <tunan/scene/cameras.h>
 #include <tunan/scene/lights.h>
 #include <tunan/material/materials.h>
 

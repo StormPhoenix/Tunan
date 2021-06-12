@@ -4,7 +4,7 @@
 
 #include <tunan/utils/model_loader.h>
 #include <tunan/utils/MemoryAllocator.h>
-#include <tunan/scene/scene_data.h>
+#include <tunan/scene/scenedata.h>
 
 #define TINYOBJLOADER_IMPLEMENTATION
 

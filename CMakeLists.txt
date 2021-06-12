@@ -132,10 +132,10 @@ set(TuNan_SRCS
         src/tunan/scene/film.cpp
         src/tunan/scene/shapes.cpp
         src/tunan/scene/lights.cpp
-        src/tunan/scene/Camera.cpp
+        src/tunan/scene/cameras.cpp
         src/tunan/scene/importers.cpp
-        src/tunan/scene/scene_data.cpp
-        src/tunan/scene/TriangleMesh.cpp)
+        src/tunan/scene/scenedata.cpp
+        src/tunan/scene/meshes.cpp)
 
 set(TuNan_HDRS
         include/tunan/common.h

@@ -3,7 +3,7 @@
 //
 
 #include <tunan/common.h>
-#include <tunan/scene/TriangleMesh.h>
+#include <tunan/scene/meshes.h>
 
 namespace RENDER_NAMESPACE {
     TriangleMesh::TriangleMesh(size_t nVertices, Point3F *vertices, size_t nNormals, Normal3F *normals,

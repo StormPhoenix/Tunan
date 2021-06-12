@@ -8,8 +8,8 @@
 #include <tunan/common.h>
 #include <tunan/sampler/samplers.h>
 #include <tunan/scene/film.h>
-#include <tunan/scene/Camera.h>
-#include <tunan/scene/scene_data.h>
+#include <tunan/scene/cameras.h>
+#include <tunan/scene/scenedata.h>
 #include <tunan/scene/SceneIntersectable.h>
 #include <tunan/utils/MemoryAllocator.h>
 #include <tunan/tracer/tracer.h>

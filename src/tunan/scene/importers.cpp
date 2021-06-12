@@ -7,7 +7,7 @@
 #include <tunan/base/spectrum.h>
 #include <tunan/utils/model_loader.h>
 #include <tunan/utils/MemoryAllocator.h>
-#include <tunan/scene/scene_data.h>
+#include <tunan/scene/scenedata.h>
 #include <tunan/material/materials.h>
 
 #include <ext/pugixml/pugixml.hpp>

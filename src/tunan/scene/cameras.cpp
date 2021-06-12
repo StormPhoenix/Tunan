@@ -2,7 +2,7 @@
 // Created by StormPhoenix on 2021/6/2.
 //
 
-#include <tunan/scene/Camera.h>
+#include <tunan/scene/cameras.h>
 
 namespace RENDER_NAMESPACE {
     using namespace math;

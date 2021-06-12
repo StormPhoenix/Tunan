@@ -2,8 +2,8 @@
 // Created by StormPhoenix on 2021/6/2.
 //
 
-#ifndef TUNAN_CAMERA_H
-#define TUNAN_CAMERA_H
+#ifndef TUNAN_CAMERAS_H
+#define TUNAN_CAMERAS_H
 
 #include <tunan/common.h>
 #include <tunan/scene/Ray.h>
@@ -15,7 +15,11 @@ namespace RENDER_NAMESPACE {
     using base::Spectrum;
     using base::Transform;
     using sampler::Sampler;
-    using sampler::CameraSamples;
+
+    typedef struct CameraSamples {
+        Point2F uvLens;
+        Point2F pixelJitter;
+    } CameraSamples;
 
     class Camera {
     public:
@@ -82,4 +86,4 @@ namespace RENDER_NAMESPACE {
 
 }
 
-#endif //TUNAN_CAMERA_H
+#endif //TUNAN_CAMERAS_H

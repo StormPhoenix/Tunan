@@ -2,8 +2,8 @@
 // Created by StormPhoenix on 2021/6/1.
 //
 
-#ifndef TUNAN_SCENE_DATA_H
-#define TUNAN_SCENE_DATA_H
+#ifndef TUNAN_SCENEDATA_H
+#define TUNAN_SCENEDATA_H
 
 #include <tunan/math.h>
 #include <tunan/common.h>
@@ -91,4 +91,4 @@ namespace RENDER_NAMESPACE {
     } SceneData;
 }
 
-#endif //TUNAN_SCENE_DATA_H
+#endif //TUNAN_SCENEDATA_H

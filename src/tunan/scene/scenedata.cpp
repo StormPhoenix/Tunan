@@ -2,7 +2,7 @@
 // Created by StormPhoenix on 2021/6/1.
 //
 
-#include <tunan/scene/scene_data.h>
+#include <tunan/scene/scenedata.h>
 #include <tunan/utils/MemoryAllocator.h>
 
 namespace RENDER_NAMESPACE {

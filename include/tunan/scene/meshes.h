@@ -2,8 +2,8 @@
 // Created by StormPhoenix on 2021/6/5.
 //
 
-#ifndef TUNAN_TRIANGLEMESH_H
-#define TUNAN_TRIANGLEMESH_H
+#ifndef TUNAN_MESHES_H
+#define TUNAN_MESHES_H
 
 #include <tunan/math.h>
 #include <tunan/common.h>
@@ -42,4 +42,4 @@ namespace RENDER_NAMESPACE {
         Float transformMatrix[4][4];
     };
 }
-#endif //TUNAN_TRIANGLEMESH_H
+#endif //TUNAN_MESHES_H
