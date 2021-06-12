@@ -314,6 +314,11 @@ namespace RENDER_NAMESPACE {
             return degrees * Pi / 180;
         }
 
+        RENDER_CPU_GPU
+        inline Vector3F reflect(const Vector3F &v, const Normal3F &normal) {
+            return 2 * DOT(v, NORMALIZE(normal)) * normal - v;
+        }
+
         namespace local_coord {
             RENDER_CPU_GPU
             inline Float vectorTheta(const Vector3F &dir) {

@@ -65,6 +65,27 @@ namespace RENDER_NAMESPACE {
             return bsdf;
         }
 
+        Metal::Metal(SpectrumTexture eta, SpectrumTexture Ks, SpectrumTexture K,
+                     MicrofacetDistribution distribution) :
+                _eta(eta), _Ks(Ks), _K(K), _distribution(distribution) {
+            ASSERT(!_eta.nullable(), "Eta is nullptr. ");
+            ASSERT(!_Ks.nullable(), "R is nullptr. ");
+            ASSERT(!_K.nullable(), "K is nullptr. ");
+            ASSERT(!_distribution.nullable(), "Distribution is nullptr. ");
+        }
+
+        RENDER_CPU_GPU
+        BSDF Metal::evaluateBSDF(SurfaceInteraction &si, ConductorBxDF *bxdf, TransportMode mode) {
+            Spectrum Ks = _Ks.evaluate(si);
+            Spectrum etaT = _eta.evaluate(si);
+            Spectrum K = _K.evaluate(si);
+
+            BSDF bsdf = BSDF(si.ng, si.ns, si.wo);
+            (*bxdf) = ConductorBxDF(Ks, Spectrum(1.f), etaT, K, _distribution);
+            bsdf.setBxDF(bxdf);
+            return bsdf;
+        }
+
         RENDER_CPU_GPU
         inline bool Material::isSpecular() {
             auto func = [&](auto ptr) { return ptr->isSpecular(); };

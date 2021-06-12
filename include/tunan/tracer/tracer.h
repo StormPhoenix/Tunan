@@ -38,12 +38,7 @@ namespace RENDER_NAMESPACE {
         } MediaEvaDetails;
 
         typedef struct RaySamples {
-            // 3 samples
-            struct {
-                Float u;
-                Point2F uv;
-            } scatter;
-
+            BSDFSample scatter;
             struct {
                 Float light;
                 Point2F uv;

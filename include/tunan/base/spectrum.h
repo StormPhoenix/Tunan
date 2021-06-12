@@ -121,6 +121,17 @@ namespace RENDER_NAMESPACE {
             }
 
             RENDER_CPU_GPU
+            friend Spectrum sqrt(const Spectrum &s) {
+                Spectrum ret;
+                for (int i = 0; i < SpectrumChannel; ++i) {
+                    ret.values[i] = std::sqrt(s.values[i]);
+                }
+                // assert(!ret.hasNans());
+                CHECK(!ret.hasNans());
+                return ret;
+            }
+
+            RENDER_CPU_GPU
             Spectrum &operator*=(const Spectrum &v) {
                 for (int i = 0; i < SpectrumChannel; ++i)
                     values[i] *= v.values[i];

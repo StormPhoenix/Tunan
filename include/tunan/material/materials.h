@@ -70,11 +70,34 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU
             BSDF evaluateBSDF(SurfaceInteraction &si, SpecularReflectionBxDF *bxdf,
                               TransportMode mode = TransportMode::RADIANCE);
+
         private:
             SpectrumTexture _Ks;
         };
 
-        class Material : public TaggedPointer<Lambertian, Dielectric, Mirror> {
+        class Metal {
+        public:
+            using MaterialBxDF = ConductorBxDF;
+
+            Metal(SpectrumTexture eta, SpectrumTexture Ks, SpectrumTexture K,
+                  MicrofacetDistribution distribution);
+
+            RENDER_CPU_GPU BSDF evaluateBSDF(SurfaceInteraction &si, ConductorBxDF *bxdf,
+                                             TransportMode mode = TransportMode::RADIANCE);
+
+            RENDER_CPU_GPU inline bool isSpecular() const {
+                return false;
+            }
+
+        private:
+            SpectrumTexture _eta;
+            SpectrumTexture _Ks;
+            SpectrumTexture _K;
+            MicrofacetDistribution _distribution;
+        };
+
+
+        class Material : public TaggedPointer<Lambertian, Dielectric, Mirror, Metal> {
         public:
             using TaggedPointer::TaggedPointer;
 

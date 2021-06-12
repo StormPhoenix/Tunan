@@ -163,7 +163,7 @@ namespace RENDER_NAMESPACE {
                 MaterialBxDF bxdf;
 
                 BSDF bsdf = material->evaluateBSDF(m.si, &bxdf);
-                if (bsdf.allIncludeOf(BxDFType(BSDF_ALL & (~BSDF_SPECULAR)))) {
+                if (bsdf.allIncludeOf(BxDFType(BSDF_All & (~BSDF_Specular)))) {
                     // TODO sample from light
                     int nLights = _lights->size();
                     if (nLights != 0) {
@@ -202,7 +202,7 @@ namespace RENDER_NAMESPACE {
                 Float pdf;
                 BxDFType sampleType;
                 // sample direction
-                Spectrum f = bsdf.sampleF(m.si.wo, &wi, &pdf, state.raySamples.scatter.uv, &sampleType);
+                Spectrum f = bsdf.sampleF(m.si.wo, &wi, &pdf, state.raySamples.scatter, &sampleType);
                 if (f.isBlack() || pdf == 0.) {
                     return;
                 }
@@ -213,7 +213,7 @@ namespace RENDER_NAMESPACE {
                 RayDetails r;
                 r.pixelIndex = m.pixelIndex;
                 r.bounce = m.bounce + 1;
-                r.specularBounce = (sampleType & BSDF_SPECULAR) > 0;
+                r.specularBounce = (sampleType & BSDF_Specular) > 0;
                 r.ray = m.si.generateRay(wi);
                 nextQueue->enqueue(r);
             };

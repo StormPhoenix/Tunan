@@ -127,6 +127,7 @@ set(TuNan_SRCS
         src/tunan/material/textures.cpp
         src/tunan/material/mappings.cpp
         src/tunan/material/fresnels.cpp
+        src/tunan/material/microfacets.cpp
         src/tunan/scene/Ray.cpp
         src/tunan/scene/film.cpp
         src/tunan/scene/shapes.cpp
