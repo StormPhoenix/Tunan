@@ -79,7 +79,7 @@ namespace RENDER_NAMESPACE {
         RENDER_CPU_GPU
         inline Vector2F triangleUniformSampling(Vector2F uv) {
             Float u = 1 - std::sqrt(uv[0]);
-            Float v = uv[1] * sqrt(uv[0]);
+            Float v = uv[1] * std::sqrt(uv[0]);
             return Vector2F(u, v);
         }
     }

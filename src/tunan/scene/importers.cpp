@@ -129,7 +129,7 @@ namespace RENDER_NAMESPACE {
             GET_PARSE_INFO_VALUE_FUNC_DECLARE(Vector3F, Vector)
 
         private:
-            std::map<std::string, XmlAttrVal> container;
+            std::map <std::string, XmlAttrVal> container;
         } XmlParseInfo;
 
         GET_PARSE_INFO_VALUE_FUNC_DEFINE(bool, Bool, bool);
@@ -192,7 +192,7 @@ namespace RENDER_NAMESPACE {
             Tag_RGB,
         };
 
-        static std::map<std::string, TagType> nodeTypeMap;
+        static std::map <std::string, TagType> nodeTypeMap;
 
         inline Vector3F toVector(const std::string &val) {
             Vector3F ret;
@@ -574,30 +574,30 @@ namespace RENDER_NAMESPACE {
             return;
         }
 
-         Material createDiffuseMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
-             Material material;
-             if (!info.attrExists("reflectance")) {
-                 // Create default diffuse material
-                 SpectrumTexture texture = allocator.newObject<ConstantSpectrumTexture>(Spectrum(0.f));
-                 material = allocator.newObject<Lambertian>(texture);
-             } else {
-                 auto type = info.getType("reflectance");
-                 if (type == XmlAttrVal::Attr_Spectrum) {
-                     Spectrum Kd = info.getSpectrumValue("reflectance", Spectrum(0));
-                     SpectrumTexture texture = allocator.newObject<ConstantSpectrumTexture>(Spectrum(Kd));
-                     material = allocator.newObject<Lambertian>(texture);
+        Material createDiffuseMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
+            Material material;
+            if (!info.attrExists("reflectance")) {
+                // Create default diffuse material
+                SpectrumTexture texture = allocator.newObject<ConstantSpectrumTexture>(Spectrum(0.f));
+                material = allocator.newObject<Lambertian>(texture);
+            } else {
+                auto type = info.getType("reflectance");
+                if (type == XmlAttrVal::Attr_Spectrum) {
+                    Spectrum Kd = info.getSpectrumValue("reflectance", Spectrum(0));
+                    SpectrumTexture texture = allocator.newObject<ConstantSpectrumTexture>(Spectrum(Kd));
+                    material = allocator.newObject<Lambertian>(texture);
                     // TODO texture
 //                } else if (type == XmlAttrVal::Attr_SpectrumTexture) {
 //                    Texture<Spectrum>::Ptr texture = info.getSpectrumTextureValue("reflectance", nullptr);
 //                    ASSERT(texture, "Texture can't be nullptr. ");
 //                    material = _allocator.newObject<Lambertian>(texture);
-                 } else {
-                     // TODO
-                     ASSERT(false, "Reflectance type not supported .");
-                 }
-             }
-             return material;
-         }
+                } else {
+                    // TODO
+                    ASSERT(false, "Reflectance type not supported .");
+                }
+            }
+            return material;
+        }
 
         Material createDielectricMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
             Material material;
@@ -645,8 +645,7 @@ namespace RENDER_NAMESPACE {
             if (distributionType == "ggx") {
                 distribution = allocator.newObject<GGXDistribution>(alpha);
             } else {
-                ASSERT(distributionType == "beckmann" || distributionType == "ggx",
-                       "Microfacet distribution unsupported: " + distributionType);
+                ASSERT(false, "Microfacet distribution unsupported: " + distributionType);
             }
 
             Spectrum specularReflectance = info.getSpectrumValue("specularReflectance", Spectrum(1.0));
@@ -984,7 +983,7 @@ namespace RENDER_NAMESPACE {
 
         void parseXml(pugi::xml_node &node, XmlParseInfo &parent, SceneData &scene, MemoryAllocator &allocator) {
             XmlParseInfo info;
-            std::map<std::string, XmlAttrVal> attrContainer;
+            std::map <std::string, XmlAttrVal> attrContainer;
             for (pugi::xml_node &child : node.children()) {
                 parseXml(child, info, scene, allocator);
             }
@@ -994,7 +993,7 @@ namespace RENDER_NAMESPACE {
         void MitsubaSceneImporter::importScene(std::string sceneDirectory, SceneData &sceneData,
                                                MemoryAllocator &allocator) {
             sceneData.sceneDirectory = sceneDirectory;
-            sceneData.lights = allocator.newObject<base::Vector<Light>>(allocator);
+            sceneData.lights = allocator.newObject < base::Vector < Light >> (allocator);
 
             std::string xml_file = sceneDirectory + "scene.xml";
             std::cout << "Loading scene file: " << xml_file << std::endl;

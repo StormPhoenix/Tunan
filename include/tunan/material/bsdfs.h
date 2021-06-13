@@ -168,6 +168,9 @@ namespace RENDER_NAMESPACE {
         class ConductorBxDF {
         public:
             RENDER_CPU_GPU
+            ConductorBxDF();
+
+            RENDER_CPU_GPU
             ConductorBxDF(const Spectrum &Ks, const Spectrum &etaI, const Spectrum &etaT,
                           const Spectrum &K, MicrofacetDistribution distribution);
 

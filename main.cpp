@@ -38,7 +38,9 @@ int main() {
 
 //    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/cornel-box/";
 //    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/cbox-bunny/";
-    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/dragon/";
+//    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/dragon/";
+    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/cbox-bunny-material/";
+//    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/dragon/";
 //    std::string sceneDirectory =  "/resource/scenes/cornel-box/";
     MitsubaSceneImporter importer = MitsubaSceneImporter();
 

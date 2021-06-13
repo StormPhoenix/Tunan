@@ -3,9 +3,9 @@
 #include <tunan/gpu/optix_ray.h>
 
 // *.cu file cannot link these variables functions and classes
-#include <tunan/scene/Camera.cpp>
+#include <tunan/scene/cameras.cpp>
 #include <tunan/scene/Ray.cpp>
-#include <tunan/scene/TriangleMesh.cpp>
+#include <tunan/scene/meshes.cpp>
 #include <tunan/base/transform.cpp>
 #include <tunan/base/interactions.cpp>
 

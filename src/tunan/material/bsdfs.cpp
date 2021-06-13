@@ -330,6 +330,9 @@ namespace RENDER_NAMESPACE {
         }
 
         RENDER_CPU_GPU
+        ConductorBxDF::ConductorBxDF() : _type(BxDFType(BSDF_Reflection | BSDF_Glossy)) {}
+
+        RENDER_CPU_GPU
         ConductorBxDF::ConductorBxDF(const Spectrum &Ks, const Spectrum &etaI, const Spectrum &etaT,
                                      const Spectrum &K, MicrofacetDistribution distribution) :
                 _type(BxDFType(BSDF_Reflection | BSDF_Glossy)),
