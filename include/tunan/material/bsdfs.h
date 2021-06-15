@@ -14,7 +14,7 @@ namespace RENDER_NAMESPACE {
     namespace bsdf {
         using base::Spectrum;
         using utils::TaggedPointer;
-        using microfacet::MicrofacetDistribution;
+        using namespace microfacet;
 
         typedef struct BSDFSample {
             Float u;
@@ -172,7 +172,7 @@ namespace RENDER_NAMESPACE {
 
             RENDER_CPU_GPU
             ConductorBxDF(const Spectrum &Ks, const Spectrum &etaI, const Spectrum &etaT,
-                          const Spectrum &K, MicrofacetDistribution distribution);
+                          const Spectrum &K, Float alpha, std::string distribType = "ggx");
 
             RENDER_CPU_GPU
             Spectrum f(const Vector3F &wo, const Vector3F &wi) const;
@@ -190,8 +190,10 @@ namespace RENDER_NAMESPACE {
             }
 
         private:
+            using __MicrofacetDistribType__ = Variant<GGXDistribution>;
             Spectrum _Ks, _K;
             Spectrum _etaI, _etaT;
+            __MicrofacetDistribType__ _distribType;
             MicrofacetDistribution _distribution;
             BxDFType _type;
         };

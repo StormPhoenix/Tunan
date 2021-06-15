@@ -334,11 +334,15 @@ namespace RENDER_NAMESPACE {
 
         RENDER_CPU_GPU
         ConductorBxDF::ConductorBxDF(const Spectrum &Ks, const Spectrum &etaI, const Spectrum &etaT,
-                                     const Spectrum &K, MicrofacetDistribution distribution) :
+                                     const Spectrum &K, Float alpha, std::string distribType) :
                 _type(BxDFType(BSDF_Reflection | BSDF_Glossy)),
-                _Ks(Ks), _K(K), _etaI(etaI), _etaT(etaT),
-                _distribution(distribution) {
-            CHECK(!_distribution.nullable());
+                _Ks(Ks), _K(K), _etaI(etaI), _etaT(etaT) {
+            if (distribType == "ggx") {
+                _distribType.set(GGXDistribution(alpha));
+                _distribution = (_distribType.ptr<GGXDistribution>());
+            } else {
+                assert(false);
+            }
         }
 
         RENDER_CPU_GPU

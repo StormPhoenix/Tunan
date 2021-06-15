@@ -100,6 +100,19 @@ template<typename List, typename T, unsigned N>
 struct FindIndexOf<List, T, N, true> {
 };
 
+template<typename List, typename T>
+struct HasType;
+
+template<typename List, typename T>
+struct HasType {
+    constexpr static bool value = std::is_same<GetFirstT<List>, T>::value ? true : HasType<PopFirstT<List>, T>::value;
+};
+
+template<typename T>
+struct HasType<TypeList<>, T> {
+    constexpr static bool value = false;
+};
+
 template<typename... Ts>
 class VariantStorage {
 private:
@@ -189,7 +202,40 @@ public:
     }
 
     template<typename T>
-    T &get() &{
+    void set(T const &value) {
+        static_assert((HasType<TypeList<Ts...>, T>::value), "T not in type list.");
+        if (this->getDiscriminator() == (FindIndexOf<TypeList<Ts...>, T>::value + 1)) {
+            (*(this->getBufferAs<T>())) = value;
+        } else {
+            destroy();
+            new(this->getRawBuffer()) T(value);
+            this->setDiscriminator((FindIndexOf<TypeList<Ts...>, T>::value + 1));
+        }
+    }
+
+    template<typename T>
+    void set(T &&value) {
+        static_assert((HasType<TypeList<Ts...>, T>::value), "T not in type list.");
+        if (this->getDiscriminator() == (FindIndexOf<TypeList<Ts...>, T>::value + 1)) {
+            (*(this->getBufferAs<T>())) = std::move(value);
+        } else {
+            destroy();
+            new(this->getRawBuffer()) T(std::move(value));
+            this->setDiscriminator((FindIndexOf<TypeList<Ts...>, T>::value + 1));
+        }
+    }
+
+    template<typename T>
+    T *ptr() {
+        if (empty()) {
+            throw EmptyVariant();
+        }
+        assert(is<T>());
+        return this->template getBufferAs<T>();
+    }
+
+    template<typename T>
+    T &get() {
         if (empty()) {
             throw EmptyVariant();
         }
@@ -198,16 +244,7 @@ public:
     }
 
     template<typename T>
-    T &&get() &&{
-        if (empty()) {
-            throw EmptyVariant();
-        }
-        assert(is<T>());
-        return std::move(*this->template getBufferAs<T>());
-    }
-
-    template<typename T>
-    T const &get() const &{
+    T const &get() const {
         if (empty()) {
             throw EmptyVariant();
         }
@@ -219,7 +256,19 @@ public:
         return this->getDiscriminator() == 0;
     }
 
-    using VariantChoice<Ts, Ts...>::VariantChoice...;
+    Variant() {}
+
+    template<typename T>
+    Variant(T const &value) {
+        new(getRawBuffer()) T(value);
+        setDiscriminator((FindIndexOf<TypeList<Ts...>, T>::value + 1));
+    }
+
+    template<typename T>
+    Variant(T &&value) {
+        new(getRawBuffer()) T(std::move(value));
+        setDiscriminator((FindIndexOf<TypeList<Ts...>, T>::value + 1));
+    }
 
     ~Variant() { destroy(); }
 

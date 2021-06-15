@@ -83,10 +83,8 @@ namespace RENDER_NAMESPACE {
             Spectrum etaT = _eta.evaluate(si);
             Spectrum K = _K.evaluate(si);
 
-            // TODO 暂时只考虑 ggx
-            GGXDistribution distrib(alpha);
             BSDF bsdf = BSDF(si.ng, si.ns, si.wo);
-            (*bxdf) = ConductorBxDF(Ks, Spectrum(1.f), etaT, K, &distrib);
+            (*bxdf) = ConductorBxDF(Ks, Spectrum(1.f), etaT, K, alpha, _distribType);
             bsdf.setBxDF(bxdf);
             return bsdf;
         }
