@@ -2,12 +2,14 @@
 // Created by Storm Phoenix on 2021/6/6.
 //
 
-#include <tunan/material/materials.h>
 #include <tunan/material/bsdfs.h>
+#include <tunan/material/materials.h>
+#include <tunan/material/microfacets.h>
 
 namespace RENDER_NAMESPACE {
     namespace material {
         using bsdf::LambertianBxDF;
+        using microfacet::GGXDistribution;
 
         RENDER_CPU_GPU
         BSDF Lambertian::evaluateBSDF(SurfaceInteraction &si, LambertianBxDF *bxdf, TransportMode mode) {
@@ -65,23 +67,26 @@ namespace RENDER_NAMESPACE {
             return bsdf;
         }
 
-        Metal::Metal(SpectrumTexture eta, SpectrumTexture Ks, SpectrumTexture K,
-                     MicrofacetDistribution distribution) :
-                _eta(eta), _Ks(Ks), _K(K), _distribution(distribution) {
+        Metal::Metal(FloatTexture alpha, SpectrumTexture eta, SpectrumTexture Ks, SpectrumTexture K,
+                     std::string distribType) :
+                _alpha(alpha), _eta(eta), _Ks(Ks), _K(K), _distribType(distribType) {
+            ASSERT(!_alpha.nullable(), "Alpha is nullptr. ");
             ASSERT(!_eta.nullable(), "Eta is nullptr. ");
             ASSERT(!_Ks.nullable(), "R is nullptr. ");
             ASSERT(!_K.nullable(), "K is nullptr. ");
-            ASSERT(!_distribution.nullable(), "Distribution is nullptr. ");
         }
 
         RENDER_CPU_GPU
         BSDF Metal::evaluateBSDF(SurfaceInteraction &si, ConductorBxDF *bxdf, TransportMode mode) {
+            Float alpha = _alpha.evaluate(si);
             Spectrum Ks = _Ks.evaluate(si);
             Spectrum etaT = _eta.evaluate(si);
             Spectrum K = _K.evaluate(si);
 
+            // TODO 暂时只考虑 ggx
+            GGXDistribution distrib(alpha);
             BSDF bsdf = BSDF(si.ng, si.ns, si.wo);
-            (*bxdf) = ConductorBxDF(Ks, Spectrum(1.f), etaT, K, _distribution);
+            (*bxdf) = ConductorBxDF(Ks, Spectrum(1.f), etaT, K, &distrib);
             bsdf.setBxDF(bxdf);
             return bsdf;
         }

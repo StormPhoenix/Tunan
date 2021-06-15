@@ -19,7 +19,6 @@ namespace RENDER_NAMESPACE {
     namespace importer {
         using utils::MemoryAllocator;
         using namespace material;
-        using namespace microfacet;
 
 #define GET_PARSE_INFO_VALUE_FUNC_DECLARE(Type, TypeUpperCase) \
     Type get##TypeUpperCase##Value(const std::string name, const Type defaultValue);                                                               \
@@ -641,9 +640,7 @@ namespace RENDER_NAMESPACE {
             }
 
             std::string distributionType = info.getStringValue("distribution", "beckmann");
-            MicrofacetDistribution distribution;
             if (distributionType == "ggx") {
-                distribution = allocator.newObject<GGXDistribution>(alpha);
             } else {
                 ASSERT(false, "Microfacet distribution unsupported: " + distributionType);
             }
@@ -652,17 +649,11 @@ namespace RENDER_NAMESPACE {
             Spectrum eta = info.getSpectrumValue("eta", Spectrum(0.200438));
             Spectrum k = info.getSpectrumValue("k", Spectrum(0.200438));
 
+            FloatTexture Alpha = allocator.newObject<ConstantFloatTexture>(alpha);
             SpectrumTexture Ks = allocator.newObject<ConstantSpectrumTexture>(specularReflectance);
             SpectrumTexture Eta = allocator.newObject<ConstantSpectrumTexture>(eta);
             SpectrumTexture K = allocator.newObject<ConstantSpectrumTexture>(k);
-
-            // TODO delete
-//            Texture<Float>::Ptr texAlpha = std::make_shared<ConstantTexture<Float>>(alpha);
-//            Texture<Spectrum>::Ptr texR = std::make_shared<ConstantTexture<Spectrum>>(R);
-//            Texture<Spectrum>::Ptr texEta = std::make_shared<ConstantTexture<Spectrum>>(Eta);
-//            Texture<Spectrum>::Ptr texK = std::make_shared<ConstantTexture<Spectrum>>(K);
-//            return std::make_shared<Metal>(texAlpha, texEta, texR, texK, distributionType);
-            return allocator.newObject<Metal>(Eta, Ks, K, distribution);
+            return allocator.newObject<Metal>(Alpha, Eta, Ks, K, distributionType);
         }
 
         void handleTagBSDF(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parent,

@@ -14,7 +14,7 @@ namespace RENDER_NAMESPACE {
         template<typename... Ts>
         class TaggedPointer {
         public:
-            using Types = TypePack<Ts...>;
+            using Types = TypeList<Ts...>;
 
             TaggedPointer() = default;
 
@@ -61,7 +61,7 @@ namespace RENDER_NAMESPACE {
                     // nullptr
                     return 0;
                 } else {
-                    return 1 + TypeIndex<T, Types>::index;
+                    return 1 + FindIndexOf<Types, T>::value;
                 }
             }
 

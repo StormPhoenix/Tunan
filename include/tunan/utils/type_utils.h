@@ -8,89 +8,266 @@
 #include <tunan/common.h>
 #include <type_traits>
 
-namespace RENDER_NAMESPACE {
-    namespace utils {
-        template<typename... Ts>
-        struct TypePack {
-            static const int count = sizeof...(Ts);
-        };
+template<typename... Ts>
+struct TypeList {
+    constexpr static int count = sizeof...(Ts);
+};
 
-        template<typename T, typename... Ts>
-        struct TypeIndex {
-            static const int index = 0;
-            static_assert(!std::is_same<T, T>::value, "Type not in type parameter pack.");
-        };
+template<bool B, typename T, typename R>
+struct IfThenElse;
 
-        template<typename T, typename... Ts>
-        struct TypeIndex<T, TypePack<T, Ts...>> {
-            static const int index = 0;
-        };
+template<typename T, typename R>
+struct IfThenElse<true, T, R> {
+    using Type = T;
+};
 
-        template<typename T, typename U, typename... Ts>
-        struct TypeIndex<T, TypePack<U, Ts...>> {
-            static const int index = TypeIndex<T, TypePack<Ts...>>::index + 1;
-        };
+template<typename T, typename R>
+struct IfThenElse<false, T, R> {
+    using Type = R;
+};
 
-        template<typename T>
-        struct RemoveFirstType {
-            using type = TypePack<T>;
-            //    static_assert(!std::is_same<T, T>::value, "No parameter can be removed. ");
-        };
+template<typename List>
+struct IsEmpty {
+    constexpr static bool value = false;
+};
 
-        template<typename T, typename... Ts>
-        struct RemoveFirstType<TypePack<T, Ts...>> {
-            using type = TypePack<Ts...>;
-        };
+template<>
+struct IsEmpty<TypeList<>> {
+    constexpr static bool value = true;
+};
 
-        template<typename T>
-        struct GetFirstType {
-        };
+template<typename T>
+struct GetFirst;
 
-        template<typename T, typename... Ts>
-        struct GetFirstType<TypePack<T, Ts...>> {
-            using type = T;
-        };
+template<typename Head, typename... Tails>
+struct GetFirst<TypeList<Head, Tails...>> {
+    using Type = Head;
+};
 
-        template<int n>
-        struct EvaluateTpType;
+template<typename List>
+using GetFirstT = typename GetFirst<List>::Type;
 
-        template<>
-        struct EvaluateTpType<1> {
-            template<typename F, typename Tp, typename... Ts>
-            RENDER_CPU_GPU
-            inline auto operator()(F func, Tp tp, int index, TypePack<Ts...> types) {
-                static_assert(sizeof...(Ts) >= 1, "Types can be zero. ");
-                using T = typename GetFirstType<TypePack<Ts...>>::type;
-                return func(tp.template cast<T>());
-            }
-        };
+template<typename List>
+struct PopFirst;
 
-        template<int n>
-        struct EvaluateTpType {
-            template<typename F, typename TP, typename... Ts>
-            RENDER_CPU_GPU
-            inline auto operator()(F func, TP tp, int index, TypePack<Ts...> types) {
-                if (index > 1) {
-                    using RestType = typename RemoveFirstType<TypePack<Ts...>>::type;
-                    return EvaluateTpType<n - 1>()(func, tp, index - 1, RestType());
-                } else {
-                    return EvaluateTpType<1>()(func, tp, index, types);
-                }
-            }
-        };
+template<typename Head, typename... Tails>
+struct PopFirst<TypeList<Head, Tails...>> {
+    using Type = TypeList<Tails...>;
+};
 
-        template<typename FWrapper, typename... Ts>
-        void forEachType(FWrapper wrapper, TypePack<Ts...>);
+template<typename List>
+using PopFirstT = typename PopFirst<List>::Type;
 
-        template<typename FWrapper, typename T, typename... Ts>
-        void forEachType(FWrapper wrapper, TypePack<T, Ts...>) {
-            wrapper.template operator()<T>();
-            forEachType(wrapper, TypePack<Ts...>());
-        }
+template<typename List, unsigned N>
+struct NthType : public NthType<PopFirstT<List>, N - 1> {
+};
 
-        template<typename FWrapper>
-        void forEachType(FWrapper wrapper, TypePack<>) {}
+template<typename List>
+struct NthType<List, 0> : public GetFirst<List> {
+};
+
+template<typename List, unsigned N>
+using NthTypeT = typename NthType<List, N>::Type;
+
+template<typename List>
+struct LargestType {
+private:
+    using First = GetFirstT<List>;
+    using Rest = typename LargestType<PopFirstT<List>>::Type;
+public:
+    using Type = typename IfThenElse<(sizeof(First) >= sizeof(Rest)), First, Rest>::Type;
+};
+
+template<>
+struct LargestType<TypeList<>> {
+    using Type = char;
+};
+
+template<typename Ts>
+using LargestTypeT = typename LargestType<Ts>::Type;
+
+template<typename List, typename T, unsigned N = 0, bool Empty = IsEmpty<List>::value>
+struct FindIndexOf;
+
+template<typename List, typename T, unsigned N>
+struct FindIndexOf<List, T, N, false> :
+        public IfThenElse<std::is_same<GetFirstT<List>, T>::value,
+                std::integral_constant<unsigned, N>,
+                FindIndexOf<PopFirstT<List>, T, N + 1>>::Type {
+};
+
+template<typename List, typename T, unsigned N>
+struct FindIndexOf<List, T, N, true> {
+};
+
+template<typename... Ts>
+class VariantStorage {
+private:
+    using LargestT = LargestTypeT<TypeList<Ts...>>;
+    alignas(Ts...) unsigned char buffer[sizeof(sizeof(LargestT))];
+    unsigned discriminator = 0;
+public:
+    unsigned getDiscriminator() const {
+        return discriminator;
     }
+
+    void setDiscriminator(unsigned val) {
+        discriminator = val;
+    }
+
+    template<typename T>
+    T *getBufferAs() {
+        return reinterpret_cast<T *>(buffer);
+    }
+
+    template<typename T>
+    T const *getBufferAs() const {
+        return reinterpret_cast<T const *>(buffer);
+    }
+
+    void *getRawBuffer() {
+        return buffer;
+    }
+
+    const void *getRayBuffer() const {
+        return buffer;
+    }
+};
+
+template<typename... Ts>
+class Variant;
+
+template<typename T, typename... Ts>
+class VariantChoice {
+protected:
+    using Derived = Variant<Ts...>;
+
+    Derived &getDerived() {
+        return *static_cast<Derived *>(this);
+    }
+
+    Derived const &getDerived() const {
+        return *static_cast<Derived const *>(this);
+    }
+
+    constexpr static unsigned discriminator = FindIndexOf<TypeList<Ts...>, T>::value + 1;
+public:
+    VariantChoice() {}
+
+    VariantChoice(T const &value) {
+        new(getDerived().getRawBuffer()) T(value);
+        getDerived().setDiscriminator(discriminator);
+    }
+
+    VariantChoice(T &&value) {
+        new(getDerived().getRawBuffer()) T(std::move(value));
+        getDerived().setDiscriminator(discriminator);
+    }
+
+    bool destroy() {
+        if (getDerived().getDiscriminator() == discriminator) {
+            getDerived().template getBufferAs<T>()->~T();
+            return true;
+        }
+        return false;
+    }
+};
+
+class EmptyVariant : public std::exception {
+};
+
+template<typename... Ts>
+class Variant : private VariantStorage<Ts...>, private VariantChoice<Ts, Ts...> ... {
+    template<typename T, typename... OtherTs>
+    friend
+    class VariantChoice;
+
+public:
+    template<typename T>
+    bool is() const {
+        return this->getDiscriminator() == VariantChoice<T, Ts...>::discriminator;
+    }
+
+    template<typename T>
+    T &get() &{
+        if (empty()) {
+            throw EmptyVariant();
+        }
+        assert(is<T>());
+        return *this->template getBufferAs<T>();
+    }
+
+    template<typename T>
+    T &&get() &&{
+        if (empty()) {
+            throw EmptyVariant();
+        }
+        assert(is<T>());
+        return std::move(*this->template getBufferAs<T>());
+    }
+
+    template<typename T>
+    T const &get() const &{
+        if (empty()) {
+            throw EmptyVariant();
+        }
+        assert(is<T>());
+        return *this->template getBufferAs<T>();
+    }
+
+    bool empty() const {
+        return this->getDiscriminator() == 0;
+    }
+
+    using VariantChoice<Ts, Ts...>::VariantChoice...;
+
+    ~Variant() { destroy(); }
+
+    void destroy() {
+        bool results[] = {VariantChoice<Ts, Ts...>::destroy()...};
+        this->setDiscriminator(0);
+    }
+};
+
+
+template<int n>
+struct EvaluateTpType;
+
+template<>
+struct EvaluateTpType<1> {
+    template<typename F, typename Tp, typename... Ts>
+    RENDER_CPU_GPU
+    inline auto operator()(F func, Tp tp, int index, TypeList<Ts...> types) {
+        static_assert(sizeof...(Ts) >= 1, "Types can be zero. ");
+        using T = GetFirstT<TypeList<Ts...>>;
+        return func(tp.template cast<T>());
+    }
+};
+
+template<int n>
+struct EvaluateTpType {
+    template<typename F, typename TP, typename... Ts>
+    RENDER_CPU_GPU
+    inline auto operator()(F func, TP tp, int index, TypeList<Ts...> types) {
+        if (index > 1) {
+            using RestType = PopFirstT<TypeList<Ts...>>;
+            return EvaluateTpType<n - 1>()(func, tp, index - 1, RestType());
+        } else {
+            return EvaluateTpType<1>()(func, tp, index, types);
+        }
+    }
+};
+
+template<typename FWrapper, typename... Ts>
+void forEachType(FWrapper wrapper, TypeList<Ts...>);
+
+template<typename FWrapper, typename T, typename... Ts>
+void forEachType(FWrapper wrapper, TypeList<T, Ts...>) {
+    wrapper.template operator()<T>();
+    forEachType(wrapper, TypeList<Ts...>());
 }
+
+template<typename FWrapper>
+void forEachType(FWrapper wrapper, TypeList<>) {}
 
 #endif //TUNAN_TYPE_UTILS_H
