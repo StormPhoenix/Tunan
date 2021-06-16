@@ -144,6 +144,7 @@ set(TuNan_HDRS
         include/tunan/medium/Medium.h)
 
 set(TuNan_BASE_SRCS
+        src/tunan/base/distributions.cpp
         src/tunan/base/interactions.cpp
         src/tunan/base/transform.cpp)
 set(TuNan_BASE_HDRS

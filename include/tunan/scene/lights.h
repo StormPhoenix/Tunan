@@ -36,6 +36,11 @@ namespace RENDER_NAMESPACE {
         Float pdfLi(const Interaction &eye, const Vector3F &direction);
 
         RENDER_CPU_GPU
+        Spectrum Le(const Ray &ray) const {
+            return Spectrum(0.f);
+        }
+
+        RENDER_CPU_GPU
         inline LightSourceType getType() const {
             return _type;
         }
@@ -65,6 +70,11 @@ namespace RENDER_NAMESPACE {
         Float pdfLi(const Interaction &eye, const Vector3F &direction);
 
         RENDER_CPU_GPU
+        Spectrum Le(const Ray &ray) const {
+            return Spectrum(0.f);
+        }
+
+        RENDER_CPU_GPU
         inline LightSourceType getType() const {
             return _type;
         }
@@ -92,6 +102,11 @@ namespace RENDER_NAMESPACE {
         Spectrum sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv, Interaction *target);
 
         RENDER_CPU_GPU
+        Spectrum Le(const Ray &ray) const {
+            return Spectrum(0.f);
+        }
+
+        RENDER_CPU_GPU
         LightSourceType getType() const;
 
     protected:
@@ -112,6 +127,9 @@ namespace RENDER_NAMESPACE {
 
         RENDER_CPU_GPU
         Float pdfLi(const Interaction &eye, const Vector3F &direction);
+
+        RENDER_CPU_GPU
+        Spectrum Le(const Ray &ray);
 
         RENDER_CPU_GPU
         LightSourceType getType() const;

@@ -56,6 +56,10 @@ namespace RENDER_NAMESPACE {
 
             ~MemoryAllocator();
 
+            const MemoryResource *getResource() const {
+                return _resource;
+            }
+
         private:
             MemoryResource *_resource;
             size_t _defaultBlockSize;
@@ -67,6 +71,10 @@ namespace RENDER_NAMESPACE {
             std::list<std::pair<size_t, uint8_t *>> _usedBlocks;
             std::list<std::pair<size_t, uint8_t *>> _availableBlocks;
         };
+
+        inline bool operator==(const MemoryAllocator &alloc1, const MemoryAllocator &alloc2) noexcept {
+            return alloc1.getResource() == alloc2.getResource();
+        }
     }
 }
 

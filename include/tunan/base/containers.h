@@ -169,8 +169,73 @@ namespace RENDER_NAMESPACE {
         template<typename T>
         class Vector {
         public:
-            Vector(const MemoryAllocator &allocator) :
+            Vector(const MemoryAllocator &allocator = {}) :
                     allocator(allocator), nAllocated(0), used(0) {}
+
+            Vector(Vector &&other) : allocator(other.allocator) {
+                used = other.used;
+                nAllocated = other.nAllocated;
+                buffer = other.buffer;
+
+                other.used = other.nAllocated = 0;
+                other.buffer = nullptr;
+            }
+
+            Vector(Vector &&other, const MemoryAllocator &allocator) : allocator(allocator) {
+                if (allocator == other.allocator) {
+                    buffer = other.buffer;
+                    nAllocated = other.nAllocated;
+                    used = other.used;
+
+                    other.buffer = nullptr;
+                    other.nAllocated = other.used = 0;
+                } else {
+                    reset(other.size());
+                    for (size_t i = 0; i < other.size(); i++) {
+                        allocator.template initialize<T>(buffer + i, std::move(other[i]));
+                    }
+                    used = other.size();
+                }
+            }
+
+            Vector &operator=(const Vector &other) {
+                if (this == &other)
+                    return *this;
+
+                clean();
+                reset(other.size());
+                for (size_t i = 0; i < other.size(); i++) {
+                    allocator.template initialize<T>(buffer + i, other[i]);
+                }
+                used = other.size();
+                return *this;
+            }
+
+            Vector &operator=(Vector &&other) {
+                if (this == &other)
+                    return *this;
+
+                if (allocator == other.allocator) {
+                    buffer = std::move(other.buffer);
+                    nAllocated = std::move(other.nAllocated);
+                    used = std::move(other.used);
+                } else {
+                    clean();
+                    reset(other.size());
+                    for (size_t i = 0; i < other.size(); i++) {
+                        allocator.template initialize<T>(buffer + i, std::move(other[i]));
+                    }
+                    used = other.size();
+                }
+                return *this;
+            }
+
+            void clean() {
+                for (int i = 0; i < used; ++i) {
+                    allocator.de_initialize(&buffer[i]);
+                }
+                used = 0;
+            }
 
             RENDER_CPU_GPU
             const T &operator[](size_t index) const {
@@ -195,7 +260,7 @@ namespace RENDER_NAMESPACE {
             }
 
             RENDER_CPU_GPU
-            size_t size() {
+            size_t size() const {
                 return used;
             }
 

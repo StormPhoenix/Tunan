@@ -134,6 +134,14 @@ namespace RENDER_NAMESPACE {
     }
 
     RENDER_CPU_GPU
+    Spectrum Light::Le(const Ray &ray) {
+        auto func = [&](auto ptr) {
+            return ptr->Le(ray);
+        };
+        return proxyCall(func);
+    }
+
+    RENDER_CPU_GPU
     LightSourceType Light::getType() const {
         auto func = [&](auto ptr) {
             return ptr->getType();
