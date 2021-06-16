@@ -157,11 +157,9 @@ namespace RENDER_NAMESPACE {
                 }
 
                 PixelState &state = (*_pixelArray)[m.pixelIndex];
-
                 MaterialType *material = m.material.cast<MaterialType>();
                 using MaterialBxDF = typename MaterialType::MaterialBxDF;
                 MaterialBxDF bxdf;
-
                 BSDF bsdf = material->evaluateBSDF(m.si, &bxdf);
                 if (bsdf.allIncludeOf(BxDFType(BSDF_All & (~BSDF_Specular)))) {
                     // TODO sample from light

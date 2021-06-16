@@ -13,6 +13,11 @@ namespace RENDER_NAMESPACE {
     namespace microfacet {
         using utils::TaggedPointer;
 
+        typedef enum MicrofacetDistribType {
+            GGX,
+            Beckmann
+        } MicrofacetDistribType;
+
         class GGXDistribution {
         public:
             RENDER_CPU_GPU

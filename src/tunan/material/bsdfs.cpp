@@ -334,12 +334,12 @@ namespace RENDER_NAMESPACE {
 
         RENDER_CPU_GPU
         ConductorBxDF::ConductorBxDF(const Spectrum &Ks, const Spectrum &etaI, const Spectrum &etaT,
-                                     const Spectrum &K, Float alpha, std::string distribType) :
+                                     const Spectrum &K, Float alpha, MicrofacetDistribType distribType) :
                 _type(BxDFType(BSDF_Reflection | BSDF_Glossy)),
                 _Ks(Ks), _K(K), _etaI(etaI), _etaT(etaT) {
-            if (distribType == "ggx") {
-                _distribType.set(GGXDistribution(alpha));
-                _distribution = (_distribType.ptr<GGXDistribution>());
+            if (distribType == GGX) {
+                _distribStorage.set(GGXDistribution(alpha));
+                _distribution = (_distribStorage.ptr<GGXDistribution>());
             } else {
                 assert(false);
             }
@@ -368,7 +368,6 @@ namespace RENDER_NAMESPACE {
 
             Float cosThetaH = DOT(wi, wh);
             Spectrum Fr = fresnel::fresnelConductor(cosThetaH, _etaI, _etaT, _K);
-
             return (D_Wh * G_Wo_Wi * Fr * _Ks) / (4 * std::abs(cosThetaO * cosThetaI));
         }
 
@@ -406,7 +405,6 @@ namespace RENDER_NAMESPACE {
             if (sampleType != nullptr) {
                 (*sampleType) = BxDFType(BSDF_Glossy | BSDF_Reflection);
             }
-
             return f(wo, reflectDir);
         }
 
@@ -546,6 +544,7 @@ namespace RENDER_NAMESPACE {
                 Vector3F wo = toObjectSpace(worldWo);
                 Vector3F wi = Vector3F(0.0f);
                 Float samplePdf = 0.f;
+
                 Spectrum f = _bxdf.sampleF(wo, &wi, &samplePdf, bsdfSample, sampleType);
 
                 if (samplePdf == 0) {

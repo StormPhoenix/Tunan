@@ -120,28 +120,34 @@ private:
     alignas(Ts...) unsigned char buffer[sizeof(sizeof(LargestT))];
     unsigned discriminator = 0;
 public:
+    RENDER_CPU_GPU
     unsigned getDiscriminator() const {
         return discriminator;
     }
 
+    RENDER_CPU_GPU
     void setDiscriminator(unsigned val) {
         discriminator = val;
     }
 
     template<typename T>
+    RENDER_CPU_GPU
     T *getBufferAs() {
         return reinterpret_cast<T *>(buffer);
     }
 
     template<typename T>
+    RENDER_CPU_GPU
     T const *getBufferAs() const {
         return reinterpret_cast<T const *>(buffer);
     }
 
+    RENDER_CPU_GPU
     void *getRawBuffer() {
         return buffer;
     }
 
+    RENDER_CPU_GPU
     const void *getRayBuffer() const {
         return buffer;
     }
@@ -155,28 +161,34 @@ class VariantChoice {
 protected:
     using Derived = Variant<Ts...>;
 
+    RENDER_CPU_GPU
     Derived &getDerived() {
         return *static_cast<Derived *>(this);
     }
 
+    RENDER_CPU_GPU
     Derived const &getDerived() const {
         return *static_cast<Derived const *>(this);
     }
 
     constexpr static unsigned discriminator = FindIndexOf<TypeList<Ts...>, T>::value + 1;
 public:
+    RENDER_CPU_GPU
     VariantChoice() {}
 
+    RENDER_CPU_GPU
     VariantChoice(T const &value) {
         new(getDerived().getRawBuffer()) T(value);
         getDerived().setDiscriminator(discriminator);
     }
 
+    RENDER_CPU_GPU
     VariantChoice(T &&value) {
         new(getDerived().getRawBuffer()) T(std::move(value));
         getDerived().setDiscriminator(discriminator);
     }
 
+    RENDER_CPU_GPU
     bool destroy() {
         if (getDerived().getDiscriminator() == discriminator) {
             getDerived().template getBufferAs<T>()->~T();
@@ -197,11 +209,13 @@ class Variant : private VariantStorage<Ts...>, private VariantChoice<Ts, Ts...> 
 
 public:
     template<typename T>
+    RENDER_CPU_GPU
     bool is() const {
         return this->getDiscriminator() == VariantChoice<T, Ts...>::discriminator;
     }
 
     template<typename T>
+    RENDER_CPU_GPU
     void set(T const &value) {
         static_assert((HasType<TypeList<Ts...>, T>::value), "T not in type list.");
         if (this->getDiscriminator() == (FindIndexOf<TypeList<Ts...>, T>::value + 1)) {
@@ -214,6 +228,7 @@ public:
     }
 
     template<typename T>
+    RENDER_CPU_GPU
     void set(T &&value) {
         static_assert((HasType<TypeList<Ts...>, T>::value), "T not in type list.");
         if (this->getDiscriminator() == (FindIndexOf<TypeList<Ts...>, T>::value + 1)) {
@@ -226,24 +241,31 @@ public:
     }
 
     template<typename T>
+    RENDER_CPU_GPU
     T *ptr() {
         if (empty()) {
-            throw EmptyVariant();
+            // TODO
+//            throw EmptyVariant();
+            return nullptr;
         }
         assert(is<T>());
         return this->template getBufferAs<T>();
     }
 
     template<typename T>
+    RENDER_CPU_GPU
     T &get() {
         if (empty()) {
-            throw EmptyVariant();
+            // TODO
+//            throw EmptyVariant();
+            return nullptr;
         }
         assert(is<T>());
         return *this->template getBufferAs<T>();
     }
 
     template<typename T>
+    RENDER_CPU_GPU
     T const &get() const {
         if (empty()) {
             throw EmptyVariant();
@@ -252,26 +274,32 @@ public:
         return *this->template getBufferAs<T>();
     }
 
+    RENDER_CPU_GPU
     bool empty() const {
         return this->getDiscriminator() == 0;
     }
 
+    RENDER_CPU_GPU
     Variant() {}
 
     template<typename T>
+    RENDER_CPU_GPU
     Variant(T const &value) {
         new(getRawBuffer()) T(value);
         setDiscriminator((FindIndexOf<TypeList<Ts...>, T>::value + 1));
     }
 
     template<typename T>
+    RENDER_CPU_GPU
     Variant(T &&value) {
         new(getRawBuffer()) T(std::move(value));
         setDiscriminator((FindIndexOf<TypeList<Ts...>, T>::value + 1));
     }
 
+    RENDER_CPU_GPU
     ~Variant() { destroy(); }
 
+    RENDER_CPU_GPU
     void destroy() {
         bool results[] = {VariantChoice<Ts, Ts...>::destroy()...};
         this->setDiscriminator(0);

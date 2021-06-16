@@ -80,7 +80,7 @@ namespace RENDER_NAMESPACE {
             using MaterialBxDF = ConductorBxDF;
 
             Metal(FloatTexture alpha, SpectrumTexture eta, SpectrumTexture Ks, SpectrumTexture K,
-                  std::string distribType = "ggx");
+                  MicrofacetDistribType distribType);
 
             RENDER_CPU_GPU BSDF evaluateBSDF(SurfaceInteraction &si, ConductorBxDF *bxdf,
                                              TransportMode mode = TransportMode::RADIANCE);
@@ -94,8 +94,7 @@ namespace RENDER_NAMESPACE {
             SpectrumTexture _eta;
             SpectrumTexture _Ks;
             SpectrumTexture _K;
-            std::string _distribType;
-
+            MicrofacetDistribType _distribType;
         };
 
 

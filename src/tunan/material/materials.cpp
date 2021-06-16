@@ -68,7 +68,7 @@ namespace RENDER_NAMESPACE {
         }
 
         Metal::Metal(FloatTexture alpha, SpectrumTexture eta, SpectrumTexture Ks, SpectrumTexture K,
-                     std::string distribType) :
+                     MicrofacetDistribType distribType) :
                 _alpha(alpha), _eta(eta), _Ks(Ks), _K(K), _distribType(distribType) {
             ASSERT(!_alpha.nullable(), "Alpha is nullptr. ");
             ASSERT(!_eta.nullable(), "Eta is nullptr. ");
@@ -84,7 +84,8 @@ namespace RENDER_NAMESPACE {
             Spectrum K = _K.evaluate(si);
 
             BSDF bsdf = BSDF(si.ng, si.ns, si.wo);
-            (*bxdf) = ConductorBxDF(Ks, Spectrum(1.f), etaT, K, alpha, _distribType);
+            new (bxdf) ConductorBxDF(Ks, Spectrum(1.f), etaT, K, alpha, _distribType);
+
             bsdf.setBxDF(bxdf);
             return bsdf;
         }

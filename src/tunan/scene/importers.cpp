@@ -8,6 +8,7 @@
 #include <tunan/utils/model_loader.h>
 #include <tunan/utils/MemoryAllocator.h>
 #include <tunan/scene/scenedata.h>
+#include <tunan/material/microfacets.h>
 #include <tunan/material/materials.h>
 
 #include <ext/pugixml/pugixml.hpp>
@@ -19,6 +20,7 @@ namespace RENDER_NAMESPACE {
     namespace importer {
         using utils::MemoryAllocator;
         using namespace material;
+        using namespace microfacet;
 
 #define GET_PARSE_INFO_VALUE_FUNC_DECLARE(Type, TypeUpperCase) \
     Type get##TypeUpperCase##Value(const std::string name, const Type defaultValue);                                                               \
@@ -639,10 +641,12 @@ namespace RENDER_NAMESPACE {
                 alpha = info.getFloatValue("alpha", 0.01);
             }
 
-            std::string distributionType = info.getStringValue("distribution", "beckmann");
-            if (distributionType == "ggx") {
+            std::string distributionTypeString = info.getStringValue("distribution", "beckmann");
+            MicrofacetDistribType distribType = GGX;
+            if (distributionTypeString == "ggx") {
+                distribType = GGX;
             } else {
-                ASSERT(false, "Microfacet distribution unsupported: " + distributionType);
+                ASSERT(false, "Microfacet distribution unsupported: " + distributionTypeString);
             }
 
             Spectrum specularReflectance = info.getSpectrumValue("specularReflectance", Spectrum(1.0));
@@ -653,7 +657,7 @@ namespace RENDER_NAMESPACE {
             SpectrumTexture Ks = allocator.newObject<ConstantSpectrumTexture>(specularReflectance);
             SpectrumTexture Eta = allocator.newObject<ConstantSpectrumTexture>(eta);
             SpectrumTexture K = allocator.newObject<ConstantSpectrumTexture>(k);
-            return allocator.newObject<Metal>(Alpha, Eta, Ks, K, distributionType);
+            return allocator.newObject<Metal>(Alpha, Eta, Ks, K, distribType);
         }
 
         void handleTagBSDF(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parent,

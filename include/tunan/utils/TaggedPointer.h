@@ -16,6 +16,7 @@ namespace RENDER_NAMESPACE {
         public:
             using Types = TypeList<Ts...>;
 
+            RENDER_CPU_GPU
             TaggedPointer() = default;
 
             template<typename T>

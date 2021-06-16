@@ -172,7 +172,7 @@ namespace RENDER_NAMESPACE {
 
             RENDER_CPU_GPU
             ConductorBxDF(const Spectrum &Ks, const Spectrum &etaI, const Spectrum &etaT,
-                          const Spectrum &K, Float alpha, std::string distribType = "ggx");
+                          const Spectrum &K, Float alpha, MicrofacetDistribType distribType = GGX);
 
             RENDER_CPU_GPU
             Spectrum f(const Vector3F &wo, const Vector3F &wi) const;
@@ -193,7 +193,7 @@ namespace RENDER_NAMESPACE {
             using __MicrofacetDistribType__ = Variant<GGXDistribution>;
             Spectrum _Ks, _K;
             Spectrum _etaI, _etaT;
-            __MicrofacetDistribType__ _distribType;
+            __MicrofacetDistribType__ _distribStorage;
             MicrofacetDistribution _distribution;
             BxDFType _type;
         };
