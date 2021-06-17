@@ -587,11 +587,10 @@ namespace RENDER_NAMESPACE {
                     Spectrum Kd = info.getSpectrumValue("reflectance", Spectrum(0));
                     SpectrumTexture texture = allocator->newObject<ConstantSpectrumTexture>(Spectrum(Kd));
                     material = allocator->newObject<Lambertian>(texture);
-                    // TODO texture
-//                } else if (type == XmlAttrVal::Attr_SpectrumTexture) {
-//                    Texture<Spectrum>::Ptr texture = info.getSpectrumTextureValue("reflectance", nullptr);
-//                    ASSERT(texture, "Texture can't be nullptr. ");
-//                    material = _allocator->newObject<Lambertian>(texture);
+                } else if (type == XmlAttrVal::Attr_SpectrumTexture) {
+                    SpectrumTexture texture = info.getSpectrumTextureValue("reflectance", SpectrumTexture());
+                    ASSERT(!texture.nullable(), "Texture can't be nullptr. ");
+                    material = allocator->newObject<Lambertian>(texture);
                 } else {
                     // TODO
                     ASSERT(false, "Reflectance type not supported .");
@@ -845,21 +844,19 @@ namespace RENDER_NAMESPACE {
                                                                   falloffAngle, totalAngle);
                 sceneData.lights->push_back(spotLight);
                 std::cout << "\tCreate light: spot light" << std::endl;
-                /*
             } else if (type == "envmap") {
-                transform::Transform toWorldMat = info.getTransformValue("toWorld", Transform());
-                std::shared_ptr<transform::Transform> toWorld = toWorldMat.ptr();
+                Transform toWorld = info.getTransformValue("toWorld", Transform());
 
                 ASSERT(info.attrExists("filename"), "Environment light type should has envmap. ");
                 std::string envmapPath = info.getStringValue("filename", "");
 
-                EnvironmentLight::Ptr envLight = std::make_shared<EnvironmentLight>(1., _inputSceneDir + envmapPath,
-                                                                                    MediumInterface(nullptr,
-                                                                                                    nullptr),
-                                                                                    toWorld);
-                _scene->addLight(envLight);
-                _scene->addEnvironmentLight(envLight);
+                EnvironmentLight *envLight = allocator->newObject<EnvironmentLight>(1., sceneData.sceneDirectory +
+                                                                                        envmapPath, MediumInterface(),
+                                                                                    toWorld, allocator);
+                sceneData.lights->push_back(envLight);
+                sceneData.envLights->push_back(envLight);
                 std::cout << "\tCreate environment light. " << std::endl;
+                /*
             } else if (type == "sunsky") {
                 ASSERT(info.attrExists("sunDirection") && info.attrExists("intensity"),
                        "Sunsky parameter incomplete. ");
@@ -978,7 +975,7 @@ namespace RENDER_NAMESPACE {
 
         void parseXml(pugi::xml_node &node, XmlParseInfo &parent, SceneData &scene, ResourceManager *allocator) {
             XmlParseInfo info;
-            std::map<std::string, XmlAttrVal> attrContainer;
+            std::map <std::string, XmlAttrVal> attrContainer;
             for (pugi::xml_node &child : node.children()) {
                 parseXml(child, info, scene, allocator);
             }
@@ -988,8 +985,8 @@ namespace RENDER_NAMESPACE {
         void MitsubaSceneImporter::importScene(std::string sceneDirectory, SceneData &sceneData,
                                                ResourceManager *allocator) {
             sceneData.sceneDirectory = sceneDirectory;
-            sceneData.lights = allocator->newObject<base::Vector<Light>>(allocator);
-            sceneData.envLights = allocator->newObject<base::Vector<EnvironmentLight *>>(allocator);
+            sceneData.lights = allocator->newObject < base::Vector < Light >> (allocator);
+            sceneData.envLights = allocator->newObject < base::Vector < EnvironmentLight * >> (allocator);
 
             std::string xml_file = sceneDirectory + "scene.xml";
             std::cout << "Loading scene file: " << xml_file << std::endl;

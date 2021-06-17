@@ -50,7 +50,7 @@ namespace RENDER_NAMESPACE {
 
             void evaluateAreaLightQueue();
 
-            void evaluateMissRays(int sampleIndex, int scanLine);
+            void evaluateMissRays();
 
             void updateFilm(int nCameraRays);
 
@@ -69,6 +69,8 @@ namespace RENDER_NAMESPACE {
             PixelStateArray *_pixelArray;
             // Lights
             base::Vector<Light> *_lights;
+            // Environment light
+            base::Vector<EnvironmentLight *> *_envLights;
 
             // Queues
             RayQueue *_rayQueues[2];

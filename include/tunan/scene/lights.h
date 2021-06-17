@@ -44,6 +44,8 @@ namespace RENDER_NAMESPACE {
         RENDER_CPU_GPU
         void worldBound(Point3F &worldMin, Point3F &worldMax);
 
+        RENDER_CPU_GPU
+        LightSourceType getType() const;
     private:
         RENDER_CPU_GPU
         Spectrum sampleTexture(Point2F uv) const;
@@ -161,7 +163,7 @@ namespace RENDER_NAMESPACE {
 
     };
 
-    class Light : public utils::TaggedPointer<DiffuseAreaLight, PointLight, SpotLight> {
+    class Light : public utils::TaggedPointer<DiffuseAreaLight, PointLight, SpotLight, EnvironmentLight> {
     public:
         using TaggedPointer::TaggedPointer;
 

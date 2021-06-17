@@ -273,6 +273,11 @@ namespace RENDER_NAMESPACE {
     }
 
     RENDER_CPU_GPU
+    LightSourceType EnvironmentLight::getType() const {
+        return _type;
+    }
+
+    RENDER_CPU_GPU
     Spectrum Light::sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv, Interaction *target) {
         auto func = [&](auto ptr) {
             return ptr->sampleLi(eye, wi, pdf, uv, target);

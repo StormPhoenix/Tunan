@@ -47,7 +47,7 @@ namespace RENDER_NAMESPACE {
             params.filename = parsedScene.filename;
 
             _camera = resourceManager->newObject<Camera>(parsedScene.cameraToWorld, parsedScene.fov,
-                                                  params.filmWidth, params.filmHeight);
+                                                         params.filmWidth, params.filmHeight);
             _sampler = SamplerFactory::newSampler(params.nIterations, _resourceManager);
 
 
@@ -66,6 +66,7 @@ namespace RENDER_NAMESPACE {
 
             _film = resourceManager->newObject<Film>(params.filmWidth, params.filmHeight, resourceManager);
             _lights = parsedScene.lights;
+            _envLights = parsedScene.envLights;
         }
 
         void PathTracer::render() {
@@ -90,15 +91,13 @@ namespace RENDER_NAMESPACE {
                         _world->findClosestHit(currentRayQueue(bounce), _missQueue, _materialEvaQueue,
                                                _mediaEvaQueue, _areaLightEvaQueue, _pixelArray);
                         // TODO Handle media queue
-                        // TODO Handle missing queue
-//                        evaluateMissRays(sampleIndex, row);
+                        evaluateMissRays();
                         evaluateAreaLightQueue();
                         evaluateMaterialBSDF(bounce);
                         _world->traceShadowRay(_shadowRayQueue, _pixelArray);
                     }
                     updateFilm(nCameraRays);
                 }
-
                 // Write image frequently
                 if ((params.writeFrequency > 0 && (sampleIndex + 1) % params.writeFrequency == 0)) {
                     Float sampleWeight = 1.0 / (sampleIndex + 1);
@@ -134,7 +133,7 @@ namespace RENDER_NAMESPACE {
         } MaterialEvaWrapper;
 
         void PathTracer::evaluateAreaLightQueue() {
-            auto func = RENDER_CPU_GPU_LAMBDA(AreaLightHitDetails & m) {
+            auto func = RENDER_CPU_GPU_LAMBDA(AreaLightHitDetails &m) {
                 if (m.bounce == 0 || m.specularBounce) {
                     Spectrum L = m.areaLight->L(m.si, m.si.wo);
                     PixelState &state = (*_pixelArray)[m.pixelIndex];
@@ -151,7 +150,7 @@ namespace RENDER_NAMESPACE {
         template<typename MaterialType>
         void PathTracer::evaluateMaterialBSDF(int bounce) {
             RayQueue *nextQueue = nextRayQueue(bounce);
-            auto func = RENDER_CPU_GPU_LAMBDA(MaterialEvaDetails & m) {
+            auto func = RENDER_CPU_GPU_LAMBDA(MaterialEvaDetails &m) {
                 if (!m.material.isType<MaterialType>()) {
                     return;
                 }
@@ -162,7 +161,6 @@ namespace RENDER_NAMESPACE {
                 MaterialBxDF bxdf;
                 BSDF bsdf = material->evaluateBSDF(m.si, &bxdf);
                 if (bsdf.allIncludeOf(BxDFType(BSDF_All & (~BSDF_Specular)))) {
-                    // TODO sample from light
                     int nLights = _lights->size();
                     if (nLights != 0) {
                         Float lightPdf = Float(1.0) / nLights;
@@ -221,7 +219,7 @@ namespace RENDER_NAMESPACE {
         void PathTracer::generateRaySamples(int sampleIndex, int bounce) {
             auto func = [=](auto sampler) {
                 using SamplerType = typename std::remove_reference<decltype(*sampler)>::type;
-                return generateRaySamples < SamplerType > (sampleIndex, bounce);
+                return generateRaySamples<SamplerType>(sampleIndex, bounce);
             };
             _sampler.proxyCall(func);
         }
@@ -229,7 +227,7 @@ namespace RENDER_NAMESPACE {
         template<typename SamplerType>
         void PathTracer::generateRaySamples(int sampleIndex, int bounce) {
             auto func = RENDER_CPU_GPU_LAMBDA(
-            const RayDetails &r) {
+                    const RayDetails &r) {
                 int bounce = r.bounce;
                 int pixelIndex = r.pixelIndex;
                 // TODO very important
@@ -253,7 +251,7 @@ namespace RENDER_NAMESPACE {
         void PathTracer::generateCameraRays(int sampleIndex, int scanLine) {
             auto func = [=](auto sampler) {
                 using SamplerType = typename std::remove_reference<decltype(*sampler)>::type;
-                return generateCameraRays < SamplerType > (sampleIndex, scanLine);
+                return generateCameraRays<SamplerType>(sampleIndex, scanLine);
             };
             _sampler.proxyCall(func);
         }
@@ -294,6 +292,22 @@ namespace RENDER_NAMESPACE {
                 return;
             };
             parallel::parallelFor(func, _maxQueueSize);
+        }
+
+        void PathTracer::evaluateMissRays() {
+            auto func = RENDER_CPU_GPU_LAMBDA(RayDetails &r) {
+                PixelState &state = (*_pixelArray)[r.pixelIndex];
+                if (r.bounce == 0 || r.specularBounce) {
+                    if (_envLights != nullptr) {
+                        Spectrum Le(0);
+                        for (int i = 0; i < _envLights->size(); i++) {
+                            Le += (*_envLights)[i]->Le(r.ray);
+                        }
+                        state.L += state.beta * Le;
+                    }
+                }
+            };
+            parallel::parallelForQueue(func, _missQueue, _maxQueueSize);
         }
 
         RayQueue *PathTracer::currentRayQueue(int depth) {
