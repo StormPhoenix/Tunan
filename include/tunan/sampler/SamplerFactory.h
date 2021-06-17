@@ -13,7 +13,7 @@ namespace RENDER_NAMESPACE {
     namespace sampler {
         class SamplerFactory {
         public:
-            static  Sampler newSampler(size_t nSamples, utils::ResourceManager &allocator);
+            static  Sampler newSampler(size_t nSamples, utils::ResourceManager *allocator);
         };
     }
 }

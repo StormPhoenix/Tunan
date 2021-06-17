@@ -11,16 +11,74 @@
 #include <tunan/material/mappings.h>
 #include <tunan/utils/TaggedPointer.h>
 #include <tunan/utils/ResourceManager.h>
+#include <tunan/utils/image_utils.h>
+
+#include <sstream>
+#include <istream>
+#include <string>
+#include <fstream>
 
 namespace RENDER_NAMESPACE {
     namespace material {
-        using base::Spectrum;
-        using base::SurfaceInteraction;
-
-        using utils::TaggedPointer;
-        using utils::ResourceManager;
+        using namespace base;
+        using namespace utils;
 
         class ImageSpectrumTexture {
+        public:
+            ImageSpectrumTexture() {}
+
+            ImageSpectrumTexture(std::string imagePath, TextureMapping2D textureMapping, ResourceManager *allocator) {
+
+                /* Check file exists */
+                {
+                    std::ifstream in(imagePath);
+                    if (!in.good()) {
+                        std::cout << imagePath << " NOT EXISTS." << std::endl;
+                        return;
+                    }
+                }
+
+                // Mapping
+                {
+                    if (!textureMapping.nullable()) {
+                        _textureMapping = textureMapping;
+                    } else {
+                        _textureMapping = allocator->newObject<UVMapping2D>();
+                    }
+                }
+
+                // Copy image to texture
+                int channelsInFile = 3;
+                _channel = 3;
+                {
+                    float *image = readImage(imagePath, &_width, &_height, _channel, &channelsInFile);
+                    _texture = allocator->allocateObjects<Spectrum>(_width * _height);
+                    for (int row = 0; row < _height; row++) {
+                        for (int col = 0; col < _width; col++) {
+                            int imageOffset = (row * _width + col) * channelsInFile;
+                            int textureOffset = (row * _width + col);
+
+                            for (int ch = 0; ch < _channel; ch++) {
+                                (*(_texture + textureOffset))[ch] = *(image + imageOffset + ch);
+                            }
+                        }
+                    }
+                    delete image;
+                }
+
+                if (_channel > SpectrumChannel) {
+                    std::cout << "Image channel count NOT Support !" << std::endl;
+                }
+            }
+
+            RENDER_CPU_GPU
+            Spectrum evaluate(const SurfaceInteraction &si);
+
+        private:
+            TextureMapping2D _textureMapping;
+            Spectrum *_texture = nullptr;
+            int _width, _height;
+            int _channel;
         };
 
         class ConstantSpectrumTexture {
@@ -93,7 +151,8 @@ namespace RENDER_NAMESPACE {
             Float evaluate(const SurfaceInteraction &si);
         };
 
-        class SpectrumTexture : public TaggedPointer<ConstantSpectrumTexture, ChessboardSpectrumTexture> {
+        class SpectrumTexture : public TaggedPointer<ConstantSpectrumTexture, ChessboardSpectrumTexture,
+                ImageSpectrumTexture> {
         public:
             using TaggedPointer::TaggedPointer;
 

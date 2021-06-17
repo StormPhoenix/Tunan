@@ -10,13 +10,13 @@
 
 namespace RENDER_NAMESPACE {
     namespace utils {
-        void *CUDAResource::allocateAlignedMemory(size_t bytes, size_t alignBytes) {
+        void *CudaAllocator::allocateAlignedMemory(size_t bytes, size_t alignBytes) {
             void *ptr;
             CUDA_CHECK(cudaMallocManaged(&ptr, bytes));
             return ptr;
         }
 
-        void CUDAResource::freeAlignedMemory(void *ptr) {
+        void CudaAllocator::freeAlignedMemory(void *ptr) {
             CUDA_CHECK(cudaFree(ptr));
         }
     }

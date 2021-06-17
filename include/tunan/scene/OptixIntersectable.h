@@ -21,7 +21,7 @@
 
 namespace RENDER_NAMESPACE {
     using material::Material;
-    using utils::MemoryAllocator;
+    using utils::ResourceManager;
     using namespace tracer;
 
     typedef struct OptiXState {
@@ -57,7 +57,7 @@ namespace RENDER_NAMESPACE {
 
     class OptixIntersectable : public SceneIntersectable {
     public:
-        OptixIntersectable(SceneData &sceneData, MemoryAllocator &allocator);
+        OptixIntersectable(SceneData &sceneData, ResourceManager *allocator);
 
         void buildIntersectionStruct(SceneData &sceneData);
 
@@ -89,8 +89,7 @@ namespace RENDER_NAMESPACE {
 
     private:
         OptiXState state;
-        // Memory allocator
-        MemoryAllocator &allocator;
+        ResourceManager *allocator;
         uint64_t buildBVHBytes = 0;
         // SBT records
         base::Vector<HitRecord> closestHitRecords;

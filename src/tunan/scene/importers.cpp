@@ -191,7 +191,7 @@ namespace RENDER_NAMESPACE {
             Tag_Vector,
             Tag_LookAt,
             Tag_RGB,
-        };
+        } TagType;
 
         static std::map <std::string, TagType> nodeTypeMap;
 
@@ -988,7 +988,7 @@ namespace RENDER_NAMESPACE {
         void MitsubaSceneImporter::importScene(std::string sceneDirectory, SceneData &sceneData,
                                                ResourceManager &allocator) {
             sceneData.sceneDirectory = sceneDirectory;
-            sceneData.lights = allocator.newObject < base::Vector < Light >> (allocator);
+            sceneData.lights = allocator.newObject<base::Vector<Light>>(&allocator);
 
             std::string xml_file = sceneDirectory + "scene.xml";
             std::cout << "Loading scene file: " << xml_file << std::endl;

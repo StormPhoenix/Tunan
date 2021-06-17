@@ -47,7 +47,7 @@ int main() {
     SceneData parsedScene;
     importer.importScene(sceneDirectory, parsedScene, allocator);
 
-    PathTracer tracer(parsedScene, allocator);
+    PathTracer tracer(parsedScene, &allocator);
     tracer.render();
      // TODO think about resource deallocation
 //    delete resource;

@@ -27,8 +27,8 @@ namespace RENDER_NAMESPACE {
             return math::clamp(start - 1, 0, size - 2);
         }
 
-        Distribution1D::Distribution1D(Float *func, int len, ResourceManager &allocator)
-                : _function(&allocator), _cdf(&allocator) {
+        Distribution1D::Distribution1D(Float *func, int len, ResourceManager *allocator)
+                : _function(allocator), _cdf(allocator) {
             _function.reset(len);
             for (int i = 0; i < len; i++) {
                 _function[i] = *(func + i);
@@ -84,8 +84,8 @@ namespace RENDER_NAMESPACE {
             return _function.size();
         }
 
-        Distribution2D::Distribution2D(Float *func2D, int width, int height, ResourceManager &allocator) :
-                _width(width), _height(height), _rowDistribution(&allocator) {
+        Distribution2D::Distribution2D(Float *func2D, int width, int height, ResourceManager *allocator) :
+                _width(width), _height(height), _rowDistribution(allocator) {
             _rowDistribution.reset(height);
             for (int row = 0; row < height; row++) {
                 int offset = row * width;

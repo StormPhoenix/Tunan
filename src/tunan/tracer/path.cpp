@@ -33,8 +33,8 @@ namespace RENDER_NAMESPACE {
             std::cout << "Size: (" << params.filmWidth << ", " << params.filmHeight << ")" << std::endl;
         }
 
-        PathTracer::PathTracer(SceneData &parsedScene, ResourceManager &allocator) :
-                _allocator(allocator) {
+        PathTracer::PathTracer(SceneData &parsedScene, ResourceManager *resourceManager) :
+                _resourceManager(resourceManager) {
 #ifdef __BUILD_GPU_RENDER_ENABLE__
             _world = new OptixIntersectable(parsedScene, resourceManager);
 #else
@@ -46,25 +46,25 @@ namespace RENDER_NAMESPACE {
             params.nIterations = parsedScene.sampleNum;
             params.filename = parsedScene.filename;
 
-            _camera = allocator.newObject<Camera>(parsedScene.cameraToWorld, parsedScene.fov,
+            _camera = resourceManager->newObject<Camera>(parsedScene.cameraToWorld, parsedScene.fov,
                                                   params.filmWidth, params.filmHeight);
-            _sampler = SamplerFactory::newSampler(params.nIterations, _allocator);
+            _sampler = SamplerFactory::newSampler(params.nIterations, _resourceManager);
 
 
             // Initialize queues
             _maxQueueSize = params.filmWidth * params.scanLines;
-            _rayQueues[0] = allocator.newObject<RayQueue>(_maxQueueSize, &allocator);
-            _rayQueues[1] = allocator.newObject<RayQueue>(_maxQueueSize, &allocator);
-            _missQueue = allocator.newObject<MissQueue>(_maxQueueSize, &allocator);
-            _mediaEvaQueue = allocator.newObject<MediaEvaQueue>(_maxQueueSize, &allocator);
-            _materialEvaQueue = allocator.newObject<MaterialEvaQueue>(_maxQueueSize, &allocator);
-            _areaLightEvaQueue = allocator.newObject<AreaLightHitQueue>(_maxQueueSize, &allocator);
-            _shadowRayQueue = allocator.newObject<ShadowRayQueue>(_maxQueueSize, &allocator);
+            _rayQueues[0] = resourceManager->newObject<RayQueue>(_maxQueueSize, resourceManager);
+            _rayQueues[1] = resourceManager->newObject<RayQueue>(_maxQueueSize, resourceManager);
+            _missQueue = resourceManager->newObject<MissQueue>(_maxQueueSize, resourceManager);
+            _mediaEvaQueue = resourceManager->newObject<MediaEvaQueue>(_maxQueueSize, resourceManager);
+            _materialEvaQueue = resourceManager->newObject<MaterialEvaQueue>(_maxQueueSize, resourceManager);
+            _areaLightEvaQueue = resourceManager->newObject<AreaLightHitQueue>(_maxQueueSize, resourceManager);
+            _shadowRayQueue = resourceManager->newObject<ShadowRayQueue>(_maxQueueSize, resourceManager);
 
-            _pixelArray = allocator.newObject<PixelStateArray>(&allocator);
+            _pixelArray = resourceManager->newObject<PixelStateArray>(resourceManager);
             _pixelArray->reset(_maxQueueSize);
 
-            _film = allocator.newObject<Film>(params.filmWidth, params.filmHeight, allocator);
+            _film = resourceManager->newObject<Film>(params.filmWidth, params.filmHeight, resourceManager);
             _lights = parsedScene.lights;
         }
 

@@ -7,6 +7,32 @@
 namespace RENDER_NAMESPACE {
     namespace material {
         RENDER_CPU_GPU
+        Spectrum ImageSpectrumTexture::evaluate(const SurfaceInteraction &si) {
+            if (_texture == nullptr) {
+                return Spectrum(0);
+            }
+            Point2F uv = _textureMapping.map(si);
+
+            int wOffset, hOffset;
+            wOffset = uv[0] * _width;
+            hOffset = uv[1] * _height;
+
+            if (wOffset < 0 || wOffset >= _width
+                || hOffset < 0 || hOffset >= _height) {
+                return Spectrum(0);
+            }
+
+            // flip
+            int offset = (hOffset * _width + wOffset);
+
+            Spectrum ret(0);
+            for (int ch = 0; ch < _channel && ch < SpectrumChannel; ch++) {
+                ret[ch] = Float(_texture[offset][ch]);
+            }
+            return ret;
+        }
+
+        RENDER_CPU_GPU
         Spectrum SpectrumTexture::evaluate(const SurfaceInteraction &si) {
             auto func = [&](auto ptr) {
                 return ptr->evaluate(si);

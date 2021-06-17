@@ -29,7 +29,7 @@ namespace RENDER_NAMESPACE {
 
         class PathTracer {
         public:
-            PathTracer(SceneData &parsedScene, ResourceManager &allocator);
+            PathTracer(SceneData &parsedScene, ResourceManager *allocator);
 
             void render();
 
@@ -81,7 +81,7 @@ namespace RENDER_NAMESPACE {
             PTParameters params;
 
             SceneIntersectable *_world;
-            ResourceManager &_allocator;
+            ResourceManager *_resourceManager;
         };
     }
 }

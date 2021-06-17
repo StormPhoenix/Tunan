@@ -168,7 +168,7 @@ set(TuNan_UTIL_HDRS
 if (BUILD_GPU_ENABLED)
     set(TuNan_UTIL_SRCS
             ${TuNan_UTIL_SRCS}
-            src/tunan/utils/memory/CUDAResource.cpp)
+            src/tunan/utils/memory/CudaAllocator.cpp)
 
     set(TuNan_SRCS
             ${TuNan_SRCS}

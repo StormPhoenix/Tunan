@@ -15,7 +15,7 @@ namespace RENDER_NAMESPACE {
         public:
             Distribution1D() = default;
 
-            Distribution1D(Float *func, int len, ResourceManager &allocator);
+            Distribution1D(Float *func, int len, ResourceManager *allocator);
 
             RENDER_CPU_GPU
             Float sampleContinuous(Float *pdf, int *offset, Float sample) const;
@@ -36,7 +36,7 @@ namespace RENDER_NAMESPACE {
 
         class Distribution2D {
         public:
-            Distribution2D(Float *func2D, int width, int height, ResourceManager &allocator);
+            Distribution2D(Float *func2D, int width, int height, ResourceManager *allocator);
 
             RENDER_CPU_GPU
             Point2F sampleContinuous(Float *pdf, Vector2F &uv) const;

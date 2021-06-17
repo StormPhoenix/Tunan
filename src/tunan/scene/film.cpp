@@ -6,10 +6,10 @@
 #include <tunan/utils/image_utils.h>
 
 namespace RENDER_NAMESPACE {
-    Film::Film(int filmWidth, int filmHeight, ResourceManager &allocator) :
+    Film::Film(int filmWidth, int filmHeight, ResourceManager *allocator) :
             _filmWidth(filmWidth), _filmHeight(filmHeight) {
         int filmSize = _filmWidth * _filmHeight;
-        _filmPlane = allocator.allocateObjects<Pixel>(filmSize);
+        _filmPlane = allocator->allocateObjects<Pixel>(filmSize);
     }
 
     RENDER_CPU_GPU

@@ -30,8 +30,8 @@ namespace RENDER_NAMESPACE {
         std::cout << "OptiX callback: " << tag << ": " << message << std::endl;
     }
 
-    OptixIntersectable::OptixIntersectable(SceneData &sceneData, MemoryAllocator &allocator) :
-            allocator(allocator), closestHitRecords(&allocator), shadowRayRecords(&allocator) {
+    OptixIntersectable::OptixIntersectable(SceneData &sceneData, ResourceManager *allocator) :
+            allocator(allocator), closestHitRecords(allocator), shadowRayRecords(allocator) {
         buildIntersectionStruct(sceneData);
     }
 
@@ -404,7 +404,7 @@ namespace RENDER_NAMESPACE {
         // Create meshes
         for (int i = 0; i < shapeCount; i++) {
             ShapeEntity &entity = data.entities[i];
-            meshes[i] = allocator.newObject<TriangleMesh>(
+            meshes[i] = allocator->newObject<TriangleMesh>(
                     entity.nVertices, entity.vertices, entity.nNormals, entity.normals,
                     entity.nTexcoords, entity.texcoords, entity.nTriangles, entity.vertexIndices,
                     entity.normalIndices, entity.texcoordIndices, entity.toWorld);
@@ -476,7 +476,7 @@ namespace RENDER_NAMESPACE {
         OPTIX_CHECK(optixAccelComputeMemoryUsage(state.optixContext, &accelOptions,
                                                  buildInputs.data(), buildInputs.size(),
                                                  &gasBufferSizes));
-        uint64_t *compactedSizeBufferPtr = allocator.newObject<uint64_t>();
+        uint64_t *compactedSizeBufferPtr = allocator->newObject<uint64_t>();
 
         OptixAccelEmitDesc emitDesc = {};
         emitDesc.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
