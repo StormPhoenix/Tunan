@@ -2,11 +2,11 @@
 // Created by StormPhoenix on 2021/5/31.
 //
 
-#ifndef TUNAN_MEMORYALLOCATOR_H
-#define TUNAN_MEMORYALLOCATOR_H
+#ifndef TUNAN_RESOURCEMANAGER_H
+#define TUNAN_RESOURCEMANAGER_H
 
 #include <tunan/common.h>
-#include <tunan/utils/memory/MemoryResource.h>
+#include <tunan/utils/memory/Allocator.h>
 
 #include <list>
 #include <cstddef>
@@ -14,15 +14,17 @@
 
 namespace RENDER_NAMESPACE {
     namespace utils {
-        class MemoryAllocator {
+        class ResourceManager {
         public:
-            MemoryAllocator();
+            ResourceManager();
 
-            MemoryAllocator(MemoryResource *resource);
+            ResourceManager(Allocator *allocator);
 
-            MemoryAllocator(const MemoryAllocator &allocator) :
-                    _resource(allocator._resource), _defaultBlockSize(1024 * 1024),
-                    _currentBlock(nullptr), _blockOffset(0), _allocatedBlockSize(0) {}
+            ResourceManager(const ResourceManager &allocator) = delete;
+
+//            ResourceManager(const ResourceManager &allocator) :
+//                    _allocator(allocator._allocator), _defaultBlockSize(1024 * 1024),
+//                    _currentBlock(nullptr), _blockOffset(0), _allocatedBlockSize(0) {}
 
             void *allocate(size_t bytes, size_t alignBytes);
 
@@ -48,20 +50,20 @@ namespace RENDER_NAMESPACE {
                 obj->~T();
             }
 
-            MemoryAllocator &operator=(const MemoryAllocator &allocator) = delete;
+            ResourceManager &operator=(const ResourceManager &allocator) = delete;
 
             void deleteObject(void *p);
 
             void reset();
 
-            ~MemoryAllocator();
+            ~ResourceManager();
 
-            const MemoryResource *getResource() const {
-                return _resource;
+            const Allocator *getResource() const {
+                return _allocator;
             }
 
         private:
-            MemoryResource *_resource;
+            Allocator *_allocator;
             size_t _defaultBlockSize;
 
             uint8_t *_currentBlock = nullptr;
@@ -72,10 +74,10 @@ namespace RENDER_NAMESPACE {
             std::list<std::pair<size_t, uint8_t *>> _availableBlocks;
         };
 
-        inline bool operator==(const MemoryAllocator &alloc1, const MemoryAllocator &alloc2) noexcept {
+        inline bool operator==(const ResourceManager &alloc1, const ResourceManager &alloc2) noexcept {
             return alloc1.getResource() == alloc2.getResource();
         }
     }
 }
 
-#endif //TUNAN_MEMORYALLOCATOR_H
+#endif //TUNAN_RESOURCEMANAGER_H

@@ -5,8 +5,8 @@
 #ifndef TUNAN_CONTAINER_H
 #define TUNAN_CONTAINER_H
 
-#include <tunan/utils/MemoryAllocator.h>
 #include <tunan/common.h>
+#include <tunan/utils/ResourceManager.h>
 
 #ifdef __BUILD_GPU_RENDER_ENABLE__
 
@@ -15,13 +15,14 @@
 
 #endif
 
+#include <iostream>
 #include <initializer_list>
 #include <cassert>
 #include <atomic>
 
 namespace RENDER_NAMESPACE {
     namespace base {
-        using utils::MemoryAllocator;
+        using utils::ResourceManager;
 
         template<typename T, int N>
         class Array {
@@ -169,32 +170,32 @@ namespace RENDER_NAMESPACE {
         template<typename T>
         class Vector {
         public:
-            Vector(const MemoryAllocator &allocator = {}) :
-                    allocator(allocator), nAllocated(0), used(0) {}
+            Vector(ResourceManager *allocator = nullptr) :
+                    resourceManager(allocator), nAllocated(0), nUsed(0) {}
 
-            Vector(Vector &&other) : allocator(other.allocator) {
-                used = other.used;
+            Vector(Vector &&other) : resourceManager(other.resourceManager) {
+                nUsed = other.nUsed;
                 nAllocated = other.nAllocated;
                 buffer = other.buffer;
 
-                other.used = other.nAllocated = 0;
+                other.nUsed = other.nAllocated = 0;
                 other.buffer = nullptr;
             }
 
-            Vector(Vector &&other, const MemoryAllocator &allocator) : allocator(allocator) {
-                if (allocator == other.allocator) {
+            Vector(Vector &&other, ResourceManager *allocator) : resourceManager(allocator) {
+                if (resourceManager == other.resourceManager) {
                     buffer = other.buffer;
                     nAllocated = other.nAllocated;
-                    used = other.used;
+                    nUsed = other.nUsed;
 
                     other.buffer = nullptr;
-                    other.nAllocated = other.used = 0;
+                    other.nAllocated = other.nUsed = 0;
                 } else {
                     reset(other.size());
                     for (size_t i = 0; i < other.size(); i++) {
-                        allocator.template initialize<T>(buffer + i, std::move(other[i]));
+                        resourceManager->template initialize<T>(buffer + i, std::move(other[i]));
                     }
-                    used = other.size();
+                    nUsed = other.size();
                 }
             }
 
@@ -202,12 +203,16 @@ namespace RENDER_NAMESPACE {
                 if (this == &other)
                     return *this;
 
+                if (resourceManager == nullptr) {
+                    resourceManager = other.resourceManager;
+                }
+
                 clean();
                 reset(other.size());
                 for (size_t i = 0; i < other.size(); i++) {
-                    allocator.template initialize<T>(buffer + i, other[i]);
+                    resourceManager->template initialize<T>(buffer + i, other[i]);
                 }
-                used = other.size();
+                nUsed = other.size();
                 return *this;
             }
 
@@ -215,37 +220,42 @@ namespace RENDER_NAMESPACE {
                 if (this == &other)
                     return *this;
 
-                if (allocator == other.allocator) {
+                if (resourceManager == nullptr) {
+                    resourceManager = std::move(other.resourceManager);
+                }
+
+                if (resourceManager == other.resourceManager) {
                     buffer = std::move(other.buffer);
                     nAllocated = std::move(other.nAllocated);
-                    used = std::move(other.used);
+                    nUsed = std::move(other.nUsed);
                 } else {
                     clean();
                     reset(other.size());
                     for (size_t i = 0; i < other.size(); i++) {
-                        allocator.template initialize<T>(buffer + i, std::move(other[i]));
+                        resourceManager->template initialize<T>(buffer + i, std::move(other[i]));
                     }
-                    used = other.size();
+                    nUsed = other.size();
                 }
                 return *this;
             }
 
             void clean() {
-                for (int i = 0; i < used; ++i) {
-                    allocator.de_initialize(&buffer[i]);
+                ASSERT(resourceManager != nullptr, "Resource manager can't be nullptr. ");
+                for (int i = 0; i < nUsed; ++i) {
+                    resourceManager->de_initialize(&buffer[i]);
                 }
-                used = 0;
+                nUsed = 0;
             }
 
             RENDER_CPU_GPU
             const T &operator[](size_t index) const {
-                assert(index >= 0 && index < used);
+                assert(index >= 0 && index < nUsed);
                 return buffer[index];
             }
 
             RENDER_CPU_GPU
             T &operator[](size_t index) {
-                assert(index >= 0 && index < used);
+                assert(index >= 0 && index < nUsed);
                 return buffer[index];
             }
 
@@ -261,38 +271,41 @@ namespace RENDER_NAMESPACE {
 
             RENDER_CPU_GPU
             size_t size() const {
-                return used;
+                return nUsed;
             }
 
             void push_back(T &val) {
-                if (used == nAllocated) {
+                if (nUsed == nAllocated) {
                     allocate(nAllocated == 0 ? 4 : 2 * nAllocated);
                 }
-                allocator.template initialize<T>(buffer + used, val);
-                used++;
+                ASSERT(resourceManager != nullptr, "Resource manager can't be nullptr. ");
+                resourceManager->template initialize<T>(buffer + nUsed, val);
+                nUsed++;
             }
 
             void push_back(T &&val) {
-                if (used == nAllocated) {
+                if (nUsed == nAllocated) {
                     allocate(nAllocated == 0 ? 4 : 2 * nAllocated);
                 }
-                allocator.template initialize<T>(buffer + used, std::move(val));
-                used++;
+                ASSERT(resourceManager != nullptr, "Resource manager can't be nullptr. ");
+                resourceManager->template initialize<T>(buffer + nUsed, std::move(val));
+                nUsed++;
             }
 
             void pop_back() {
-                if (used <= 0) {
+                if (nUsed <= 0) {
                     return;
                 }
-                allocator.template de_initialize<T>(buffer + used - 1);
-                used--;
+                ASSERT(resourceManager != nullptr, "Resource manager can't be nullptr. ");
+                resourceManager->template de_initialize<T>(buffer + nUsed - 1);
+                nUsed--;
             }
 
             void reset(size_t n) {
                 if (n > nAllocated) {
                     allocate(n);
                 }
-                used = n;
+                nUsed = n;
             }
 
         private:
@@ -301,9 +314,10 @@ namespace RENDER_NAMESPACE {
                     return;
                 }
 
-                T *newBuffer = allocator.template allocateObjects<T>(n);
-                for (int i = 0; i < used; i++) {
-                    allocator.template initialize<T>(newBuffer + i, std::move(buffer[i]));
+                ASSERT(resourceManager != nullptr, "Resource manager can't be nullptr. ");
+                T *newBuffer = resourceManager->template allocateObjects<T>(n);
+                for (int i = 0; i < nUsed; i++) {
+                    resourceManager->template initialize<T>(newBuffer + i, std::move(buffer[i]));
                 }
                 buffer = newBuffer;
                 nAllocated = n;
@@ -311,9 +325,9 @@ namespace RENDER_NAMESPACE {
 
         private:
             int nAllocated;
-            int used;
+            int nUsed;
             T *buffer = nullptr;
-            MemoryAllocator allocator;
+            ResourceManager *resourceManager = nullptr;
         };
 
         template<typename T>
@@ -321,9 +335,10 @@ namespace RENDER_NAMESPACE {
         public:
             Queue() = default;
 
-            Queue(int maxQueueSize, MemoryAllocator &allocator) :
+            Queue(int maxQueueSize, ResourceManager *allocator) :
                     maxQueueSize(maxQueueSize), allocator(allocator) {
-                buffer = allocator.allocateObjects<T>(maxQueueSize);
+                assert(allocator != nullptr);
+                buffer = allocator->allocateObjects<T>(maxQueueSize);
                 nAllocated = maxQueueSize;
             }
 
@@ -410,7 +425,7 @@ namespace RENDER_NAMESPACE {
 
             int nAllocated = 0;
             T *buffer = nullptr;
-            MemoryAllocator allocator;
+            ResourceManager *allocator = nullptr;
         };
     }
 }

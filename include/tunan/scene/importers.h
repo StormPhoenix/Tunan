@@ -14,17 +14,17 @@ namespace RENDER_NAMESPACE {
     class SceneData;
 
     namespace utils {
-        class MemoryAllocator;
+        class ResourceManager;
     }
 
     namespace importer {
-        using utils::MemoryAllocator;
+        using utils::ResourceManager;
 
         class MitsubaSceneImporter {
         public:
             MitsubaSceneImporter();
 
-            void importScene(std::string sceneDirectory, SceneData &scene, MemoryAllocator &allocator);
+            void importScene(std::string sceneDirectory, SceneData &scene, ResourceManager &allocator);
         };
     }
 }

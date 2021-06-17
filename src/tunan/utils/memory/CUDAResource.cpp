@@ -2,7 +2,7 @@
 // Created by StormPhoenix on 2021/5/31.
 //
 
-#include <tunan/utils/memory/CUDAResource.h>
+#include <tunan/utils/memory/CudaAllocator.h>
 #include <tunan/gpu/cuda_utils.h>
 
 #include <cuda.h>

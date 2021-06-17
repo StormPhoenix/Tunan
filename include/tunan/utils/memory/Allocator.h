@@ -2,15 +2,15 @@
 // Created by StormPhoenix on 2021/5/31.
 //
 
-#ifndef TUNAN_MEMORYRESOURCE_H
-#define TUNAN_MEMORYRESOURCE_H
+#ifndef TUNAN_ALLOCATOR_H
+#define TUNAN_ALLOCATOR_H
 
 #include <tunan/common.h>
 #include <stddef.h>
 
 namespace RENDER_NAMESPACE {
     namespace utils {
-        class MemoryResource {
+        class Allocator {
         public:
             virtual void *allocateAlignedMemory(size_t bytes, size_t alignBytes) = 0;
 
@@ -19,4 +19,4 @@ namespace RENDER_NAMESPACE {
     }
 }
 
-#endif //TUNAN_MEMORYRESOURCE_H
+#endif //TUNAN_ALLOCATOR_H

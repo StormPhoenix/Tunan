@@ -3,7 +3,7 @@
 //
 
 #include <tunan/utils/model_loader.h>
-#include <tunan/utils/MemoryAllocator.h>
+#include <tunan/utils/ResourceManager.h>
 #include <tunan/scene/scenedata.h>
 
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -12,7 +12,7 @@
 
 namespace RENDER_NAMESPACE {
     namespace utils {
-        bool load_obj(const std::string path, ShapeEntity &entity, MemoryAllocator &allocator) {
+        bool load_obj(const std::string path, ShapeEntity &entity, ResourceManager &allocator) {
             tinyobj::attrib_t attrib;
             std::vector<tinyobj::shape_t> shapes;
             std::vector<tinyobj::material_t> materials;

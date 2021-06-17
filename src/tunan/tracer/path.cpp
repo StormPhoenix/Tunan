@@ -33,10 +33,10 @@ namespace RENDER_NAMESPACE {
             std::cout << "Size: (" << params.filmWidth << ", " << params.filmHeight << ")" << std::endl;
         }
 
-        PathTracer::PathTracer(SceneData &parsedScene, MemoryAllocator &allocator) :
+        PathTracer::PathTracer(SceneData &parsedScene, ResourceManager &allocator) :
                 _allocator(allocator) {
 #ifdef __BUILD_GPU_RENDER_ENABLE__
-            _world = new OptixIntersectable(parsedScene, allocator);
+            _world = new OptixIntersectable(parsedScene, resourceManager);
 #else
             // TODO cpu scene intersectable
 #endif
@@ -53,15 +53,15 @@ namespace RENDER_NAMESPACE {
 
             // Initialize queues
             _maxQueueSize = params.filmWidth * params.scanLines;
-            _rayQueues[0] = allocator.newObject<RayQueue>(_maxQueueSize, allocator);
-            _rayQueues[1] = allocator.newObject<RayQueue>(_maxQueueSize, allocator);
-            _missQueue = allocator.newObject<MissQueue>(_maxQueueSize, allocator);
-            _mediaEvaQueue = allocator.newObject<MediaEvaQueue>(_maxQueueSize, allocator);
-            _materialEvaQueue = allocator.newObject<MaterialEvaQueue>(_maxQueueSize, allocator);
-            _areaLightEvaQueue = allocator.newObject<AreaLightHitQueue>(_maxQueueSize, allocator);
-            _shadowRayQueue = allocator.newObject<ShadowRayQueue>(_maxQueueSize, allocator);
+            _rayQueues[0] = allocator.newObject<RayQueue>(_maxQueueSize, &allocator);
+            _rayQueues[1] = allocator.newObject<RayQueue>(_maxQueueSize, &allocator);
+            _missQueue = allocator.newObject<MissQueue>(_maxQueueSize, &allocator);
+            _mediaEvaQueue = allocator.newObject<MediaEvaQueue>(_maxQueueSize, &allocator);
+            _materialEvaQueue = allocator.newObject<MaterialEvaQueue>(_maxQueueSize, &allocator);
+            _areaLightEvaQueue = allocator.newObject<AreaLightHitQueue>(_maxQueueSize, &allocator);
+            _shadowRayQueue = allocator.newObject<ShadowRayQueue>(_maxQueueSize, &allocator);
 
-            _pixelArray = allocator.newObject<PixelStateArray>(allocator);
+            _pixelArray = allocator.newObject<PixelStateArray>(&allocator);
             _pixelArray->reset(_maxQueueSize);
 
             _film = allocator.newObject<Film>(params.filmWidth, params.filmHeight, allocator);

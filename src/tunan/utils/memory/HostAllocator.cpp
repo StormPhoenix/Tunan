@@ -2,7 +2,7 @@
 // Created by StormPhoenix on 2021/5/31.
 //
 
-#include <tunan/utils/memory/CPUResource.h>
+#include <tunan/utils/memory/HostAllocator.h>
 
 #if defined(RENDER_WINDOWS_MALLOC_ALIGNED)
 #include <malloc.h>
@@ -12,7 +12,7 @@
 
 namespace RENDER_NAMESPACE {
     namespace utils {
-        void *CPUResource::allocateAlignedMemory(size_t bytes, size_t alignBytes) {
+        void *HostAllocator::allocateAlignedMemory(size_t bytes, size_t alignBytes) {
 #if defined(RENDER_WINDOWS_MALLOC_ALIGNED)
             return _aligned_malloc(bytes, alignBytes);
 #elif defined(RENDER_POSIX_MALLOC_ALIGNED)
@@ -26,7 +26,7 @@ namespace RENDER_NAMESPACE {
 #endif
         }
 
-        void CPUResource::freeAlignedMemory(void *ptr) {
+        void HostAllocator::freeAlignedMemory(void *ptr) {
             if (ptr == nullptr) {
                 return;
             }

@@ -11,7 +11,7 @@
 #include <tunan/base/transform.h>
 #include <tunan/base/containers.h>
 #include <tunan/material/materials.h>
-#include <tunan/utils/MemoryAllocator.h>
+#include <tunan/utils/ResourceManager.h>
 
 #include <string>
 #include <vector>
@@ -23,7 +23,7 @@ namespace RENDER_NAMESPACE {
     typedef struct ShapeEntity {
         ShapeEntity() = default;
 
-        void createAreaLights(const Spectrum &radiance, utils::MemoryAllocator &allocator);
+        void createAreaLights(const Spectrum &radiance, utils::ResourceManager &allocator);
 
         int nVertices = 0;
         Point3F *vertices = nullptr;

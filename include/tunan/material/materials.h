@@ -11,7 +11,7 @@
 #include <tunan/material/bsdfs.h>
 #include <tunan/material/textures.h>
 #include <tunan/utils/TaggedPointer.h>
-#include <tunan/utils/MemoryAllocator.h>
+#include <tunan/utils/ResourceManager.h>
 
 namespace RENDER_NAMESPACE {
     namespace material {

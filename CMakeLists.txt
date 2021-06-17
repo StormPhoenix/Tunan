@@ -156,8 +156,8 @@ set(TuNan_UTIL_SRCS
         src/tunan/utils/model_loader.cpp
         src/tunan/utils/image_utils.cpp
         src/tunan/utils/file_utils.cpp
-        src/tunan/utils/MemoryAllocator.cpp
-        src/tunan/utils/memory/CPUResource.cpp)
+        src/tunan/utils/ResourceManager.cpp
+        src/tunan/utils/memory/HostAllocator.cpp)
 
 set(TuNan_UTIL_HDRS
         include/tunan/utils/type_utils.h

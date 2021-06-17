@@ -31,7 +31,7 @@ namespace RENDER_NAMESPACE {
     }
 
     OptixIntersectable::OptixIntersectable(SceneData &sceneData, MemoryAllocator &allocator) :
-            allocator(allocator), closestHitRecords(allocator), shadowRayRecords(allocator) {
+            allocator(allocator), closestHitRecords(&allocator), shadowRayRecords(&allocator) {
         buildIntersectionStruct(sceneData);
     }
 

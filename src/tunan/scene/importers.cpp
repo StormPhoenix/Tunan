@@ -6,7 +6,7 @@
 #include <tunan/base/transform.h>
 #include <tunan/base/spectrum.h>
 #include <tunan/utils/model_loader.h>
-#include <tunan/utils/MemoryAllocator.h>
+#include <tunan/utils/ResourceManager.h>
 #include <tunan/scene/scenedata.h>
 #include <tunan/material/microfacets.h>
 #include <tunan/material/materials.h>
@@ -18,7 +18,7 @@
 
 namespace RENDER_NAMESPACE {
     namespace importer {
-        using utils::MemoryAllocator;
+        using utils::ResourceManager;
         using namespace material;
         using namespace microfacet;
 
@@ -351,7 +351,7 @@ namespace RENDER_NAMESPACE {
             sceneData.radiusDecay = info.getFloatValue("alpha", sceneData.radiusDecay);
         }
 
-        void createRectangleShape(XmlParseInfo &info, SceneData &sceneData, MemoryAllocator &allocator) {
+        void createRectangleShape(XmlParseInfo &info, SceneData &sceneData, ResourceManager &allocator) {
             sceneData.entities.push_back(ShapeEntity());
             ShapeEntity &entity = sceneData.entities.back();
             entity.toWorld = info.getTransformValue("toWorld", Transform());
@@ -428,7 +428,7 @@ namespace RENDER_NAMESPACE {
             }
         }
 
-        static void createCubeShape(XmlParseInfo &info, SceneData &sceneData, MemoryAllocator &allocator) {
+        static void createCubeShape(XmlParseInfo &info, SceneData &sceneData, ResourceManager &allocator) {
             sceneData.entities.push_back(ShapeEntity());
             ShapeEntity &entity = sceneData.entities.back();
             entity.toWorld = info.getTransformValue("toWorld", Transform());
@@ -544,7 +544,7 @@ namespace RENDER_NAMESPACE {
             }
         }
 
-        static void createObjMeshes(XmlParseInfo &info, SceneData &sceneData, MemoryAllocator &allocator) {
+        static void createObjMeshes(XmlParseInfo &info, SceneData &sceneData, ResourceManager &allocator) {
             sceneData.entities.push_back(ShapeEntity());
             ShapeEntity &entity = sceneData.entities.back();
             entity.toWorld = info.getTransformValue("toWorld", Transform());
@@ -575,7 +575,7 @@ namespace RENDER_NAMESPACE {
             return;
         }
 
-        Material createDiffuseMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
+        Material createDiffuseMaterial(XmlParseInfo &info, ResourceManager &allocator) {
             Material material;
             if (!info.attrExists("reflectance")) {
                 // Create default diffuse material
@@ -600,7 +600,7 @@ namespace RENDER_NAMESPACE {
             return material;
         }
 
-        Material createDielectricMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
+        Material createDielectricMaterial(XmlParseInfo &info, ResourceManager &allocator) {
             Material material;
             auto intIORType = info.getType("intIOR");
             auto extIORType = info.getType("extIOR");
@@ -618,11 +618,11 @@ namespace RENDER_NAMESPACE {
             return material;
         }
 
-        Material createMirrorMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
+        Material createMirrorMaterial(XmlParseInfo &info, ResourceManager &allocator) {
             return allocator.newObject<Mirror>();
         }
 
-        Material createGlassMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
+        Material createGlassMaterial(XmlParseInfo &info, ResourceManager &allocator) {
             Float extIOR = 1.;
             Float intIOR = 1.5;
             SpectrumTexture texR = allocator.newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
@@ -630,7 +630,7 @@ namespace RENDER_NAMESPACE {
             return allocator.newObject<Dielectric>(texR, texT, extIOR, intIOR);
         }
 
-        Material createRoughConductorMaterial(XmlParseInfo &info, MemoryAllocator &allocator) {
+        Material createRoughConductorMaterial(XmlParseInfo &info, ResourceManager &allocator) {
             // Roughness
             Float alpha = 0.01;
             if (info.attrExists("alpha")) {
@@ -661,7 +661,7 @@ namespace RENDER_NAMESPACE {
         }
 
         void handleTagBSDF(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parent,
-                           SceneData &sceneData, MemoryAllocator &allocator) {
+                           SceneData &sceneData, ResourceManager &allocator) {
             std::string type = node.attribute("type").value();
             std::string id = node.attribute("id").value();
 
@@ -700,7 +700,7 @@ namespace RENDER_NAMESPACE {
         }
 
         static void handleTagShape(pugi::xml_node &node, XmlParseInfo &parseInfo,
-                                   SceneData &sceneData, MemoryAllocator &allocator) {
+                                   SceneData &sceneData, ResourceManager &allocator) {
             std::string type = node.attribute("type").value();
 
             if (type == "rectangle") {
@@ -819,7 +819,7 @@ namespace RENDER_NAMESPACE {
 
         static void
         handleTagEmitter(pugi::xml_node &node, XmlParseInfo &info, XmlParseInfo &parent,
-                         SceneData &sceneData, MemoryAllocator &allocator) {
+                         SceneData &sceneData, ResourceManager &allocator) {
             std::string type = node.attribute("type").value();
             if (type == "area") {
                 parent.hasAreaLight = true;
@@ -877,7 +877,7 @@ namespace RENDER_NAMESPACE {
         }
 
         static void handleTagTexture(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parentInfo,
-                                     MemoryAllocator &allocator) {
+                                     ResourceManager &allocator) {
             const std::string type = node.attribute("type").value();
             const std::string name = node.attribute("name").value();
             if (type == "checkerboard") {
@@ -906,7 +906,7 @@ namespace RENDER_NAMESPACE {
         }
 
         static void handleXmlNode(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parentParseInfo,
-                                  SceneData &sceneData, MemoryAllocator &allocator) {
+                                  SceneData &sceneData, ResourceManager &allocator) {
             TagType tagType = nodeTypeMap[node.name()];
             switch (tagType) {
 //                case Tag_Mode:
@@ -976,7 +976,7 @@ namespace RENDER_NAMESPACE {
             }
         }
 
-        void parseXml(pugi::xml_node &node, XmlParseInfo &parent, SceneData &scene, MemoryAllocator &allocator) {
+        void parseXml(pugi::xml_node &node, XmlParseInfo &parent, SceneData &scene, ResourceManager &allocator) {
             XmlParseInfo info;
             std::map <std::string, XmlAttrVal> attrContainer;
             for (pugi::xml_node &child : node.children()) {
@@ -986,7 +986,7 @@ namespace RENDER_NAMESPACE {
         }
 
         void MitsubaSceneImporter::importScene(std::string sceneDirectory, SceneData &sceneData,
-                                               MemoryAllocator &allocator) {
+                                               ResourceManager &allocator) {
             sceneData.sceneDirectory = sceneDirectory;
             sceneData.lights = allocator.newObject < base::Vector < Light >> (allocator);
 

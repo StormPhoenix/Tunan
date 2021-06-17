@@ -3,11 +3,11 @@
 //
 
 #include <tunan/scene/scenedata.h>
-#include <tunan/utils/MemoryAllocator.h>
+#include <tunan/utils/ResourceManager.h>
 
 namespace RENDER_NAMESPACE {
 
-    void ShapeEntity::createAreaLights(const Spectrum &radiance, utils::MemoryAllocator &allocator) {
+    void ShapeEntity::createAreaLights(const Spectrum &radiance, utils::ResourceManager &allocator) {
         if (nTriangles > 0) {
             areaLights = allocator.allocateObjects<DiffuseAreaLight>(nTriangles);
         }

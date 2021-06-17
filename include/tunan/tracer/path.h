@@ -11,7 +11,7 @@
 #include <tunan/scene/cameras.h>
 #include <tunan/scene/scenedata.h>
 #include <tunan/scene/SceneIntersectable.h>
-#include <tunan/utils/MemoryAllocator.h>
+#include <tunan/utils/ResourceManager.h>
 #include <tunan/tracer/tracer.h>
 
 namespace RENDER_NAMESPACE {
@@ -29,7 +29,7 @@ namespace RENDER_NAMESPACE {
 
         class PathTracer {
         public:
-            PathTracer(SceneData &parsedScene, MemoryAllocator &allocator);
+            PathTracer(SceneData &parsedScene, ResourceManager &allocator);
 
             void render();
 
@@ -81,7 +81,7 @@ namespace RENDER_NAMESPACE {
             PTParameters params;
 
             SceneIntersectable *_world;
-            MemoryAllocator &_allocator;
+            ResourceManager &_allocator;
         };
     }
 }

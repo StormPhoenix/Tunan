@@ -12,7 +12,7 @@
 #include <tunan/material/materials.h>
 #include <tunan/scene/scenedata.h>
 #include <tunan/scene/SceneIntersectable.h>
-#include <tunan/utils/MemoryAllocator.h>
+#include <tunan/utils/ResourceManager.h>
 
 #include <optix.h>
 #include <string>

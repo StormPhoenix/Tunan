@@ -10,7 +10,7 @@
 #include <tunan/base/interactions.h>
 #include <tunan/material/mappings.h>
 #include <tunan/utils/TaggedPointer.h>
-#include <tunan/utils/MemoryAllocator.h>
+#include <tunan/utils/ResourceManager.h>
 
 namespace RENDER_NAMESPACE {
     namespace material {
@@ -18,7 +18,7 @@ namespace RENDER_NAMESPACE {
         using base::SurfaceInteraction;
 
         using utils::TaggedPointer;
-        using utils::MemoryAllocator;
+        using utils::ResourceManager;
 
         class ImageSpectrumTexture {
         };

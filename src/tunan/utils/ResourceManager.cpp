@@ -7,23 +7,23 @@
 #define RENDER_CACHE_LINE_SIZE 128
 #endif
 
-#include <tunan/utils/MemoryAllocator.h>
-#include <tunan/utils/memory/CPUResource.h>
+#include <tunan/utils/ResourceManager.h>
+#include <tunan/utils/memory/HostAllocator.h>
 
 namespace RENDER_NAMESPACE {
     namespace utils {
-        MemoryAllocator::MemoryAllocator()
+        ResourceManager::ResourceManager()
                 : _defaultBlockSize(1024 * 1024), _currentBlock(nullptr),
                   _blockOffset(0), _allocatedBlockSize(0) {
-            _resource = new CPUResource();
+            _allocator = new HostAllocator();
         }
 
-        MemoryAllocator::MemoryAllocator(MemoryResource *resource)
+        ResourceManager::ResourceManager(Allocator *allocator)
                 : _defaultBlockSize(1024 * 1024), _currentBlock(nullptr),
-                  _blockOffset(0),_allocatedBlockSize(0),
-                  _resource(resource) {}
+                  _blockOffset(0), _allocatedBlockSize(0),
+                  _allocator(allocator) {}
 
-        void *MemoryAllocator::allocate(size_t bytes, size_t alignBytes) {
+        void *ResourceManager::allocate(size_t bytes, size_t alignBytes) {
             if ((_blockOffset % alignBytes) != 0) {
                 _blockOffset += (alignBytes - (_blockOffset % alignBytes));
             }
@@ -50,7 +50,7 @@ namespace RENDER_NAMESPACE {
                 if (_currentBlock == nullptr) {
                     size_t allocatedBytes = std::max(bytes, _defaultBlockSize);
                     _currentBlock = static_cast<uint8_t *>(
-                            _resource->allocateAlignedMemory(allocatedBytes, RENDER_CACHE_LINE_SIZE));
+                            _allocator->allocateAlignedMemory(allocatedBytes, RENDER_CACHE_LINE_SIZE));
                     _allocatedBlockSize = allocatedBytes;
                 }
                 _blockOffset = 0;
@@ -60,23 +60,23 @@ namespace RENDER_NAMESPACE {
             return ret;
         }
 
-        void MemoryAllocator::reset() {
+        void ResourceManager::reset() {
             _availableBlocks.splice(_availableBlocks.begin(), _usedBlocks);
             _blockOffset = 0;
         }
 
-        void MemoryAllocator::deleteObject(void *p) {
+        void ResourceManager::deleteObject(void *p) {
             // TODO do nothing
         }
 
-        MemoryAllocator::~MemoryAllocator() {
-            _resource->freeAlignedMemory(_currentBlock);
+        ResourceManager::~ResourceManager() {
+            _allocator->freeAlignedMemory(_currentBlock);
             for (auto iter = _usedBlocks.begin(); iter != _usedBlocks.end(); iter++) {
-                _resource->freeAlignedMemory(iter->second);
+                _allocator->freeAlignedMemory(iter->second);
             }
 
             for (auto iter = _availableBlocks.begin(); iter != _availableBlocks.end(); iter++) {
-                _resource->freeAlignedMemory(iter->second);
+                _allocator->freeAlignedMemory(iter->second);
             }
             // TODO delete
 //            delete _resource;

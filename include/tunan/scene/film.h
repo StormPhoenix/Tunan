@@ -8,11 +8,11 @@
 #include <tunan/common.h>
 #include <tunan/base/spectrum.h>
 #include <tunan/parallel/atomics.h>
-#include <tunan/utils/MemoryAllocator.h>
+#include <tunan/utils/ResourceManager.h>
 
 namespace RENDER_NAMESPACE {
     using namespace base;
-    using utils::MemoryAllocator;
+    using utils::ResourceManager;
     using parallel::AtomicFloat;
 
     struct Pixel {
@@ -29,7 +29,7 @@ namespace RENDER_NAMESPACE {
 
     class Film {
     public:
-        Film(int filmWidth, int filmHeight, MemoryAllocator &allocator);
+        Film(int filmWidth, int filmHeight, ResourceManager &allocator);
 
         RENDER_CPU_GPU
         void addExtra(const Spectrum &spectrum, int row, int col);

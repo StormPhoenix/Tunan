@@ -3,8 +3,8 @@
 // TODO for testing
 #include <tunan/common.h>
 #include <tunan/scene/importers.h>
-#include <tunan/utils/memory/CUDAResource.h>
-#include <tunan/utils/MemoryAllocator.h>
+#include <tunan/utils/memory/CudaAllocator.h>
+#include <tunan/utils/ResourceManager.h>
 
 #if defined(__cplusplus) && __cplusplus >= 201703L && defined(__has_include)
 #if __has_include(<filesystem>)
@@ -33,8 +33,8 @@ int main() {
     using namespace tunan::tracer;
     using namespace tunan::sampler;
 
-    MemoryResource *resource = new CUDAResource();
-    MemoryAllocator allocator(resource);
+    Allocator *resource = new CudaAllocator();
+    ResourceManager allocator(resource);
 
 //    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/cornel-box/";
 //    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/cbox-bunny/";

@@ -7,13 +7,13 @@
 
 #include <tunan/common.h>
 #include <tunan/sampler/samplers.h>
-#include <tunan/utils/MemoryAllocator.h>
+#include <tunan/utils/ResourceManager.h>
 
 namespace RENDER_NAMESPACE {
     namespace sampler {
         class SamplerFactory {
         public:
-            static  Sampler newSampler(size_t nSamples, utils::MemoryAllocator &allocator);
+            static  Sampler newSampler(size_t nSamples, utils::ResourceManager &allocator);
         };
     }
 }

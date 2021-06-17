@@ -6,7 +6,7 @@
 
 namespace RENDER_NAMESPACE {
     namespace sampler {
-        Sampler SamplerFactory::newSampler(size_t nSamples, utils::MemoryAllocator &allocator) {
+        Sampler SamplerFactory::newSampler(size_t nSamples, utils::ResourceManager &allocator) {
             return allocator.newObject<IndependentSampler>(nSamples);
         }
     }

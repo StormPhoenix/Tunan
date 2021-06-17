@@ -10,12 +10,12 @@
 #include <tunan/base/transform.h>
 #include <tunan/base/interactions.h>
 #include <tunan/utils/TaggedPointer.h>
-#include <tunan/utils/MemoryAllocator.h>
+#include <tunan/utils/ResourceManager.h>
 
 namespace RENDER_NAMESPACE {
     namespace material {
         using utils::TaggedPointer;
-        using utils::MemoryAllocator;
+        using utils::ResourceManager;
         using base::Transform;
         using base::SurfaceInteraction;
 
