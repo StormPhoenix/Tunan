@@ -351,10 +351,10 @@ namespace RENDER_NAMESPACE {
             sceneData.radiusDecay = info.getFloatValue("alpha", sceneData.radiusDecay);
         }
 
-        void createRectangleShape(XmlParseInfo &info, SceneData &sceneData, ResourceManager &allocator) {
+        void createRectangleShape(XmlParseInfo &info, SceneData &sceneData, ResourceManager *allocator) {
             sceneData.entities.push_back(ShapeEntity());
             ShapeEntity &entity = sceneData.entities.back();
-            entity.toWorld = info.getTransformValue("toWorld", Transform());
+            Transform toWorld = info.getTransformValue("toWorld", Transform());
 
             const int nVertices = 4;
             const int nNormals = nVertices;
@@ -363,12 +363,12 @@ namespace RENDER_NAMESPACE {
 
             // Vertices
             entity.nVertices = nVertices;
-            entity.vertices = allocator.allocateObjects<Point3F>(nVertices);
+            entity.vertices = allocator->allocateObjects<Point3F>(nVertices);
             {
-                entity.vertices[0] = entity.toWorld.transformPoint(Point3F(-1, -1, 0));
-                entity.vertices[1] = entity.toWorld.transformPoint(Point3F(1, -1, 0));
-                entity.vertices[2] = entity.toWorld.transformPoint(Point3F(1, 1, 0));
-                entity.vertices[3] = entity.toWorld.transformPoint(Point3F(-1, 1, 0));
+                entity.vertices[0] = toWorld.transformPoint(Point3F(-1, -1, 0));
+                entity.vertices[1] = toWorld.transformPoint(Point3F(1, -1, 0));
+                entity.vertices[2] = toWorld.transformPoint(Point3F(1, 1, 0));
+                entity.vertices[3] = toWorld.transformPoint(Point3F(-1, 1, 0));
 //                entity.vertices[0] = Point3F(-1, -1, 0);
 //                entity.vertices[1] = Point3F(1, -1, 0);
 //                entity.vertices[2] = Point3F(1, 1, 0);
@@ -377,18 +377,18 @@ namespace RENDER_NAMESPACE {
 
             // Normals
             entity.nNormals = nNormals;
-            entity.normals = allocator.allocateObjects<Normal3F>(nNormals);
+            entity.normals = allocator->allocateObjects<Normal3F>(nNormals);
             Normal3F normal(0, 0, 1);
             {
-                entity.normals[0] = entity.toWorld.transformNormal(normal);
-                entity.normals[1] = entity.toWorld.transformNormal(normal);
-                entity.normals[2] = entity.toWorld.transformNormal(normal);
-                entity.normals[3] = entity.toWorld.transformNormal(normal);
+                entity.normals[0] = toWorld.transformNormal(normal);
+                entity.normals[1] = toWorld.transformNormal(normal);
+                entity.normals[2] = toWorld.transformNormal(normal);
+                entity.normals[3] = toWorld.transformNormal(normal);
             }
 
             // UVs
             entity.nTexcoords = nTexcoords;
-            entity.texcoords = allocator.allocateObjects<Point2F>(nTexcoords);
+            entity.texcoords = allocator->allocateObjects<Point2F>(nTexcoords);
             {
                 entity.texcoords[0] = Point2F(0, 0);
                 entity.texcoords[1] = Point2F(1, 0);
@@ -398,9 +398,9 @@ namespace RENDER_NAMESPACE {
 
             // Indices
             entity.nTriangles = nTriangles;
-            entity.vertexIndices = allocator.allocateObjects<int>(nTriangles * 3);
-            entity.normalIndices = allocator.allocateObjects<int>(nTriangles * 3);
-            entity.texcoordIndices = allocator.allocateObjects<int>(nTriangles * 3);
+            entity.vertexIndices = allocator->allocateObjects<int>(nTriangles * 3);
+            entity.normalIndices = allocator->allocateObjects<int>(nTriangles * 3);
+            entity.texcoordIndices = allocator->allocateObjects<int>(nTriangles * 3);
             {
                 entity.vertexIndices[0] = 0;
                 entity.normalIndices[0] = 0;
@@ -428,26 +428,26 @@ namespace RENDER_NAMESPACE {
             }
         }
 
-        static void createCubeShape(XmlParseInfo &info, SceneData &sceneData, ResourceManager &allocator) {
+        static void createCubeShape(XmlParseInfo &info, SceneData &sceneData, ResourceManager *allocator) {
             sceneData.entities.push_back(ShapeEntity());
             ShapeEntity &entity = sceneData.entities.back();
-            entity.toWorld = info.getTransformValue("toWorld", Transform());
+            Transform toWorld = info.getTransformValue("toWorld", Transform());
 
             const int nVertices = 8;
             const int nTriangles = 12;
 
             // Vertices
             entity.nVertices = nVertices;
-            entity.vertices = allocator.allocateObjects<Point3F>(nVertices);
+            entity.vertices = allocator->allocateObjects<Point3F>(nVertices);
             {
-                entity.vertices[0] = entity.toWorld.transformPoint(Point3F(1, -1, -1));
-                entity.vertices[1] = entity.toWorld.transformPoint(Point3F(1, -1, 1));
-                entity.vertices[2] = entity.toWorld.transformPoint(Point3F(-1, -1, 1));
-                entity.vertices[3] = entity.toWorld.transformPoint(Point3F(-1, -1, -1));
-                entity.vertices[4] = entity.toWorld.transformPoint(Point3F(1, 1, -1));
-                entity.vertices[5] = entity.toWorld.transformPoint(Point3F(-1, 1, -1));
-                entity.vertices[6] = entity.toWorld.transformPoint(Point3F(-1, 1, 1));
-                entity.vertices[7] = entity.toWorld.transformPoint(Point3F(1, 1, 1));
+                entity.vertices[0] = toWorld.transformPoint(Point3F(1, -1, -1));
+                entity.vertices[1] = toWorld.transformPoint(Point3F(1, -1, 1));
+                entity.vertices[2] = toWorld.transformPoint(Point3F(-1, -1, 1));
+                entity.vertices[3] = toWorld.transformPoint(Point3F(-1, -1, -1));
+                entity.vertices[4] = toWorld.transformPoint(Point3F(1, 1, -1));
+                entity.vertices[5] = toWorld.transformPoint(Point3F(-1, 1, -1));
+                entity.vertices[6] = toWorld.transformPoint(Point3F(-1, 1, 1));
+                entity.vertices[7] = toWorld.transformPoint(Point3F(1, 1, 1));
 
 //                entity.vertices[0] = Point3F(1, -1, -1);
 //                entity.vertices[1] = Point3F(1, -1, 1);
@@ -461,7 +461,7 @@ namespace RENDER_NAMESPACE {
 
             // Vertex indices
             entity.nTriangles = nTriangles;
-            entity.vertexIndices = allocator.allocateObjects<int>(nTriangles * 3);
+            entity.vertexIndices = allocator->allocateObjects<int>(nTriangles * 3);
             {
                 entity.vertexIndices[0] = 7;
                 entity.vertexIndices[1] = 2;
@@ -514,8 +514,8 @@ namespace RENDER_NAMESPACE {
 
             // Normals and normal indices
             entity.nNormals = nTriangles * 3;
-            entity.normals = allocator.allocateObjects<Normal3F>(nTriangles * 3);
-            entity.normalIndices = allocator.allocateObjects<int>(nTriangles * 3);
+            entity.normals = allocator->allocateObjects<Normal3F>(nTriangles * 3);
+            entity.normalIndices = allocator->allocateObjects<int>(nTriangles * 3);
             for (int i = 0; i < nTriangles; i++) {
                 int index = i * 3;
                 Point3F v1 = entity.vertices[entity.vertexIndices[index]];
@@ -531,8 +531,8 @@ namespace RENDER_NAMESPACE {
 
             // UVs
             entity.nTexcoords = 1;
-            entity.texcoords = allocator.allocateObjects<Point2F>(1);
-            entity.texcoordIndices = allocator.allocateObjects<int>(nTriangles * 3);
+            entity.texcoords = allocator->allocateObjects<Point2F>(1);
+            entity.texcoordIndices = allocator->allocateObjects<int>(nTriangles * 3);
             {
                 entity.texcoords[0] = Point2F(0.0f, 0.0f);
                 for (int i = 0; i < nTriangles; i++) {
@@ -544,10 +544,10 @@ namespace RENDER_NAMESPACE {
             }
         }
 
-        static void createObjMeshes(XmlParseInfo &info, SceneData &sceneData, ResourceManager &allocator) {
+        static void createObjMeshes(XmlParseInfo &info, SceneData &sceneData, ResourceManager *allocator) {
             sceneData.entities.push_back(ShapeEntity());
             ShapeEntity &entity = sceneData.entities.back();
-            entity.toWorld = info.getTransformValue("toWorld", Transform());
+            Transform toWorld = info.getTransformValue("toWorld", Transform());
 
             // face normal
             bool faceNormal = false;
@@ -563,11 +563,11 @@ namespace RENDER_NAMESPACE {
             // Transform mesh from object space to world space
             {
                 for (int i = 0; i < entity.nVertices; i++) {
-                    entity.vertices[i] = entity.toWorld.transformPoint(entity.vertices[i]);
+                    entity.vertices[i] = toWorld.transformPoint(entity.vertices[i]);
                 }
 
                 for (int i = 0; i < entity.nNormals; i++) {
-                    entity.normals[i] = entity.toWorld.transformNormal(entity.normals[i]);
+                    entity.normals[i] = toWorld.transformNormal(entity.normals[i]);
                 }
             }
 
@@ -575,23 +575,23 @@ namespace RENDER_NAMESPACE {
             return;
         }
 
-        Material createDiffuseMaterial(XmlParseInfo &info, ResourceManager &allocator) {
+        Material createDiffuseMaterial(XmlParseInfo &info, ResourceManager *allocator) {
             Material material;
             if (!info.attrExists("reflectance")) {
                 // Create default diffuse material
-                SpectrumTexture texture = allocator.newObject<ConstantSpectrumTexture>(Spectrum(0.f));
-                material = allocator.newObject<Lambertian>(texture);
+                SpectrumTexture texture = allocator->newObject<ConstantSpectrumTexture>(Spectrum(0.f));
+                material = allocator->newObject<Lambertian>(texture);
             } else {
                 auto type = info.getType("reflectance");
                 if (type == XmlAttrVal::Attr_Spectrum) {
                     Spectrum Kd = info.getSpectrumValue("reflectance", Spectrum(0));
-                    SpectrumTexture texture = allocator.newObject<ConstantSpectrumTexture>(Spectrum(Kd));
-                    material = allocator.newObject<Lambertian>(texture);
+                    SpectrumTexture texture = allocator->newObject<ConstantSpectrumTexture>(Spectrum(Kd));
+                    material = allocator->newObject<Lambertian>(texture);
                     // TODO texture
 //                } else if (type == XmlAttrVal::Attr_SpectrumTexture) {
 //                    Texture<Spectrum>::Ptr texture = info.getSpectrumTextureValue("reflectance", nullptr);
 //                    ASSERT(texture, "Texture can't be nullptr. ");
-//                    material = _allocator.newObject<Lambertian>(texture);
+//                    material = _allocator->newObject<Lambertian>(texture);
                 } else {
                     // TODO
                     ASSERT(false, "Reflectance type not supported .");
@@ -600,7 +600,7 @@ namespace RENDER_NAMESPACE {
             return material;
         }
 
-        Material createDielectricMaterial(XmlParseInfo &info, ResourceManager &allocator) {
+        Material createDielectricMaterial(XmlParseInfo &info, ResourceManager *allocator) {
             Material material;
             auto intIORType = info.getType("intIOR");
             auto extIORType = info.getType("extIOR");
@@ -612,25 +612,25 @@ namespace RENDER_NAMESPACE {
             Float intIOR = info.getFloatValue("intIOR", 1.5);
             // thetaI
             Float extIOR = info.getFloatValue("extIOR", 1.0);
-            SpectrumTexture texR = allocator.newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
-            SpectrumTexture texT = allocator.newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
-            material = allocator.newObject<Dielectric>(texR, texT, extIOR, intIOR, roughness);
+            SpectrumTexture texR = allocator->newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
+            SpectrumTexture texT = allocator->newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
+            material = allocator->newObject<Dielectric>(texR, texT, extIOR, intIOR, roughness);
             return material;
         }
 
-        Material createMirrorMaterial(XmlParseInfo &info, ResourceManager &allocator) {
-            return allocator.newObject<Mirror>();
+        Material createMirrorMaterial(XmlParseInfo &info, ResourceManager *allocator) {
+            return allocator->newObject<Mirror>();
         }
 
-        Material createGlassMaterial(XmlParseInfo &info, ResourceManager &allocator) {
+        Material createGlassMaterial(XmlParseInfo &info, ResourceManager *allocator) {
             Float extIOR = 1.;
             Float intIOR = 1.5;
-            SpectrumTexture texR = allocator.newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
-            SpectrumTexture texT = allocator.newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
-            return allocator.newObject<Dielectric>(texR, texT, extIOR, intIOR);
+            SpectrumTexture texR = allocator->newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
+            SpectrumTexture texT = allocator->newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
+            return allocator->newObject<Dielectric>(texR, texT, extIOR, intIOR);
         }
 
-        Material createRoughConductorMaterial(XmlParseInfo &info, ResourceManager &allocator) {
+        Material createRoughConductorMaterial(XmlParseInfo &info, ResourceManager *allocator) {
             // Roughness
             Float alpha = 0.01;
             if (info.attrExists("alpha")) {
@@ -653,15 +653,15 @@ namespace RENDER_NAMESPACE {
             Spectrum eta = info.getSpectrumValue("eta", Spectrum(0.200438));
             Spectrum k = info.getSpectrumValue("k", Spectrum(0.200438));
 
-            FloatTexture Alpha = allocator.newObject<ConstantFloatTexture>(alpha);
-            SpectrumTexture Ks = allocator.newObject<ConstantSpectrumTexture>(specularReflectance);
-            SpectrumTexture Eta = allocator.newObject<ConstantSpectrumTexture>(eta);
-            SpectrumTexture K = allocator.newObject<ConstantSpectrumTexture>(k);
-            return allocator.newObject<Metal>(Alpha, Eta, Ks, K, distribType);
+            FloatTexture Alpha = allocator->newObject<ConstantFloatTexture>(alpha);
+            SpectrumTexture Ks = allocator->newObject<ConstantSpectrumTexture>(specularReflectance);
+            SpectrumTexture Eta = allocator->newObject<ConstantSpectrumTexture>(eta);
+            SpectrumTexture K = allocator->newObject<ConstantSpectrumTexture>(k);
+            return allocator->newObject<Metal>(Alpha, Eta, Ks, K, distribType);
         }
 
         void handleTagBSDF(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parent,
-                           SceneData &sceneData, ResourceManager &allocator) {
+                           SceneData &sceneData, ResourceManager *allocator) {
             std::string type = node.attribute("type").value();
             std::string id = node.attribute("id").value();
 
@@ -700,7 +700,7 @@ namespace RENDER_NAMESPACE {
         }
 
         static void handleTagShape(pugi::xml_node &node, XmlParseInfo &parseInfo,
-                                   SceneData &sceneData, ResourceManager &allocator) {
+                                   SceneData &sceneData, ResourceManager *allocator) {
             std::string type = node.attribute("type").value();
 
             if (type == "rectangle") {
@@ -819,7 +819,7 @@ namespace RENDER_NAMESPACE {
 
         static void
         handleTagEmitter(pugi::xml_node &node, XmlParseInfo &info, XmlParseInfo &parent,
-                         SceneData &sceneData, ResourceManager &allocator) {
+                         SceneData &sceneData, ResourceManager *allocator) {
             std::string type = node.attribute("type").value();
             if (type == "area") {
                 parent.hasAreaLight = true;
@@ -833,7 +833,7 @@ namespace RENDER_NAMESPACE {
             } else if (type == "point") {
                 Transform toWorld = info.getTransformValue("toWorld", Transform());
                 Spectrum intensity = info.getSpectrumValue("intensity", Spectrum(0));
-                Light pointLight = allocator.newObject<PointLight>(intensity, toWorld, MediumInterface());
+                Light pointLight = allocator->newObject<PointLight>(intensity, toWorld, MediumInterface());
                 sceneData.lights->push_back(pointLight);
                 std::cout << "\tCreate light: point light" << std::endl;
             } else if (type == "spot") {
@@ -841,8 +841,8 @@ namespace RENDER_NAMESPACE {
                 Spectrum intensity = info.getSpectrumValue("intensity", Spectrum(0));
                 Float totalAngle = info.getFloatValue("totalAngle", 60.);
                 Float falloffAngle = info.getFloatValue("falloffAngle", 50.);
-                Light spotLight = allocator.newObject<SpotLight>(intensity, toWorld, MediumInterface(),
-                                                                 falloffAngle, totalAngle);
+                Light spotLight = allocator->newObject<SpotLight>(intensity, toWorld, MediumInterface(),
+                                                                  falloffAngle, totalAngle);
                 sceneData.lights->push_back(spotLight);
                 std::cout << "\tCreate light: spot light" << std::endl;
                 /*
@@ -877,7 +877,7 @@ namespace RENDER_NAMESPACE {
         }
 
         static void handleTagTexture(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parentInfo,
-                                     ResourceManager &allocator) {
+                                     ResourceManager *allocator) {
             const std::string type = node.attribute("type").value();
             const std::string name = node.attribute("name").value();
             if (type == "checkerboard") {
@@ -887,8 +887,8 @@ namespace RENDER_NAMESPACE {
                 Float uScale = parseInfo.getFloatValue("uscale", 1.0);
                 Float vScale = parseInfo.getFloatValue("vscale", 1.0);
 
-                SpectrumTexture texture = allocator.newObject<ChessboardSpectrumTexture>(color0, color1,
-                                                                                         uScale, vScale);
+                SpectrumTexture texture = allocator->newObject<ChessboardSpectrumTexture>(color0, color1,
+                                                                                          uScale, vScale);
                 parentInfo.setSpectrumTextureValue(name, texture);
                 /*
             } else if (type == "bitmap") {
@@ -906,7 +906,7 @@ namespace RENDER_NAMESPACE {
         }
 
         static void handleXmlNode(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parentParseInfo,
-                                  SceneData &sceneData, ResourceManager &allocator) {
+                                  SceneData &sceneData, ResourceManager *allocator) {
             TagType tagType = nodeTypeMap[node.name()];
             switch (tagType) {
 //                case Tag_Mode:
@@ -976,9 +976,9 @@ namespace RENDER_NAMESPACE {
             }
         }
 
-        void parseXml(pugi::xml_node &node, XmlParseInfo &parent, SceneData &scene, ResourceManager &allocator) {
+        void parseXml(pugi::xml_node &node, XmlParseInfo &parent, SceneData &scene, ResourceManager *allocator) {
             XmlParseInfo info;
-            std::map <std::string, XmlAttrVal> attrContainer;
+            std::map<std::string, XmlAttrVal> attrContainer;
             for (pugi::xml_node &child : node.children()) {
                 parseXml(child, info, scene, allocator);
             }
@@ -986,9 +986,10 @@ namespace RENDER_NAMESPACE {
         }
 
         void MitsubaSceneImporter::importScene(std::string sceneDirectory, SceneData &sceneData,
-                                               ResourceManager &allocator) {
+                                               ResourceManager *allocator) {
             sceneData.sceneDirectory = sceneDirectory;
-            sceneData.lights = allocator.newObject<base::Vector<Light>>(&allocator);
+            sceneData.lights = allocator->newObject<base::Vector<Light>>(allocator);
+            sceneData.envLights = allocator->newObject<base::Vector<EnvironmentLight *>>(allocator);
 
             std::string xml_file = sceneDirectory + "scene.xml";
             std::cout << "Loading scene file: " << xml_file << std::endl;
@@ -1003,12 +1004,7 @@ namespace RENDER_NAMESPACE {
             parseXml(*xml_doc.begin(), parseInfo, sceneData, allocator);
             std::cout << "\tReading scene data finished ." << std::endl;
 
-            // TODO add lights
-//            const std::vector<Light::Ptr> &lights = _scene->getLights();
-//            for (auto it = lights.begin(); it != lights.end(); it++) {
-//                (*it)->worldBound(_scene);
-//            }
-
+            sceneData.postprocess();
             std::cout << "Loading finished. " << std::endl;
         }
 

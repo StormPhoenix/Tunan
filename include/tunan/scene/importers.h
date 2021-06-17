@@ -24,7 +24,7 @@ namespace RENDER_NAMESPACE {
         public:
             MitsubaSceneImporter();
 
-            void importScene(std::string sceneDirectory, SceneData &scene, ResourceManager &allocator);
+            void importScene(std::string sceneDirectory, SceneData &scene, ResourceManager *allocator);
         };
     }
 }

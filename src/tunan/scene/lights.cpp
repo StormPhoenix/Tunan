@@ -3,8 +3,14 @@
 //
 
 #include <tunan/scene/lights.h>
+#include <tunan/utils/image_utils.h>
+
+#include <string>
+#include <fstream>
 
 namespace RENDER_NAMESPACE {
+    using namespace utils;
+
     SpotLight::SpotLight(const Spectrum &intensity, Transform lightToWorld, MediumInterface mediumBoundary,
                          Float fallOffRange, Float totalRange) :
             _type(Delta_Position), _mediumInterface(mediumBoundary), _intensity(intensity),
@@ -115,6 +121,154 @@ namespace RENDER_NAMESPACE {
     RENDER_CPU_GPU
     Float PointLight::pdfLi(const Interaction &eye, const Vector3F &dir) {
         return 0.0;
+    }
+
+    EnvironmentLight::EnvironmentLight(Float intensity, std::string texturePath, MediumInterface mediumInterface,
+                                       Transform lightToWorld, ResourceManager *allocator) :
+            _type(Environment), _intensity(intensity), _mediumInterface(mediumInterface), _lightToWorld(lightToWorld) {
+        // Check file exists
+        {
+            std::ifstream in(texturePath);
+            ASSERT(in.good(), texturePath + " NOT EXISTS.");
+        }
+
+        // Copy from image to texture
+        _worldToLight = _lightToWorld.inverse();
+        int channelsInFile = 3;
+        {
+            float *image = readImage(texturePath, &_width, &_height, SpectrumChannel, &channelsInFile);
+            _texture = allocator->allocateObjects<Spectrum>(_width * _height);
+            for (int row = 0; row < _height; row++) {
+                for (int col = 0; col < _width; col++) {
+                    int imageOffset = (row * _width + col) * channelsInFile;
+                    int textureOffset = (row * _width + col);
+
+                    for (int ch = 0; ch < SpectrumChannel; ch++) {
+                        (*(_texture + textureOffset))[ch] = *(image + imageOffset + ch);
+                    }
+                }
+            }
+            delete image;
+        }
+
+        Float *sampleFunction = new Float[_width * _height];
+        int sampleChannel = 1;
+        for (int row = 0; row < _height; row++) {
+            // SinTheta for sampling correction
+            Float sinTheta = std::sin(Float(_height - 1 - row) / (_height - 1) * Pi);
+            for (int col = 0; col < _width; col++) {
+                int offset = row * _width + col;
+                sampleFunction[offset] = _texture[offset][sampleChannel] * sinTheta;
+            }
+        }
+        _textureDistribution = Distribution2D(sampleFunction, _width, _height, allocator);
+    }
+
+    RENDER_CPU_GPU
+    Spectrum EnvironmentLight::sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf,
+                                        Vector2F uv, Interaction *target) {
+        // Sample from environment map
+        Float samplePdf = 0.;
+        Point2F sample = _textureDistribution.sampleContinuous(&samplePdf, uv);
+
+        if (samplePdf == 0.) {
+            return Spectrum(0.);
+        }
+
+        // Inverse coordinate v
+        Float theta = Pi * (1.0 - sample.y);
+        Float phi = 2 * Pi * sample.x;
+
+        Float sinTheta = std::sin(theta);
+        Float cosTheta = std::cos(theta);
+        Float cosPhi = std::cos(phi);
+        Float sinPhi = std::sin(phi);
+
+        *wi = _lightToWorld.transformVector({sinTheta * cosPhi, cosTheta, sinTheta * sinPhi});
+        *wi = NORMALIZE(*wi);
+
+        if (sinTheta == 0) {
+            *pdf = 0;
+        } else {
+            // Jacobi correction
+            *pdf = samplePdf / (2 * Pi * Pi * sinTheta);
+        }
+
+        if (target != nullptr) {
+            target->p = eye.p + (*wi) * Float(2.f * _worldRadius);
+            target->ng = -(*wi);
+            target->wo = -(*wi);
+            target->mediumInterface = _mediumInterface;
+            target->error = Vector3F(0);
+        }
+        // TODO delete
+//        *visibilityTester = VisibilityTester(eye, Interaction(
+//                eye.point + (*wi) * Float(2. * _worldRadius),
+//                (*wi), -(*wi), _mediumInterface));
+        return sampleTexture(sample);
+    }
+
+    RENDER_CPU_GPU
+    Float EnvironmentLight::pdfLi(const Interaction &eye, const Vector3F &dir) {
+        Vector3F wi = NORMALIZE(_worldToLight.transformVector(dir));
+        Float theta = math::local_coord::vectorTheta(wi);
+        Float phi = math::local_coord::vectorPhi(wi);
+
+        Float u = phi * Inv_2Pi;
+        // Inverse the v coordinator
+        Float v = (1.0 - theta * Inv_Pi);
+
+        Float sinTheta = std::sin(theta);
+        if (sinTheta == 0) {
+            return 0;
+        } else {
+            // Jacobi correction
+            return (_textureDistribution.pdfContinuous(Point2F(u, v))) / (2 * Pi * Pi * sinTheta);
+        }
+    }
+
+    RENDER_CPU_GPU
+    Spectrum EnvironmentLight::Le(const Ray &ray) const {
+        Vector3F wi = NORMALIZE(_worldToLight.transformVector(ray.getDirection()));
+        // wi.y = cosTheta
+        Float theta = math::local_coord::vectorTheta(wi);
+        // wi.x = sinTheta * cosPhi
+        // wi.z = sinTheta * sinPhi
+        // wi.z / wi.x = tanPhi
+        Float phi = math::local_coord::vectorPhi(wi);
+        // Inverse coordinator v
+        Point2F uv = {phi * Inv_2Pi, (1.0 - theta * Inv_Pi)};
+        return sampleTexture(uv);
+    }
+
+    RENDER_CPU_GPU
+    void EnvironmentLight::worldBound(Point3F &worldMin, Point3F &worldMax) {
+        _worldRadius = 0.5 * LENGTH(worldMax - worldMin);
+        _worldCenter = (worldMax + worldMin) / Float(2.0);
+    }
+
+    RENDER_CPU_GPU
+    Spectrum EnvironmentLight::sampleTexture(Point2F uv) const {
+        int wOffset, hOffset;
+        wOffset = uv[0] * _width;
+        hOffset = uv[1] * _height;
+
+        if (wOffset < 0 || wOffset >= _width
+            || hOffset < 0 || hOffset >= _height) {
+            return Spectrum(0);
+        }
+
+        // flip
+//            hOffset = _height - (hOffset + 1);
+        int offset = (hOffset * _width + wOffset);
+
+        Spectrum ret(0);
+        // TODO Adjust rgb channels
+        for (int ch = 0; ch < 3 && ch < SpectrumChannel; ch++) {
+//                ret[ch] = Float(_texture[offset][ch]) / 255.0 * _intensity;
+            ret[ch] = Float(_texture[offset][ch]) * _intensity;
+        }
+        return ret;
     }
 
     RENDER_CPU_GPU

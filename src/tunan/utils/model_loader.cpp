@@ -12,7 +12,7 @@
 
 namespace RENDER_NAMESPACE {
     namespace utils {
-        bool load_obj(const std::string path, ShapeEntity &entity, ResourceManager &allocator) {
+        bool load_obj(const std::string path, ShapeEntity &entity, ResourceManager *allocator) {
             tinyobj::attrib_t attrib;
             std::vector<tinyobj::shape_t> shapes;
             std::vector<tinyobj::material_t> materials;
@@ -33,7 +33,7 @@ namespace RENDER_NAMESPACE {
             // Vertices
 //            vertices.resize(attrib.vertices.size() / 3);
             entity.nVertices = attrib.vertices.size() / 3;
-            entity.vertices = allocator.allocateObjects<Point3F>(entity.nVertices);
+            entity.vertices = allocator->allocateObjects<Point3F>(entity.nVertices);
             for (int i = 0; i < attrib.vertices.size(); i += 3) {
                 Float x = attrib.vertices[i];
                 Float y = attrib.vertices[i + 1];
@@ -44,7 +44,7 @@ namespace RENDER_NAMESPACE {
             // Normals
 //            normals.resize(attrib.vertices.size() / 3);
             entity.nNormals = attrib.normals.size() / 3;
-            entity.normals = allocator.allocateObjects<Normal3F>(entity.nNormals);
+            entity.normals = allocator->allocateObjects<Normal3F>(entity.nNormals);
             for (int i = 0; i < attrib.normals.size(); i += 3) {
                 Float x = attrib.normals[i];
                 Float y = attrib.normals[i + 1];
@@ -54,7 +54,7 @@ namespace RENDER_NAMESPACE {
 
 //            texcoords.resize(attrib.vertices.size() / 2);
             entity.nTexcoords = attrib.texcoords.size() / 2;
-            entity.texcoords = allocator.allocateObjects<Point2F>(entity.nTexcoords);
+            entity.texcoords = allocator->allocateObjects<Point2F>(entity.nTexcoords);
             for (int i = 0; i < attrib.texcoords.size(); i += 2) {
                 Float x = attrib.texcoords[i];
                 Float y = attrib.texcoords[i + 1];
@@ -66,9 +66,9 @@ namespace RENDER_NAMESPACE {
                 int index_offset = 0;
                 int materialId = -1;
                 entity.nTriangles = shapes[s].mesh.num_face_vertices.size();
-                entity.vertexIndices = allocator.allocateObjects<int>(entity.nTriangles * 3);
-                entity.normalIndices = allocator.allocateObjects<int>(entity.nTriangles * 3);
-                entity.texcoordIndices = allocator.allocateObjects<int>(entity.nTriangles * 3);
+                entity.vertexIndices = allocator->allocateObjects<int>(entity.nTriangles * 3);
+                entity.normalIndices = allocator->allocateObjects<int>(entity.nTriangles * 3);
+                entity.texcoordIndices = allocator->allocateObjects<int>(entity.nTriangles * 3);
 
                 for (int f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
                     int fv = shapes[s].mesh.num_face_vertices[f];

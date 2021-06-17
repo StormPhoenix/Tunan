@@ -25,6 +25,8 @@ namespace RENDER_NAMESPACE {
 
         void createAreaLights(const Spectrum &radiance, utils::ResourceManager &allocator);
 
+        void computeWorldBound();
+
         int nVertices = 0;
         Point3F *vertices = nullptr;
 
@@ -41,14 +43,19 @@ namespace RENDER_NAMESPACE {
 
         bool faceNormal = false;
         Material material;
-        base::Transform toWorld;
         DiffuseAreaLight *areaLights = nullptr;
+
+        Point3F minVertex, maxVertex;
 //        std::string materialName = "";
 //        int materialIndex = -1;
     } ShapeEntity;
 
     typedef struct SceneData {
         std::string sceneDirectory;
+
+        void postprocess();
+
+        void computeWorldBound();
 
         // Entities
         std::vector<ShapeEntity> entities;
@@ -83,11 +90,14 @@ namespace RENDER_NAMESPACE {
         float radiusDecay = 0.3;
 
         // Materials
-        std::map<std::string, Material> namedMaterial;
-
         std::vector<Material> materials;
         std::map<std::string, Material> materialMap;
+        // Lights
         base::Vector<Light> *lights = nullptr;
+        base::Vector<EnvironmentLight *> *envLights = nullptr;
+
+        Point3F worldMin = Point3F(0);
+        Point3F worldMax = Point3F(0);
     } SceneData;
 }
 

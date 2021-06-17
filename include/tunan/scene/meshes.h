@@ -39,6 +39,7 @@ namespace RENDER_NAMESPACE {
         int *normalIndices;
         int *texcoordIndices;
 
+        // TODO delete
         Float transformMatrix[4][4];
     };
 }

@@ -36,6 +36,8 @@ namespace RENDER_NAMESPACE {
 
         class Distribution2D {
         public:
+            Distribution2D() = default;
+
             Distribution2D(Float *func2D, int width, int height, ResourceManager *allocator);
 
             RENDER_CPU_GPU

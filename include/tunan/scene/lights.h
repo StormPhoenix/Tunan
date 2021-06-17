@@ -11,10 +11,13 @@
 #include <tunan/base/spectrum.h>
 #include <tunan/base/transform.h>
 #include <tunan/base/interactions.h>
+#include <tunan/base/distributions.h>
 #include <tunan/utils/TaggedPointer.h>
+#include <tunan/utils/ResourceManager.h>
 
 namespace RENDER_NAMESPACE {
     using namespace base;
+    using namespace utils;
 
     typedef enum LightSourceType {
         Delta_Position = 1 << 0,
@@ -22,6 +25,45 @@ namespace RENDER_NAMESPACE {
         Area = 1 << 2,
         Environment = 1 << 3
     } LightSourceType;
+
+    class EnvironmentLight {
+    public:
+        EnvironmentLight(Float intensity, std::string texturePath, MediumInterface mediumInterface,
+                         Transform lightToWorld, ResourceManager *allocator);
+
+        RENDER_CPU_GPU
+        Spectrum sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv, Interaction *target);
+
+        RENDER_CPU_GPU
+        Float pdfLi(const Interaction &eye, const Vector3F &dir);
+
+        RENDER_CPU_GPU
+        Spectrum Le(const Ray &ray) const;
+
+        RENDER_CPU_GPU
+        void worldBound(Point3F &worldMin, Point3F &worldMax);
+
+    private:
+        RENDER_CPU_GPU
+        Spectrum sampleTexture(Point2F uv) const;
+
+    private:
+        LightSourceType _type;
+        Float _intensity = 12;
+        MediumInterface _mediumInterface;
+
+        Transform _lightToWorld;
+        Transform _worldToLight;
+        Float _worldRadius = 20000;
+        Point3F _worldCenter;
+
+        // Texture
+        Spectrum *_texture = nullptr;
+        int _width, _height;
+
+        // Texture distribution
+        Distribution2D _textureDistribution;
+    };
 
     class SpotLight {
     public:

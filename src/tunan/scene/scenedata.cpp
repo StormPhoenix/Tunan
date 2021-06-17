@@ -29,4 +29,62 @@ namespace RENDER_NAMESPACE {
             areaLights[i] = DiffuseAreaLight(radiance, shape, MediumInterface());
         }
     }
+
+    void ShapeEntity::computeWorldBound() {
+        Float minX, minY, minZ;
+        Float maxX, maxY, maxZ;
+
+        if (nVertices > 0) {
+            maxX = minX = vertices[0].x;
+            maxY = minY = vertices[0].y;
+            maxZ = minZ = vertices[0].z;
+
+            for (int i = 1; i < nVertices; i++) {
+                maxX = maxX >= vertices[i].x ? maxX : vertices[i].x;
+                minX = minX <= vertices[i].x ? minX : vertices[i].x;
+
+                maxY = maxY >= vertices[i].y ? maxY : vertices[i].y;
+                minY = minY <= vertices[i].y ? minY : vertices[i].y;
+
+                maxZ = maxZ >= vertices[i].z ? maxZ : vertices[i].z;
+                minZ = minZ <= vertices[i].z ? minZ : vertices[i].z;
+            }
+        }
+
+        minVertex = Point3F(minX, minY, minZ);
+        maxVertex = Point3F(maxX, maxY, maxZ);
+    }
+
+    void SceneData::computeWorldBound() {
+        if (entities.size() > 0) {
+            for (int i = 0; i < entities.size(); i++) {
+                entities[i].computeWorldBound();
+            }
+
+            worldMin = entities[0].minVertex;
+            worldMax = entities[0].maxVertex;
+
+            for (int i = 1; i < entities.size(); i++) {
+                worldMin.x = worldMin.x < entities[i].minVertex.x ? worldMin.x : entities[i].minVertex.x;
+                worldMin.y = worldMin.y < entities[i].minVertex.y ? worldMin.y : entities[i].minVertex.y;
+                worldMin.z = worldMin.z < entities[i].minVertex.z ? worldMin.z : entities[i].minVertex.z;
+
+                worldMax.x = worldMax.x > entities[i].maxVertex.x ? worldMax.x : entities[i].maxVertex.x;
+                worldMax.y = worldMax.y > entities[i].maxVertex.y ? worldMax.y : entities[i].maxVertex.y;
+                worldMax.z = worldMax.z > entities[i].maxVertex.z ? worldMax.z : entities[i].maxVertex.z;
+            }
+
+            worldMin = Point3F(worldMin.x - 0.0001, worldMin.y - 0.0001, worldMin.z - 0.0001);
+            worldMax = Point3F(worldMax.x + 0.0001, worldMax.y + 0.0001, worldMax.z + 0.0001);
+        }
+    }
+
+    void SceneData::postprocess() {
+        computeWorldBound();
+        if (envLights != nullptr) {
+            for (int i = 0; i < envLights->size(); i ++) {
+                (*envLights)[i]->worldBound(worldMin, worldMax);
+            }
+        }
+    }
 }

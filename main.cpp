@@ -45,7 +45,7 @@ int main() {
     MitsubaSceneImporter importer = MitsubaSceneImporter();
 
     SceneData parsedScene;
-    importer.importScene(sceneDirectory, parsedScene, allocator);
+    importer.importScene(sceneDirectory, parsedScene, &allocator);
 
     PathTracer tracer(parsedScene, &allocator);
     tracer.render();

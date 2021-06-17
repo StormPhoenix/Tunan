@@ -13,7 +13,7 @@ namespace RENDER_NAMESPACE {
     class ShapeEntity;
     class ResourceManager;
     namespace utils {
-        bool load_obj(const std::string model_path, ShapeEntity &entity, ResourceManager &allocator);
+        bool load_obj(const std::string model_path, ShapeEntity &entity, ResourceManager *allocator);
     }
 }
 
