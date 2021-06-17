@@ -407,7 +407,7 @@ namespace RENDER_NAMESPACE {
             meshes[i] = allocator->newObject<TriangleMesh>(
                     entity.nVertices, entity.vertices, entity.nNormals, entity.normals,
                     entity.nTexcoords, entity.texcoords, entity.nTriangles, entity.vertexIndices,
-                    entity.normalIndices, entity.texcoordIndices, entity.toWorld);
+                    entity.normalIndices, entity.texcoordIndices);
         }
 
         std::vector <OptixBuildInput> buildInputs;

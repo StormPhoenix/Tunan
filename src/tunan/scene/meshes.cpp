@@ -8,16 +8,10 @@
 namespace RENDER_NAMESPACE {
     TriangleMesh::TriangleMesh(size_t nVertices, Point3F *vertices, size_t nNormals, Normal3F *normals,
                                size_t nTexcoords, Point2F *texcoords, size_t nTriangles, int *vertexIndices,
-                               int *normalIndices, int *texcoordIndices, Transform &transform) :
+                               int *normalIndices, int *texcoordIndices) :
             nVertices(nVertices), vertices(vertices), nNormals(nNormals), normals(normals),
             nTexcoords(nTexcoords), texcoords(texcoords), nTriangles(nTriangles),
-            vertexIndices(vertexIndices), normalIndices(normalIndices), texcoordIndices(texcoordIndices) {
-        for (int row = 0; row < 4; row++) {
-            for (int col = 0; col < 4; col++) {
-                transformMatrix[row][col] = transform.mat()[col][row];
-            }
-        }
-    }
+            vertexIndices(vertexIndices), normalIndices(normalIndices), texcoordIndices(texcoordIndices) {}
 
     RENDER_CPU_GPU
     SurfaceInteraction TriangleMesh::buildSurfaceInteraction(unsigned int index, float b0, float b1, Vector3F wo) {

@@ -3,6 +3,7 @@
 //
 
 #include <tunan/scene/lights.h>
+#include <tunan/utils/ResourceManager.h>
 #include <tunan/utils/image_utils.h>
 
 #include <string>
@@ -124,7 +125,7 @@ namespace RENDER_NAMESPACE {
     }
 
     EnvironmentLight::EnvironmentLight(Float intensity, std::string texturePath, MediumInterface mediumInterface,
-                                       Transform lightToWorld, ResourceManager *allocator) :
+                                       Transform lightToWorld, utils::ResourceManager *allocator) :
             _type(Environment), _intensity(intensity), _mediumInterface(mediumInterface), _lightToWorld(lightToWorld) {
         // Check file exists
         {

@@ -19,8 +19,7 @@ namespace RENDER_NAMESPACE {
                      size_t nNormals, Normal3F *normals,
                      size_t nTexcoords, Point2F *texcoords,
                      size_t nTriangles, int *vertexIndices,
-                     int *normalIndices, int *texcoordIndices,
-                     Transform &transform);
+                     int *normalIndices, int *texcoordIndices);
 
         RENDER_CPU_GPU
         SurfaceInteraction buildSurfaceInteraction(unsigned int index, float b0, float b1, Vector3F wo);
@@ -38,9 +37,6 @@ namespace RENDER_NAMESPACE {
         int *vertexIndices;
         int *normalIndices;
         int *texcoordIndices;
-
-        // TODO delete
-        Float transformMatrix[4][4];
     };
 }
 #endif //TUNAN_MESHES_H

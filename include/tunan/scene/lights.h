@@ -13,11 +13,12 @@
 #include <tunan/base/interactions.h>
 #include <tunan/base/distributions.h>
 #include <tunan/utils/TaggedPointer.h>
-#include <tunan/utils/ResourceManager.h>
 
 namespace RENDER_NAMESPACE {
     using namespace base;
-    using namespace utils;
+    namespace utils {
+        class ResourceManager;
+    }
 
     typedef enum LightSourceType {
         Delta_Position = 1 << 0,
@@ -29,7 +30,7 @@ namespace RENDER_NAMESPACE {
     class EnvironmentLight {
     public:
         EnvironmentLight(Float intensity, std::string texturePath, MediumInterface mediumInterface,
-                         Transform lightToWorld, ResourceManager *allocator);
+                         Transform lightToWorld, utils::ResourceManager *allocator);
 
         RENDER_CPU_GPU
         Spectrum sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv, Interaction *target);

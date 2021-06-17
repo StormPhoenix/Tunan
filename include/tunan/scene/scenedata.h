@@ -23,7 +23,7 @@ namespace RENDER_NAMESPACE {
     typedef struct ShapeEntity {
         ShapeEntity() = default;
 
-        void createAreaLights(const Spectrum &radiance, utils::ResourceManager &allocator);
+        void createAreaLights(const Spectrum &radiance, utils::ResourceManager *allocator);
 
         void computeWorldBound();
 

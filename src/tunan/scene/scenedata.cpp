@@ -7,9 +7,9 @@
 
 namespace RENDER_NAMESPACE {
 
-    void ShapeEntity::createAreaLights(const Spectrum &radiance, utils::ResourceManager &allocator) {
+    void ShapeEntity::createAreaLights(const Spectrum &radiance, utils::ResourceManager *allocator) {
         if (nTriangles > 0) {
-            areaLights = allocator.allocateObjects<DiffuseAreaLight>(nTriangles);
+            areaLights = allocator->allocateObjects<DiffuseAreaLight>(nTriangles);
         }
 
         for (int i = 0; i < nTriangles; i++) {
@@ -24,7 +24,7 @@ namespace RENDER_NAMESPACE {
                 n1 = normals[normalIndices[offset + 1]];
                 n2 = normals[normalIndices[offset + 2]];
             }
-            Shape shape = allocator.newObject<Triangle>(p0, p1, p2, n0, n1, n2);
+            Shape shape = allocator->newObject<Triangle>(p0, p1, p2, n0, n1, n2);
             // TODO medium
             areaLights[i] = DiffuseAreaLight(radiance, shape, MediumInterface());
         }
