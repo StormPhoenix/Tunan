@@ -204,6 +204,15 @@ namespace RENDER_NAMESPACE {
                 return ret;
             }
 
+            RENDER_CPU_GPU
+            Float maxComponent() const {
+                Float comp = values[0];
+                for (int i = 1; i < SpectrumChannel; i++) {
+                    comp = comp > values[i] ? comp : values[i];
+                }
+                return comp;
+            }
+
         private:
             Array<Float, SpectrumChannel> values;
         };

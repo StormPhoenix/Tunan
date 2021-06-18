@@ -206,6 +206,13 @@ namespace RENDER_NAMESPACE {
                 Float cosTheta = ABS_DOT(m.si.ns, NORMALIZE(wi));
                 state.beta *= (f * cosTheta / pdf);
 
+                if (state.beta.maxComponent() < 1.0f && m.bounce > 10) {
+                    Float q = 1 - state.beta.maxComponent();
+                    if (state.raySamples.rr < q) {
+                        return;
+                    }
+                }
+
                 RayDetails r;
                 r.pixelIndex = m.pixelIndex;
                 r.bounce = m.bounce + 1;
@@ -231,8 +238,8 @@ namespace RENDER_NAMESPACE {
                 int bounce = r.bounce;
                 int pixelIndex = r.pixelIndex;
                 // TODO very important
-                // 4 for CameraSamples
-                int dimension = 4 + (3 + 3) * bounce;
+                // 4 for CameraSamples + 3: scatter + 3: sampleLight + 1: rr
+                int dimension = 4 + (3 + 3 + 1) * bounce;
 
                 PixelState &pixelState = (*_pixelArray)[pixelIndex];
 
@@ -244,6 +251,8 @@ namespace RENDER_NAMESPACE {
 
                 pixelState.raySamples.sampleLight.light = sampler.sample1D();
                 pixelState.raySamples.sampleLight.uv = sampler.sample2D();
+
+                pixelState.raySamples.rr = sampler.sample1D();
             };
             parallel::parallelForQueue(func, currentRayQueue(bounce), _maxQueueSize);
         }

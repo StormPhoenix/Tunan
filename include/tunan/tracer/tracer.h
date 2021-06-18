@@ -43,6 +43,7 @@ namespace RENDER_NAMESPACE {
                 Float light;
                 Point2F uv;
             } sampleLight;
+            Float rr;
         } RaySamples;
 
         typedef struct PixelState {
