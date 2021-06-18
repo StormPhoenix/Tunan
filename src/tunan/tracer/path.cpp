@@ -206,8 +206,9 @@ namespace RENDER_NAMESPACE {
                 Float cosTheta = ABS_DOT(m.si.ns, NORMALIZE(wi));
                 state.beta *= (f * cosTheta / pdf);
 
-                if (state.beta.maxComponent() < 1.0f && m.bounce > 10) {
-                    Float q = 1 - state.beta.maxComponent();
+                Spectrum rrBeta = state.beta * (1.0f / bsdf.refractionIndex);
+                if (rrBeta.maxComponent() < 1.0f && m.bounce > 15) {
+                    Float q = std::max(0.0f, 1 - rrBeta.maxComponent());
                     if (state.raySamples.rr < q) {
                         return;
                     }

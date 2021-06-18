@@ -296,6 +296,8 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU
             int hasAnyOf(const BxDFType bxdfType) const;
 
+            Float refractionIndex = 1;
+
         private:
             BxDF _bxdf;
             Vector3F _tanY;

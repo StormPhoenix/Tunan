@@ -20,7 +20,9 @@ namespace RENDER_NAMESPACE {
         }
 
         Dielectric::Dielectric(SpectrumTexture R, SpectrumTexture T, Float etaI, Float etaT, Float roughness) :
-                _R(R), _T(T), _etaI(etaI), _etaT(etaT), _roughness(roughness) {}
+                _R(R), _T(T), _etaI(etaI), _etaT(etaT), _roughness(roughness) {
+            ASSERT(etaI != 0.f && etaT != 0.f, "Eta can't be zero. ");
+        }
 
         RENDER_CPU_GPU
         BSDF Dielectric::evaluateBSDF(SurfaceInteraction &si, DielectricBxDF *bxdf, TransportMode mode) {
@@ -35,6 +37,7 @@ namespace RENDER_NAMESPACE {
 
             (*bxdf) = DielectricBxDF(Kr, Kt, roughness, _etaI, _etaT, GGX, mode);
             bsdf.setBxDF(bxdf);
+            bsdf.refractionIndex = DOT(si.ng, si.wo) > 0 ? _etaI / _etaT : _etaT / _etaI;
             return bsdf;
         }
 
