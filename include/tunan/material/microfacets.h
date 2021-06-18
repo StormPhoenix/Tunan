@@ -15,7 +15,8 @@ namespace RENDER_NAMESPACE {
 
         typedef enum MicrofacetDistribType {
             GGX,
-            Beckmann
+            Beckmann,
+            None
         } MicrofacetDistribType;
 
         class GGXDistribution {

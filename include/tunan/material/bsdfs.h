@@ -72,10 +72,8 @@ namespace RENDER_NAMESPACE {
             FresnelSpecularBxDF();
 
             RENDER_CPU_GPU
-            FresnelSpecularBxDF(const Spectrum &reflectance,
-                                const Spectrum &transmittance,
-                                Float thetaI, Float thetaT,
-                                TransportMode mode = TransportMode::RADIANCE);
+            FresnelSpecularBxDF(const Spectrum &Ks, const Spectrum &Kt,
+                                Float thetaI, Float thetaT, TransportMode mode = TransportMode::RADIANCE);
 
             RENDER_CPU_GPU
             Spectrum f(const Vector3F &wo, const Vector3F &wi) const;
@@ -138,9 +136,12 @@ namespace RENDER_NAMESPACE {
         class MicrofacetBxDF {
         public:
             RENDER_CPU_GPU
-            MicrofacetBxDF(const Spectrum &Ks, const Spectrum &Kt,
-                           Float etaI, Float etaT, MicrofacetDistribution distribution,
-                           const TransportMode mode);
+            MicrofacetBxDF();
+
+            RENDER_CPU_GPU
+            MicrofacetBxDF(const Spectrum &Ks, const Spectrum &Kt, Float alpha,
+                           Float etaI, Float etaT, MicrofacetDistribType distribType = GGX,
+                           const TransportMode mode = RADIANCE);
 
             RENDER_CPU_GPU
             Spectrum sampleF(const Vector3F &wo, Vector3F *wi, Float *pdf,
@@ -158,11 +159,43 @@ namespace RENDER_NAMESPACE {
             }
 
         private:
+            using __MicrofacetDistribType__ = Variant<GGXDistribution>;
+            __MicrofacetDistribType__ _distribStorage;
+            MicrofacetDistribution _distribution;
             BxDFType _type;
             Float _etaT, _etaI;
-            const Spectrum _Ks, _Kt;
-            const TransportMode _mode;
-            const MicrofacetDistribution _microfacetDistribution;
+            Spectrum _Ks, _Kt;
+            TransportMode _mode;
+        };
+
+        class DielectricBxDF {
+        public:
+            RENDER_CPU_GPU
+            DielectricBxDF() = default;
+
+            RENDER_CPU_GPU
+            DielectricBxDF(const Spectrum &Ks, const Spectrum &Kt,
+                           Float alpha, Float etaI, Float etaT,
+                           MicrofacetDistribType distribType = GGX,
+                           TransportMode mode = TransportMode::RADIANCE);
+
+            RENDER_CPU_GPU
+            Spectrum f(const Vector3F &wo, const Vector3F &wi) const;
+
+            RENDER_CPU_GPU
+            Spectrum sampleF(const Vector3F &wo, Vector3F *wi, Float *pdf,
+                             BSDFSample &bsdfSample, BxDFType *sampleType);
+
+            RENDER_CPU_GPU
+            Float samplePdf(const Vector3F &wo, const Vector3F &wi) const;
+
+            RENDER_CPU_GPU
+            inline BxDFType type() const;
+
+        private:
+            bool isSpecular = false;
+            MicrofacetBxDF _glossyBxDF;
+            FresnelSpecularBxDF _specularBxDF;
         };
 
         class ConductorBxDF {
@@ -199,7 +232,7 @@ namespace RENDER_NAMESPACE {
         };
 
         class BxDF : public TaggedPointer<LambertianBxDF, FresnelSpecularBxDF, SpecularReflectionBxDF,
-                MicrofacetBxDF, ConductorBxDF> {
+                MicrofacetBxDF, ConductorBxDF, DielectricBxDF> {
         public:
             using TaggedPointer::TaggedPointer;
 

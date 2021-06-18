@@ -154,10 +154,22 @@ namespace RENDER_NAMESPACE {
         }
 
         RENDER_CPU_GPU
-        MicrofacetBxDF::MicrofacetBxDF(const Spectrum &Ks, const Spectrum &Kt, Float etaI, Float etaT,
-                                       MicrofacetDistribution distribution, const TransportMode mode) :
+        MicrofacetBxDF::MicrofacetBxDF() :
+                _type(BxDFType(BSDF_Glossy | BSDF_Transmission | BSDF_Reflection)) {}
+
+        RENDER_CPU_GPU
+        MicrofacetBxDF::MicrofacetBxDF(const Spectrum &Ks, const Spectrum &Kt,
+                                       Float alpha, Float etaI, Float etaT,
+                                       MicrofacetDistribType distribType, const TransportMode mode) :
                 _type(BxDFType(BSDF_Glossy | BSDF_Transmission | BSDF_Reflection)), _Ks(Ks), _Kt(Kt),
-                _etaI(etaI), _etaT(etaT), _microfacetDistribution(distribution), _mode(mode) {}
+                _etaI(etaI), _etaT(etaT), _mode(mode) {
+            if (distribType == GGX) {
+                _distribStorage.set(GGXDistribution(alpha));
+                _distribution = (_distribStorage.ptr<GGXDistribution>());
+            } else {
+                assert(false);
+            }
+        }
 
         RENDER_CPU_GPU
         Spectrum MicrofacetBxDF::sampleF(const Vector3F &wo, Vector3F *wi, Float *pdf,
@@ -168,7 +180,7 @@ namespace RENDER_NAMESPACE {
             }
 
             // Sample microfacet
-            Normal3F wh = _microfacetDistribution.sampleWh(wo, bsdfSample.uv);
+            Normal3F wh = _distribution.sampleWh(wo, bsdfSample.uv);
             Float cosThetaWoWh = DOT(wo, wh);
             if (cosThetaWoWh <= 0.0f) {
                 // Back face
@@ -258,8 +270,8 @@ namespace RENDER_NAMESPACE {
                     return Spectrum(0.0f);
                 }
 
-                Float D_Wh = _microfacetDistribution.D(wh);
-                Float G_Wo_Wi = _microfacetDistribution.G(wo, wi, wh);
+                Float D_Wh = _distribution.D(wh);
+                Float G_Wo_Wi = _distribution.G(wo, wi, wh);
 
                 Float cosThetaWoWh = DOT(wo, wh);
                 Float Fr = fresnel::fresnelDielectric(cosThetaWoWh, _etaI, _etaT);
@@ -282,8 +294,8 @@ namespace RENDER_NAMESPACE {
                     wh *= -1;
                 }
 
-                Float D_Wh = _microfacetDistribution.D(wh);
-                Float G_Wo_Wi = _microfacetDistribution.G(wo, wi, wh);
+                Float D_Wh = _distribution.D(wh);
+                Float G_Wo_Wi = _distribution.G(wo, wi, wh);
 
                 Float cosThetaWoWh = DOT(wo, wh);
                 Float Fr = fresnel::fresnelDielectric(cosThetaWoWh, _etaI, _etaT);
@@ -307,7 +319,7 @@ namespace RENDER_NAMESPACE {
                 Float reflectionProb = fresnel::fresnelDielectric(ABS_DOT(wo, wh),
                                                                   cosThetaWo > 0 ? _etaI : _etaT,
                                                                   cosThetaWi > 0 ? _etaT : _etaI);
-                return reflectionProb * _microfacetDistribution.samplePdf(wo, wh) / (4 * ABS_DOT(wo, wh));
+                return reflectionProb * _distribution.samplePdf(wo, wh) / (4 * ABS_DOT(wo, wh));
             } else {
                 // Refraction
                 Float eta = cosThetaWo > 0 ? _etaI / _etaT : _etaT / _etaI;
@@ -324,7 +336,7 @@ namespace RENDER_NAMESPACE {
                                                                         cosThetaWi > 0 ? _etaT : _etaI);
                 Float sqrtDenom = DOT(wo, wh) + invEta * DOT(wi, wh);
                 // Some difference from PBRT
-                return refractionProb * _microfacetDistribution.samplePdf(wo, wh) * ABS_DOT(wi, wh) /
+                return refractionProb * _distribution.samplePdf(wo, wh) * ABS_DOT(wi, wh) /
                        (sqrtDenom * sqrtDenom);
             }
         }
@@ -416,6 +428,55 @@ namespace RENDER_NAMESPACE {
             }
             Vector3F wh = NORMALIZE(wo + wi);
             return _distribution.samplePdf(wo, wh) / (4 * DOT(wo, wh));
+        }
+
+        RENDER_CPU_GPU
+        DielectricBxDF::DielectricBxDF(const Spectrum &Ks, const Spectrum &Kt, Float alpha, Float etaI, Float etaT,
+                                       MicrofacetDistribType distribType, TransportMode mode) {
+            if (alpha == 0.0f) {
+                isSpecular = true;
+                _specularBxDF = FresnelSpecularBxDF(Ks, Kt, etaI, etaT, mode);
+            } else {
+                isSpecular = false;
+                _glossyBxDF = MicrofacetBxDF(Ks, Kt, alpha, etaI, etaT, distribType, mode);
+            }
+        }
+
+        RENDER_CPU_GPU
+        Spectrum DielectricBxDF::f(const Vector3F &wo, const Vector3F &wi) const {
+            if (isSpecular) {
+                return _specularBxDF.f(wo, wi);
+            } else {
+                return _glossyBxDF.f(wo, wi);
+            }
+        }
+
+        RENDER_CPU_GPU
+        Spectrum DielectricBxDF::sampleF(const Vector3F &wo, Vector3F *wi, Float *pdf,
+                                         BSDFSample &bsdfSample, BxDFType *sampleType) {
+            if (isSpecular) {
+                return _specularBxDF.sampleF(wo, wi, pdf, bsdfSample, sampleType);
+            } else {
+                return _glossyBxDF.sampleF(wo, wi, pdf, bsdfSample, sampleType);
+            }
+        }
+
+        RENDER_CPU_GPU
+        Float DielectricBxDF::samplePdf(const Vector3F &wo, const Vector3F &wi) const {
+            if (isSpecular) {
+                return _specularBxDF.samplePdf(wo, wi);
+            } else {
+                return _glossyBxDF.samplePdf(wo, wi);
+            }
+        }
+
+        RENDER_CPU_GPU
+        BxDFType DielectricBxDF::type() const {
+            if (isSpecular) {
+                return BxDFType(BSDF_Specular | BSDF_Reflection | BSDF_Transmission);
+            } else {
+                return BxDFType(BSDF_Glossy | BSDF_Reflection | BSDF_Transmission);
+            }
         }
 
         RENDER_CPU_GPU

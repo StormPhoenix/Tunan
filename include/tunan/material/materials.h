@@ -28,23 +28,17 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU BSDF evaluateBSDF(SurfaceInteraction &si, LambertianBxDF *bxdf,
                                              TransportMode mode = TransportMode::RADIANCE);
 
-            RENDER_CPU_GPU inline bool isSpecular() {
-                return false;
-            }
-
         private:
             SpectrumTexture _Kd;
         };
 
         class Dielectric {
         public:
-            using MaterialBxDF = FresnelSpecularBxDF;
+            using MaterialBxDF = DielectricBxDF;
 
             Dielectric(SpectrumTexture R, SpectrumTexture T, Float etaI, Float etaT, Float roughness = 0.f);
 
-            RENDER_CPU_GPU bool isSpecular() const;
-
-            RENDER_CPU_GPU BSDF evaluateBSDF(SurfaceInteraction &si, FresnelSpecularBxDF *bxdf,
+            RENDER_CPU_GPU BSDF evaluateBSDF(SurfaceInteraction &si, DielectricBxDF *bxdf,
                                              TransportMode mode = TransportMode::RADIANCE);
 
         private:
@@ -61,11 +55,6 @@ namespace RENDER_NAMESPACE {
             Mirror();
 
             Mirror(SpectrumTexture &Ks);
-
-            RENDER_CPU_GPU
-            inline bool isSpecular() const {
-                return true;
-            }
 
             RENDER_CPU_GPU
             BSDF evaluateBSDF(SurfaceInteraction &si, SpecularReflectionBxDF *bxdf,
@@ -85,10 +74,6 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU BSDF evaluateBSDF(SurfaceInteraction &si, ConductorBxDF *bxdf,
                                              TransportMode mode = TransportMode::RADIANCE);
 
-            RENDER_CPU_GPU inline bool isSpecular() const {
-                return false;
-            }
-
         private:
             FloatTexture _alpha;
             SpectrumTexture _eta;
@@ -101,8 +86,6 @@ namespace RENDER_NAMESPACE {
         class Material : public TaggedPointer<Lambertian, Dielectric, Mirror, Metal> {
         public:
             using TaggedPointer::TaggedPointer;
-
-            RENDER_CPU_GPU inline bool isSpecular();
         };
     }
 }

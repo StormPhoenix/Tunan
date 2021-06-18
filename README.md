@@ -18,9 +18,12 @@ A GPU physically based render.
 - Material
     - [x] Diffuse
     - [x] Dielectric
+    - [x] Microfacet
     
 - Light
     - [x] Area light
+    - [x] Point light / Spot light
+    - [x] Environment light
 
 To be continued ...
 
@@ -28,7 +31,7 @@ To be continued ...
 
 - [ ] Material
     - [x] ConstantTexture
-    - [ ] ImageTexture
+    - [x] ImageTexture
     - [x] LambertianMaterial
     - [x] DielectricMaterial
     - [x] MirrorMaterial
@@ -39,10 +42,10 @@ To be continued ...
     - [ ] 各向异性 Medium
     - [ ] 各向同性 Medium
 
-- [ ] Light source
+- [x] Light source
     - [x] DiffuseAreaLight
-    - [ ] 一般 Light(PointLight / SpotLight / DirectLight)
-    - [ ] EnvironmentLight
+    - [x] 一般 Light(PointLight / SpotLight / DirectLight)
+    - [x] EnvironmentLight
     
 - [ ] 琐碎的小细节
     - [x] Frequency writing
