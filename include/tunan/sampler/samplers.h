@@ -51,9 +51,7 @@ namespace RENDER_NAMESPACE {
             RNG rng;
         };
 
-        using utils::TaggedPointer;
-
-        class Sampler : public TaggedPointer<IndependentSampler> {
+        class Sampler : public utils::TaggedPointer<IndependentSampler> {
         public:
             using TaggedPointer::TaggedPointer;
 
@@ -72,15 +70,32 @@ namespace RENDER_NAMESPACE {
             RENDER_CPU_GPU inline Vector2F sample2D();
         };
 
-        RENDER_CPU_GPU Vector2F diskUniformSampling(const Point2F &uv, Float radius = 1.);
+        RENDER_CPU_GPU
+        inline Vector2F diskUniformSampling(const Point2F &uv, Float radius = 1.);
 
-        RENDER_CPU_GPU Vector3F hemiCosineSampling(const Vector2F &uv);
+        RENDER_CPU_GPU
+        inline Vector3F hemiCosineSampling(const Vector2F &uv);
 
         RENDER_CPU_GPU
         inline Vector2F triangleUniformSampling(Vector2F uv) {
             Float u = 1 - std::sqrt(uv[0]);
             Float v = uv[1] * std::sqrt(uv[0]);
             return Vector2F(u, v);
+        }
+
+        RENDER_CPU_GPU
+        inline Float uniformDouble(Float min, Float max, Float sample) {
+            return min + (max - min) * sample;
+        }
+
+        RENDER_CPU_GPU
+        inline int uniformInteger(int min, int max, Float sample) {
+            int ret = std::min(static_cast<int>(uniformDouble(min, max + 1, sample)), max);
+            if (ret <= max) {
+                return ret;
+            } else {
+                return uniformInteger(min, max, sample);
+            }
         }
     }
 }

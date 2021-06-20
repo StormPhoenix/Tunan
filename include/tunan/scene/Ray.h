@@ -37,7 +37,7 @@ namespace RENDER_NAMESPACE {
         void setStep(Float step);
 
         RENDER_CPU_GPU
-        const Vector3F at(Float step) const;
+        Point3F at(Float step) const;
 
     private:
         Vector3F _origin;

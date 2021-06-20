@@ -33,7 +33,7 @@ namespace RENDER_NAMESPACE {
     }
 
     RENDER_CPU_GPU
-    const Vector3F Ray::at(Float step) const {
+    Vector3F Ray::at(Float step) const {
         return _origin + Vector3F(_direction.x * step, _direction.y * step, _direction.z * step);
     }
 }

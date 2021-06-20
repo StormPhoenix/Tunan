@@ -128,6 +128,8 @@ set(TuNan_SRCS
         src/tunan/material/mappings.cpp
         src/tunan/material/fresnels.cpp
         src/tunan/material/microfacets.cpp
+        src/tunan/medium/mediums.cpp
+        src/tunan/medium/phase_functions.cpp
         src/tunan/scene/Ray.cpp
         src/tunan/scene/film.cpp
         src/tunan/scene/shapes.cpp
@@ -140,8 +142,7 @@ set(TuNan_SRCS
 set(TuNan_HDRS
         include/tunan/common.h
         include/tunan/sampler/rng.h
-        include/tunan/material/materials.h
-        include/tunan/medium/Medium.h)
+        include/tunan/material/materials.h)
 
 set(TuNan_BASE_SRCS
         src/tunan/base/distributions.cpp
@@ -150,7 +151,9 @@ set(TuNan_BASE_SRCS
 set(TuNan_BASE_HDRS
         include/tunan/base/spectrum.h
         include/tunan/base/containers.h
-        include/tunan/base/mediums.h)
+        include/tunan/base/transform.h
+        include/tunan/base/interactions.h
+        include/tunan/base/distributions.h)
 
 set(TuNan_UTIL_SRCS
         src/tunan/utils/model_loader.cpp
