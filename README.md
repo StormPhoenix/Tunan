@@ -40,7 +40,7 @@ To be continued ...
     
 - [ ] Medium
     - [ ] 各向异性 Medium
-    - [ ] 各向同性 Medium
+    - [x] 各向同性 Medium
 
 - [x] Light source
     - [x] DiffuseAreaLight
@@ -49,10 +49,12 @@ To be continued ...
     
 - [ ] 琐碎的小细节
     - [x] Frequency writing
-    - [x] ParsedScene 属性管理
+    - [ ] ParsedScene 属性管理
     - [ ] Command line 输入
     
+- [ ] Handle medium
+    - [ ] medium sample 放在 __closesthit__ 判定还是说放在 evaluateMediumSample 函数里判定，这样就需要修改 __closesthit__ 以及 render() 函数了    
+    
 - [ ] 对 empty material 的处理。如果不处理而是全部扔到 SurfaceInteractionQueue 里面，那么 empty material 的 intersecation 就会被忽略。
-
 ## Example
 To be continued ...

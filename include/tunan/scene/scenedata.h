@@ -42,8 +42,10 @@ namespace RENDER_NAMESPACE {
         int *texcoordIndices = nullptr;
 
         bool faceNormal = false;
-        Material material;
         DiffuseAreaLight *areaLights = nullptr;
+        Material material;
+        Medium interiorMedium;
+        Medium exteriorMedium;
 
         Point3F minVertex, maxVertex;
 //        std::string materialName = "";

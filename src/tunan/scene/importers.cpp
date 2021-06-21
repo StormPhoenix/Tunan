@@ -77,6 +77,9 @@ namespace RENDER_NAMESPACE {
             Material currentMaterial;
             bool hasAreaLight = false;
 
+            Medium currentExteriorMedium;
+            Medium currentInteriorMedium;
+
             XmlAttrVal get(std::string name) {
                 return container[name];
             }
@@ -712,12 +715,14 @@ namespace RENDER_NAMESPACE {
                 ASSERT(false, "Only support rectangle shape for now");
             }
 
-            ShapeEntity &entity = sceneData.entities.back();
             Material material = parseInfo.currentMaterial;
-            entity.material = material;
+            Medium exteriorMedium = parseInfo.currentExteriorMedium;
+            Medium interiorMedium = parseInfo.currentInteriorMedium;
 
-//            Medium::Ptr exteriorMedium = parseInfo.currentExteriorMedium;
-//            Medium::Ptr interiorMedium = parseInfo.currentInteriorMedium;
+            ShapeEntity &entity = sceneData.entities.back();
+            entity.material = material;
+            entity.interiorMedium = interiorMedium;
+            entity.exteriorMedium = exteriorMedium;
 
             Spectrum radiance(0.0);
             if (parseInfo.hasAreaLight) {
@@ -732,24 +737,6 @@ namespace RENDER_NAMESPACE {
                     sceneData.lights->push_back(entity.areaLights + i);
                 }
             }
-
-/*
- * TODO medium
-            for (auto it = shapes->begin(); it != shapes->end(); it++) {
-                AreaLight::Ptr light = nullptr;
-                if (parseInfo.hasAreaLight) {
-                    light = std::make_shared<DiffuseAreaLight>(radiance, *it,
-                                                               MediumInterface(interiorMedium.get(),
-                                                                               exteriorMedium.get()),
-                                                               true);
-                    _scene->addLight(light);
-                }
-
-                Geometry::Ptr geometry = std::make_shared<Geometry>(*it, material, interiorMedium, exteriorMedium,
-                                                                    light);
-                _shapes.push_back(geometry);
-            }
-            */
         }
 
         static void handleTagLookAt(pugi::xml_node &node, XmlParseInfo &parent) {
@@ -902,6 +889,30 @@ namespace RENDER_NAMESPACE {
             }
         }
 
+        static void handleTagMedium(pugi::xml_node &node, XmlParseInfo &info, XmlParseInfo &parent,
+                                    ResourceManager *allocator) {
+            std::string mediumType = node.attribute("type").value();
+            std::string mediumName = node.attribute("name").value();
+            Medium medium;
+            if (mediumType == "homogeneous") {
+                ASSERT(info.attrExists("sigmaS") && info.attrExists("sigmaA"), "Medium parameter missed. ")
+                Spectrum sigmaS = info.getSpectrumValue("sigmaS", Spectrum(0.1));
+                Spectrum sigmaA = info.getSpectrumValue("sigmaA", Spectrum(0.1));
+                Float g = info.getFloatValue("g", 0.0f);
+                medium = allocator->newObject<HomogenousMedium>(sigmaA, sigmaS, g);
+            } else {
+                ASSERT(false, "Medium type not supported. ");
+            }
+
+            if (!medium.nullable()) {
+                if (mediumName == "exterior") {
+                    parent.currentExteriorMedium = medium;
+                } else if (mediumName == "interior") {
+                    parent.currentInteriorMedium = medium;
+                }
+            }
+        }
+
         static void handleXmlNode(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parentParseInfo,
                                   SceneData &sceneData, ResourceManager *allocator) {
             TagType tagType = nodeTypeMap[node.name()];
@@ -965,9 +976,9 @@ namespace RENDER_NAMESPACE {
                 case Tag_Integrator:
                     handleTagIntegrator(node, parseInfo, sceneData);
                     break;
-//                case Tag_Medium:
-//                    handleTagMedium(node, parseInfo, parentParseInfo);
-//                    break;
+                case Tag_Medium:
+                    handleTagMedium(node, parseInfo, parentParseInfo, allocator);
+                    break;
                 default:
                     std::cout << "\tUnsupported tag: <" << node.name() << ">" << std::endl;
             }

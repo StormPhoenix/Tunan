@@ -7,7 +7,6 @@
 
 #include <tunan/common.h>
 #include <tunan/base/spectrum.h>
-#include <tunan/scene/Ray.h>
 #include <tunan/sampler/rng.h>
 #include <tunan/utils/TaggedPointer.h>
 #include <tunan/medium/phase_functions.h>
@@ -16,6 +15,7 @@ namespace RENDER_NAMESPACE {
     namespace base {
         class MediumInteraction;
     }
+    class Ray;
     using namespace base;
     using namespace sampler;
     using utils::TaggedPointer;

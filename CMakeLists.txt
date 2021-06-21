@@ -130,7 +130,7 @@ set(TuNan_SRCS
         src/tunan/material/microfacets.cpp
         src/tunan/medium/mediums.cpp
         src/tunan/medium/phase_functions.cpp
-        src/tunan/scene/Ray.cpp
+        src/tunan/scene/ray.cpp
         src/tunan/scene/film.cpp
         src/tunan/scene/shapes.cpp
         src/tunan/scene/lights.cpp

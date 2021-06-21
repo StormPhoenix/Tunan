@@ -7,6 +7,7 @@
 
 #include <tunan/common.h>
 #include <tunan/math.h>
+#include <tunan/medium/mediums.h>
 
 namespace RENDER_NAMESPACE {
     class Ray {
@@ -44,6 +45,7 @@ namespace RENDER_NAMESPACE {
         Vector3F _direction;
         Float _minStep;
         Float _step;
+        Medium _medium;
     };
 
 }

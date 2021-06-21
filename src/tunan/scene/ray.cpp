@@ -2,7 +2,7 @@
 // Created by StormPhoenix on 2021/6/2.
 //
 
-#include <tunan/scene/Ray.h>
+#include <tunan/scene/ray.h>
 
 namespace RENDER_NAMESPACE {
     using namespace math;

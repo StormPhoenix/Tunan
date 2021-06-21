@@ -449,10 +449,12 @@ namespace RENDER_NAMESPACE {
 
             // Set shader binding table data
             HitRecord hitRecord;
-            OPTIX_CHECK(optixSbtRecordPackHeader(closestHitPG, &hitRecord));
             hitRecord.data.mesh = mesh;
             hitRecord.data.material = entity.material;
             hitRecord.data.areaLights = entity.areaLights;
+            hitRecord.data.mediumInterface = MediumInterface(entity.interiorMedium, entity.exteriorMedium);
+
+            OPTIX_CHECK(optixSbtRecordPackHeader(closestHitPG, &hitRecord));
             closestHitRecords.push_back(hitRecord);
 
             OPTIX_CHECK(optixSbtRecordPackHeader(shadowRayHitPG, &hitRecord));

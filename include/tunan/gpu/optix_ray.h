@@ -11,6 +11,7 @@
 #include <tunan/scene/cameras.h>
 #include <tunan/scene/lights.h>
 #include <tunan/material/materials.h>
+#include <tunan/medium/mediums.h>
 
 namespace RENDER_NAMESPACE {
     using namespace tracer;
@@ -33,8 +34,9 @@ namespace RENDER_NAMESPACE {
 
     struct ClosestHitData {
         TriangleMesh *mesh = nullptr;
-        Material material;
         DiffuseAreaLight *areaLights = nullptr;
+        Material material;
+        MediumInterface mediumInterface;
     };
 
     struct MissData {

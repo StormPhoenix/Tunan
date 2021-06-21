@@ -7,7 +7,7 @@
 
 #include <tunan/math.h>
 #include <tunan/common.h>
-#include <tunan/scene/Ray.h>
+#include <tunan/scene/ray.h>
 #include <tunan/medium/mediums.h>
 #include <tunan/medium/phase_functions.h>
 

@@ -6,7 +6,7 @@
 #define TUNAN_CAMERAS_H
 
 #include <tunan/common.h>
-#include <tunan/scene/Ray.h>
+#include <tunan/scene/ray.h>
 #include <tunan/sampler/samplers.h>
 #include <tunan/base/spectrum.h>
 #include <tunan/base/transform.h>

@@ -48,7 +48,7 @@ extern "C" __global__ void __closesthit__scene() {
     if (data->areaLights != nullptr) {
         AreaLightHitDetails areaLightHitDetails;
         areaLightHitDetails.areaLight = data->areaLights + triangleIndex;
-        areaLightHitDetails.pixelIndex = r.pixelIndex;
+        areaLightHitDetails.pixelIndex = r.pixelIREADndex;
         areaLightHitDetails.bounce = r.bounce;
         areaLightHitDetails.si = si;
         areaLightHitDetails.specularBounce = r.specularBounce;

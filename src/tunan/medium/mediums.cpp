@@ -5,6 +5,7 @@
 #include <tunan/base/hash.h>
 #include <tunan/base/interactions.h>
 #include <tunan/medium/mediums.h>
+#include <tunan/scene/ray.h>
 #include <tunan/sampler/samplers.h>
 
 namespace RENDER_NAMESPACE {
