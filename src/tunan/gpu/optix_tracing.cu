@@ -1,6 +1,6 @@
 #include <optix.h>
 #include <tunan/common.h>
-#include <tunan/gpu/optix_ray.h>
+#include <tunan/gpu/optix_tracing.h>
 
 // *.cu file cannot link these variables functions and classes
 #include <tunan/scene/cameras.cpp>
@@ -64,7 +64,7 @@ extern "C" __global__ void __closesthit__scene() {
     params.materialEvaQueue->enqueue(materialEvaDetails);
 }
 
-extern "C" __global__ void __miss__findclosesthit() {
+extern "C" __global__ void __miss__findClosestHit() {
     optixSetPayload_0(1);
 }
 

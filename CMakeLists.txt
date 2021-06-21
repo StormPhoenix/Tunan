@@ -79,8 +79,7 @@ endif(BUILD_GPU_ENABLED)
 ### Compile *.PTX code
 if (BUILD_GPU_ENABLED)
     set(PTX_CODE_GEN ptx_code_gen)
-    set(OPTIX_RAYTRACING_FILE
-            src/tunan/gpu/optix_ray.cu)
+    set(OPTIX_RAYTRACING_FILE src/tunan/gpu/optix_tracing.cu)
     add_library(${PTX_CODE_GEN} OBJECT ${OPTIX_RAYTRACING_FILE})
     set_property(TARGET ${PTX_CODE_GEN} PROPERTY CUDA_PTX_COMPILATION ON)
     target_compile_options("${PTX_CODE_GEN}"

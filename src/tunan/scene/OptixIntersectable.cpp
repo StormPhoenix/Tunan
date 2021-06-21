@@ -9,7 +9,7 @@
 #include <tunan/scene/OptixIntersectable.h>
 #include <tunan/gpu/cuda_utils.h>
 #include <tunan/gpu/optix_utils.h>
-#include <tunan/gpu/optix_ray.h>
+#include <tunan/gpu/optix_tracing.h>
 #include <tunan/utils/image_utils.h>
 
 #include <sstream>
@@ -161,7 +161,7 @@ namespace RENDER_NAMESPACE {
             OptixProgramGroupDesc raygenMissingDesc = {};
             raygenMissingDesc.kind = OPTIX_PROGRAM_GROUP_KIND_MISS;
             raygenMissingDesc.miss.module = state.optixModule;
-            raygenMissingDesc.miss.entryFunctionName = "__miss__findclosesthit";
+            raygenMissingDesc.miss.entryFunctionName = "__miss__findClosestHit";
             OPTIX_CHECK_LOG(optixProgramGroupCreate(state.optixContext, &raygenMissingDesc, 1, /* num program groups */
                                                     &pgOptions, log, &logSize,
                                                     &missFindClosestHitPG), log);

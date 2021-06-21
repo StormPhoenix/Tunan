@@ -7,7 +7,7 @@
 
 #include <tunan/common.h>
 #include <tunan/tracer/tracer.h>
-#include <tunan/gpu/optix_ray.h>
+#include <tunan/gpu/optix_tracing.h>
 #include <tunan/base/containers.h>
 #include <tunan/material/materials.h>
 #include <tunan/scene/scenedata.h>
