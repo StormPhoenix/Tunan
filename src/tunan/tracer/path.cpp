@@ -2,10 +2,13 @@
 // Created by StormPhoenix on 2021/6/5.
 //
 
+#include <tunan/base/hash.h>
 #include <tunan/tracer/path.h>
 #include <tunan/parallel/parallels.h>
 #include <tunan/material/bsdfs.h>
 #include <tunan/material/materials.h>
+#include <tunan/medium/mediums.h>
+#include <tunan/sampler/rng.h>
 #include <tunan/sampler/samplers.h>
 #include <tunan/sampler/SamplerFactory.h>
 #include <tunan/scene/lights.h>
@@ -22,8 +25,9 @@
 
 namespace RENDER_NAMESPACE {
     namespace tracer {
-        using sampler::SamplerFactory;
+        using namespace base;
         using namespace bsdf;
+        using namespace sampler;
 
         void printDetails(PTParameters &params) {
             // Print config info
@@ -31,6 +35,24 @@ namespace RENDER_NAMESPACE {
             std::cout << "Max depth: " << params.maxBounce << std::endl;
             std::cout << "Sample number: " << params.nIterations << std::endl;
             std::cout << "Size: (" << params.filmWidth << ", " << params.filmHeight << ")" << std::endl;
+        }
+
+        RENDER_CPU_GPU
+        inline Spectrum
+        sampleDirectLight(base::Vector <Light> *lights, const Interaction &eye, LightSample &lightSample,
+                          Vector3F &shadowRayDirection, Float &lightPdf, Float &samplePdf,
+                          Interaction &target, bool &isDeltaLight) {
+            int nLights = lights->size();
+            if (nLights != 0) {
+                lightPdf = Float(1.0) / nLights;
+                int lightIdx = int(lightSample.light * nLights) < (nLights - 1) ?
+                               int(lightSample.light * nLights) : (nLights - 1);
+                Light &light = (*lights)[lightIdx];
+                isDeltaLight = light.isDeltaType();
+                return light.sampleLi(eye, &shadowRayDirection, &samplePdf, lightSample.uv, &target);
+            } else {
+                return Spectrum(0.f);
+            }
         }
 
         PathTracer::PathTracer(SceneData &parsedScene, ResourceManager *resourceManager) :
@@ -82,6 +104,7 @@ namespace RENDER_NAMESPACE {
                             break;
                         }
                         _missQueue->reset();
+                        _mediaEvaQueue->reset();
                         _materialEvaQueue->reset();
                         _areaLightEvaQueue->reset();
                         _shadowRayQueue->reset();
@@ -90,7 +113,7 @@ namespace RENDER_NAMESPACE {
                         generateRaySamples(sampleIndex, bounce);
                         _world->findClosestHit(currentRayQueue(bounce), _missQueue, _materialEvaQueue,
                                                _mediaEvaQueue, _areaLightEvaQueue, _pixelArray);
-                        // TODO Handle media queue
+                        evaluateMediumSample(bounce);
                         evaluateMissRays();
                         evaluateAreaLightQueue();
                         evaluateMaterialBSDF(bounce);
@@ -113,7 +136,8 @@ namespace RENDER_NAMESPACE {
         }
 
         void PathTracer::updateFilm(int nCameraRays) {
-            auto func = RENDER_CPU_GPU_LAMBDA(int idx) {
+            auto func = RENDER_CPU_GPU_LAMBDA(int
+            idx) {
                 PixelState &state = (*_pixelArray)[idx];
                 int pixelX = state.pixelX;
                 int pixelY = state.pixelY;
@@ -133,7 +157,7 @@ namespace RENDER_NAMESPACE {
         } MaterialEvaWrapper;
 
         void PathTracer::evaluateAreaLightQueue() {
-            auto func = RENDER_CPU_GPU_LAMBDA(AreaLightHitDetails &m) {
+            auto func = RENDER_CPU_GPU_LAMBDA(AreaLightHitDetails & m) {
                 if (m.bounce == 0 || m.specularBounce) {
                     Spectrum L = m.areaLight->L(m.si, m.si.wo);
                     PixelState &state = (*_pixelArray)[m.pixelIndex];
@@ -147,10 +171,85 @@ namespace RENDER_NAMESPACE {
             forEachType(MaterialEvaWrapper({this, bounce}), Material::Types());
         }
 
+        void PathTracer::evaluateMediumSample(int bounce) {
+            RayQueue *nextQueue = nextRayQueue(bounce);
+            auto func = RENDER_CPU_GPU_LAMBDA(MediaEvaDetails & m) {
+                if (!m.medium.nullable()) {
+                    MediumInteraction mi;
+                    RNG rng = RNG(hash(m.ray.getStep()), hash(m.ray.getDirection()));
+                    m.ray.setStep(m.tMax);
+
+                    PixelState &state = (*_pixelArray)[m.pixelIndex];
+                    Spectrum Tr = m.medium.sample(m.ray, state.raySamples.media.mediaDist, rng, &mi);
+                    state.beta *= Tr;
+
+                    if (mi.isValid()) {
+                        Vector3F wi;
+                        // TODO delete pdf ?
+                        mi.phaseFunc.sample(m.si.wo, &wi, state.raySamples.media.scatter);
+
+                        RayDetails r;
+                        r.pixelIndex = m.bounce + 1;
+                        r.specularBounce = false;
+                        r.ray = mi.generateRay(wi);
+                        nextQueue->enqueue(r);
+
+                        // Sample from light
+                        Vector3F lightDirection;
+                        Float samplePdf, lightPdf;
+                        samplePdf = lightPdf = 0.f;
+                        Interaction target;
+                        bool isDeltaType = false;
+                        Spectrum Li = sampleDirectLight(_lights, mi, state.raySamples.sampleLight, lightDirection,
+                                                        lightPdf, samplePdf, target, isDeltaType);
+
+                        if (!Li.isBlack() && samplePdf > 0.f) {
+                            ShadowRayDetails details;
+                            details.ray = mi.generateRayTo(target);
+                            if (details.ray.getStep() > details.ray.getMinStep()) {
+                                details.tMax = details.ray.getStep();
+                                details.beta = state.beta * mi.phaseFunc.pdf(m.si.wo, lightDirection);
+                                details.scatterPdf = mi.phaseFunc.pdf(m.si.wo, lightDirection);
+                                details.sampleLightPdf = samplePdf;
+                                details.deltaType = isDeltaType;
+                                details.pixelIndex = m.pixelIndex;
+                                details.L = Li;
+                                details.lightPdf = lightPdf;
+
+                                RNG rng = RNG(hash(details.ray.getStep()), hash(details.ray.getDirection()));
+                                details.Tr = m.medium.transmittance(details.ray, rng);
+
+                                _shadowRayQueue->enqueue(details);
+                            }
+                        }
+                        return;
+                    }
+                }
+
+                if (m.areaLight != nullptr) {
+                    AreaLightHitDetails areaLightHitDetails;
+                    areaLightHitDetails.areaLight = m.areaLight;
+                    areaLightHitDetails.pixelIndex = m.pixelIndex;
+                    areaLightHitDetails.bounce = m.bounce;
+                    areaLightHitDetails.si = m.si;
+                    areaLightHitDetails.specularBounce = m.specularBounce;
+                    _areaLightEvaQueue->enqueue(areaLightHitDetails);
+                }
+
+                MaterialEvaDetails materialEvaDetails;
+                materialEvaDetails.bounce = m.bounce;
+                materialEvaDetails.pixelIndex = m.pixelIndex;
+                materialEvaDetails.si = m.si;
+                materialEvaDetails.material = m.material;
+                _materialEvaQueue->enqueue(materialEvaDetails);
+            };
+            parallel::parallelForQueue(func, _mediaEvaQueue, _maxQueueSize);
+        }
+
         template<typename MaterialType>
         void PathTracer::evaluateMaterialBSDF(int bounce) {
             RayQueue *nextQueue = nextRayQueue(bounce);
-            auto func = RENDER_CPU_GPU_LAMBDA(MaterialEvaDetails &m) {
+            auto func = RENDER_CPU_GPU_LAMBDA(MaterialEvaDetails & m) {
                 if (!m.material.isType<MaterialType>()) {
                     return;
                 }
@@ -160,36 +259,38 @@ namespace RENDER_NAMESPACE {
                 using MaterialBxDF = typename MaterialType::MaterialBxDF;
                 MaterialBxDF bxdf;
                 BSDF bsdf = material->evaluateBSDF(m.si, &bxdf);
+                // Sample light
                 if (bsdf.allIncludeOf(BxDFType(BSDF_All & (~BSDF_Specular)))) {
-                    int nLights = _lights->size();
-                    if (nLights != 0) {
-                        Float lightPdf = Float(1.0) / nLights;
-                        int lightIdx = int(state.raySamples.sampleLight.light * nLights) < (nLights - 1) ?
-                                       int(state.raySamples.sampleLight.light * nLights) : (nLights - 1);
-                        Light &light = (*_lights)[lightIdx];
-                        // Do sampling
-                        Vector3F lightDirection;
-                        Float samplePdf = 0;
-                        Interaction target;
-                        Spectrum Li = light.sampleLi(m.si, &lightDirection, &samplePdf,
-                                                     state.raySamples.sampleLight.uv, &target);
+                    Vector3F lightDirection;
+                    Float samplePdf = 0;
+                    Interaction target;
+                    bool isDeltaType = false;
+                    Float lightPdf = 0.f;
+                    Spectrum Li = sampleDirectLight(_lights, m.si, state.raySamples.sampleLight, lightDirection,
+                                                    lightPdf, samplePdf, target, isDeltaType);
+                    if (!Li.isBlack() && samplePdf > 0.) {
+                        Float cosTheta = ABS_DOT(m.si.ns, lightDirection);
+                        ShadowRayDetails details;
 
-                        if (!Li.isBlack() && samplePdf > 0.) {
-                            // TODO handle medium
-                            Float cosTheta = ABS_DOT(m.si.ns, lightDirection);
-                            ShadowRayDetails details;
-                            details.ray = m.si.generateRayTo(target);
-                            if (details.ray.getStep() > details.ray.getMinStep()) {
-                                details.tMax = details.ray.getStep();
-                                details.beta = state.beta * bsdf.f(m.si.wo, lightDirection) * cosTheta;
-                                details.scatterPdf = bsdf.samplePdf(m.si.wo, lightDirection);
-                                details.sampleLightPdf = samplePdf;
-                                details.deltaType = light.isDeltaType();
-                                details.pixelIndex = m.pixelIndex;
-                                details.L = Li;
-                                details.lightPdf = lightPdf;
-                                _shadowRayQueue->enqueue(details);
+                        details.ray = m.si.generateRayTo(target);
+                        if (details.ray.getStep() > details.ray.getMinStep()) {
+                            details.tMax = details.ray.getStep();
+                            details.beta = state.beta * bsdf.f(m.si.wo, lightDirection) * cosTheta;
+                            details.scatterPdf = bsdf.samplePdf(m.si.wo, lightDirection);
+                            details.sampleLightPdf = samplePdf;
+                            details.deltaType = isDeltaType;
+                            details.pixelIndex = m.pixelIndex;
+                            details.L = Li;
+                            details.lightPdf = lightPdf;
+
+                            if (details.ray.getMedium().nullable()) {
+                                details.Tr = Spectrum(1.0f);
+                            } else {
+                                RNG rng = RNG(hash(details.ray.getStep()), hash(details.ray.getDirection()));
+                                details.Tr = details.ray.getMedium().transmittance(details.ray, rng);
                             }
+
+                            _shadowRayQueue->enqueue(details);
                         }
                     }
                 }
@@ -227,7 +328,7 @@ namespace RENDER_NAMESPACE {
         void PathTracer::generateRaySamples(int sampleIndex, int bounce) {
             auto func = [=](auto sampler) {
                 using SamplerType = typename std::remove_reference<decltype(*sampler)>::type;
-                return generateRaySamples<SamplerType>(sampleIndex, bounce);
+                return generateRaySamples < SamplerType > (sampleIndex, bounce);
             };
             _sampler.proxyCall(func);
         }
@@ -235,12 +336,12 @@ namespace RENDER_NAMESPACE {
         template<typename SamplerType>
         void PathTracer::generateRaySamples(int sampleIndex, int bounce) {
             auto func = RENDER_CPU_GPU_LAMBDA(
-                    const RayDetails &r) {
+            const RayDetails &r) {
                 int bounce = r.bounce;
                 int pixelIndex = r.pixelIndex;
                 // TODO very important
-                // 4 for CameraSamples + 3: scatter + 3: sampleLight + 1: rr
-                int dimension = 4 + (3 + 3 + 1) * bounce;
+                // 4 for CameraSamples + 3: scatter + 3: sampleLight + 3: mediumSample + 1: rr
+                int dimension = 4 + (3 + 3 + 3 + 1) * bounce;
 
                 PixelState &pixelState = (*_pixelArray)[pixelIndex];
 
@@ -253,6 +354,9 @@ namespace RENDER_NAMESPACE {
                 pixelState.raySamples.sampleLight.light = sampler.sample1D();
                 pixelState.raySamples.sampleLight.uv = sampler.sample2D();
 
+                pixelState.raySamples.media.mediaDist = sampler.sample1D();
+                pixelState.raySamples.media.scatter = sampler.sample2D();
+
                 pixelState.raySamples.rr = sampler.sample1D();
             };
             parallel::parallelForQueue(func, currentRayQueue(bounce), _maxQueueSize);
@@ -261,7 +365,7 @@ namespace RENDER_NAMESPACE {
         void PathTracer::generateCameraRays(int sampleIndex, int scanLine) {
             auto func = [=](auto sampler) {
                 using SamplerType = typename std::remove_reference<decltype(*sampler)>::type;
-                return generateCameraRays<SamplerType>(sampleIndex, scanLine);
+                return generateCameraRays < SamplerType > (sampleIndex, scanLine);
             };
             _sampler.proxyCall(func);
         }
@@ -269,7 +373,8 @@ namespace RENDER_NAMESPACE {
         template<typename SamplerType>
         void PathTracer::generateCameraRays(int sampleIndex, int scanLine) {
             RayQueue *rayQueue = currentRayQueue(0);
-            auto func = RENDER_CPU_GPU_LAMBDA(int idx) {
+            auto func = RENDER_CPU_GPU_LAMBDA(int
+            idx) {
                 int pixelY = idx / params.filmWidth + scanLine;
                 int pixelX = idx % params.filmWidth;
 
@@ -305,7 +410,7 @@ namespace RENDER_NAMESPACE {
         }
 
         void PathTracer::evaluateMissRays() {
-            auto func = RENDER_CPU_GPU_LAMBDA(RayDetails &r) {
+            auto func = RENDER_CPU_GPU_LAMBDA(RayDetails & r) {
                 PixelState &state = (*_pixelArray)[r.pixelIndex];
                 if (r.bounce == 0 || r.specularBounce) {
                     if (_envLights != nullptr) {

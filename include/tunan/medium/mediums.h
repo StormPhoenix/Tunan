@@ -20,12 +20,17 @@ namespace RENDER_NAMESPACE {
     using namespace sampler;
     using utils::TaggedPointer;
 
+    typedef struct MediumSample {
+        Float mediaDist;
+        Point2F scatter;
+    } MediumSample;
+
     class HomogenousMedium {
     public:
         HomogenousMedium(const Spectrum &sigma_a, const Spectrum &sigma_s, Float g);
 
         RENDER_CPU_GPU
-        Spectrum transmittance(const Ray &ray, Float u, RNG rng) const;
+        Spectrum transmittance(const Ray &ray, RNG rng) const;
 
         RENDER_CPU_GPU
         Spectrum sample(const Ray &ray, Float u, RNG rng, MediumInteraction *mi) const;
@@ -40,6 +45,12 @@ namespace RENDER_NAMESPACE {
     class Medium : public TaggedPointer<HomogenousMedium> {
     public:
         using TaggedPointer::TaggedPointer;
+
+        RENDER_CPU_GPU
+        Spectrum sample(const Ray &ray, Float u, RNG rng, MediumInteraction *mi) const;
+
+        RENDER_CPU_GPU
+        Spectrum transmittance(const Ray &ray, RNG rng) const;
     };
 
     class MediumInterface {

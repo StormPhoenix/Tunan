@@ -350,6 +350,7 @@ namespace RENDER_NAMESPACE {
         }
         state.params.rayQueue = rayQueue;
         state.params.missQueue = missQueue;
+        state.params.mediaEvaQueue = mediaEvaQueue;
         state.params.materialEvaQueue = materialEvaQueue;
         state.params.areaLightQueue = areaLightQueue;
         state.params.pixelStateArray = pixelStateArray;

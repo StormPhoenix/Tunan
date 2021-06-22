@@ -34,15 +34,21 @@ namespace RENDER_NAMESPACE {
         } MaterialEvaDetails;
 
         typedef struct MediaEvaDetails {
-            // TODO
+            int bounce;
+            int pixelIndex;
+            float tMax;
+            bool specularBounce;
+            Ray ray;
+            Medium medium;
+            Material material;
+            SurfaceInteraction si;
+            DiffuseAreaLight *areaLight = nullptr;
         } MediaEvaDetails;
 
         typedef struct RaySamples {
             BSDFSample scatter;
-            struct {
-                Float light;
-                Point2F uv;
-            } sampleLight;
+            LightSample sampleLight;
+            MediumSample media;
             Float rr;
         } RaySamples;
 
@@ -68,6 +74,7 @@ namespace RENDER_NAMESPACE {
             bool deltaType = false;
             int pixelIndex;
             Spectrum L, beta;
+            Spectrum Tr;
             Ray ray;
             float tMax;
         } ShadowRayDetails;

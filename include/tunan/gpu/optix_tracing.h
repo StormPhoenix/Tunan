@@ -20,6 +20,7 @@ namespace RENDER_NAMESPACE {
     struct RayParams {
         RayQueue *rayQueue;
         MissQueue *missQueue;
+        MediaEvaQueue *mediaEvaQueue;
         MaterialEvaQueue *materialEvaQueue;
         AreaLightHitQueue *areaLightQueue;
         PixelStateArray *pixelStateArray;

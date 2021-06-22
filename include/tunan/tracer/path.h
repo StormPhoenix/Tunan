@@ -43,6 +43,8 @@ namespace RENDER_NAMESPACE {
             template<typename SamplerType>
             void generateRaySamples(int sampleIndex, int bounce);
 
+            void evaluateMediumSample(int bounce);
+
             void evaluateMaterialBSDF(int bounce);
 
             template<typename MaterialType>

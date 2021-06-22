@@ -34,6 +34,22 @@ namespace RENDER_NAMESPACE {
     class PhaseFunction : public TaggedPointer<HGFunc> {
     public:
         using TaggedPointer::TaggedPointer;
+
+        RENDER_CPU_GPU
+        inline Float sample(const Vector3F &wo, Vector3F *wi, Vector2F sample) const {
+            auto func = [&](auto ptr) {
+                return ptr->sample(wo, wi, sample);
+            };
+            return proxyCall(func);
+        }
+
+        RENDER_CPU_GPU
+        Float pdf(const Vector3F &wo, const Vector3F &wi) const {
+            auto func = [&](auto ptr) {
+                return ptr->pdf(wo, wi);
+            };
+            return proxyCall(func);
+        }
     };
 }
 

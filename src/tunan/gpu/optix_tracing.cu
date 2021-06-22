@@ -44,6 +44,26 @@ extern "C" __global__ void __closesthit__scene() {
     const ClosestHitData *data = (const ClosestHitData *) optixGetSbtDataPointer();
     SurfaceInteraction si = data->mesh->buildSurfaceInteraction(triangleIndex, 1 - barycentric.x - barycentric.y,
                                                                 barycentric.x, -r.ray.getDirection());
+    si.mediumInterface = data->mediumInterface;
+
+    if (!r.ray.getMedium().nullable()) {
+        MediaEvaDetails mediaEvaDetails;
+        mediaEvaDetails.ray = r.ray;
+        mediaEvaDetails.tMax = optixGetRayTmax();
+        mediaEvaDetails.bounce = r.bounce;
+        mediaEvaDetails.pixelIndex = r.pixelIndex;
+        mediaEvaDetails.medium = r.ray.getMedium();
+        mediaEvaDetails.material = data->material;
+        mediaEvaDetails.si = si;
+        mediaEvaDetails.specularBounce = r.specularBounce;
+
+        if (data->areaLights != nullptr) {
+            mediaEvaDetails.areaLight = data->areaLights + triangleIndex;
+        }
+
+        params.mediaEvaQueue->enqueue(mediaEvaDetails);
+        return;
+    }
 
     if (data->areaLights != nullptr) {
         AreaLightHitDetails areaLightHitDetails;
@@ -102,6 +122,7 @@ extern "C" __global__ void __raygen__shadowRay() {
             float weight = misWeight(1, r.sampleLightPdf, 1, r.scatterPdf);
             L = r.beta * r.L * weight / r.sampleLightPdf;
         }
+        L *= r.Tr;
 
         PixelState &state = (*params.pixelStateArray)[r.pixelIndex];
         state.L += L / r.lightPdf;

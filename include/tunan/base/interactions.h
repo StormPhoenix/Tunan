@@ -30,6 +30,12 @@ namespace RENDER_NAMESPACE {
             Interaction(Point3F p, Normal3F ng, Vector3F wo, Vector3F error, MediumInterface mediumInterface)
                     : p(p), ng(ng), wo(NORMALIZE(wo)), error(error), mediumInterface(mediumInterface) {}
 
+            RENDER_CPU_GPU
+            Ray generateRay(const Vector3F &direction) const;
+
+            RENDER_CPU_GPU
+            Ray generateRayTo(const Interaction &target) const;
+
             Point3F p;
             Vector3F wo;
             Normal3F ng;
@@ -51,12 +57,6 @@ namespace RENDER_NAMESPACE {
                                MediumInterface mediumInterface)
                     : Interaction(p, ng, wo, error, mediumInterface), ns(ns), uv(st) {}
 
-            RENDER_CPU_GPU
-            Ray generateRay(const Vector3F &direction) const;
-
-            RENDER_CPU_GPU
-            Ray generateRayTo(const Interaction &target) const;
-
             Point2F uv;
             Normal3F ns;
         };
@@ -68,10 +68,13 @@ namespace RENDER_NAMESPACE {
 
             RENDER_CPU_GPU
             MediumInteraction(Point3F p, Vector3F wo, Medium medium, PhaseFunction phaseFunc)
-                    : Interaction(p, wo, wo, Vector3F(0), MediumInterface(medium, medium)),
-                      medium(medium), phaseFunc(phaseFunc) {}
+                    : Interaction(p, wo, wo, Vector3F(0), MediumInterface(medium, medium)), phaseFunc(phaseFunc) {}
 
-            Medium medium;
+            RENDER_CPU_GPU
+            bool isValid() {
+                return !phaseFunc.nullable();
+            }
+
             PhaseFunction phaseFunc;
         };
     }

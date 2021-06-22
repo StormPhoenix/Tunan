@@ -14,6 +14,10 @@ namespace RENDER_NAMESPACE {
             _origin(origin), _direction(direction), _minStep(0.0), _step(Infinity) {}
 
     RENDER_CPU_GPU
+    Ray::Ray(const Vector3F &origin, const Vector3F &direction, Medium medium) :
+            _origin(origin), _direction(direction), _minStep(0.0), _step(Infinity), _medium(medium) {}
+
+    RENDER_CPU_GPU
     const Vector3F &Ray::getDirection() const {
         return _direction;
     }

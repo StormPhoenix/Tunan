@@ -20,6 +20,11 @@ namespace RENDER_NAMESPACE {
         class ResourceManager;
     }
 
+    typedef struct LightSample {
+        Float light;
+        Point2F uv;
+    } LightSample;
+
     typedef enum LightSourceType {
         Delta_Position = 1 << 0,
         Delta_Direction = 1 << 1,

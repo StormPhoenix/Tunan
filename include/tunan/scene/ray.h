@@ -19,6 +19,9 @@ namespace RENDER_NAMESPACE {
         Ray(const Vector3F &origin, const Vector3F &direction);
 
         RENDER_CPU_GPU
+        Ray(const Vector3F &origin, const Vector3F &direction, Medium medium);
+
+        RENDER_CPU_GPU
         const Vector3F &getDirection() const;
 
         RENDER_CPU_GPU
@@ -39,6 +42,16 @@ namespace RENDER_NAMESPACE {
 
         RENDER_CPU_GPU
         Point3F at(Float step) const;
+
+        RENDER_CPU_GPU
+        Medium getMedium() const {
+            return _medium;
+        }
+
+        RENDER_CPU_GPU
+        void setMedium(Medium medium) {
+            _medium = medium;
+        }
 
     private:
         Vector3F _origin;

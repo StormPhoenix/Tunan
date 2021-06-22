@@ -16,7 +16,7 @@ namespace RENDER_NAMESPACE {
     }
 
     RENDER_CPU_GPU
-    Spectrum HomogenousMedium::transmittance(const Ray &ray, Float u, RNG rng) const {
+    Spectrum HomogenousMedium::transmittance(const Ray &ray, RNG rng) const {
         return exp(-_sigma_t * std::min(ray.getStep() * LENGTH(ray.getDirection()), MaxFloat));
     }
 
@@ -51,5 +51,21 @@ namespace RENDER_NAMESPACE {
             assert(T.isBlack());
         }
         return sampleMedium ? (T * _sigma_s / pdf) : (T / pdf);
+    }
+
+    RENDER_CPU_GPU
+    Spectrum Medium::sample(const Ray &ray, Float u, RNG rng, MediumInteraction *mi) const {
+        auto func = [&](auto ptr) {
+            return ptr->sample(ray, u, rng, mi);
+        };
+        return proxyCall(func);
+    }
+
+    RENDER_CPU_GPU
+    Spectrum Medium::transmittance(const Ray &ray, RNG rng) const {
+        auto func = [&](auto ptr) {
+            return ptr->transmittance(ray, rng);
+        };
+        return proxyCall(func);
     }
 }
