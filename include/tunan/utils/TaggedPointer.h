@@ -62,7 +62,7 @@ namespace RENDER_NAMESPACE {
                     // nullptr
                     return 0;
                 } else {
-                    return 1 + FindIndexOf<Types, T>::value;
+                    return 1 + FindIndexOf<Types, Tp>::value;
                 }
             }
 

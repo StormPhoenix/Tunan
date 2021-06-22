@@ -6,6 +6,7 @@
 #define TUNAN_DISTRIBUTIONS_H
 
 #include <tunan/common.h>
+#include <tunan/math.h>
 #include <tunan/base/containers.h>
 #include <tunan/utils/ResourceManager.h>
 

@@ -95,33 +95,5 @@ namespace RENDER_NAMESPACE {
             auto sample2DFunc = [&](auto ptr) { return ptr->sample2D(); };
             return proxyCall(sample2DFunc);
         }
-
-        RENDER_CPU_GPU Vector2F diskUniformSampling(const Point2F &uv, Float radius) {
-            // sampleY = r / Radius
-            // sampleX = theta / (2 * PI)
-            Float sampleY = uv[0];
-            Float sampleX = uv[1];
-
-            Float theta = 2 * Pi * sampleX;
-            Float r = sampleY * radius;
-
-            return Vector2F(r * std::cos(theta), r * std::sin(theta));
-        }
-
-        RENDER_CPU_GPU Vector3F hemiCosineSampling(const Vector2F &uv) {
-            Vector2F sample = uv;
-            // fi = 2 * Pi * sampleU
-            Float sampleU = sample.x;
-            // sampleV = sin^2(theta)
-            Float sampleV = sample.y;
-            // x = sin(theta) * cos(fi)
-            Float x = sqrt(sampleV) * cos(2 * Pi * sampleU);
-            // y = cos(theta)
-            Float y = sqrt(1 - sampleV);
-            // z = sin(theta) * sin(fi)
-            Float z = sqrt(sampleV) * sin(2 * Pi * sampleU);
-            return NORMALIZE(Vector3F(x, y, z));
-        }
-
     }
 }

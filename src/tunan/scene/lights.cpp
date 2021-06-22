@@ -66,7 +66,6 @@ namespace RENDER_NAMESPACE {
     Spectrum DiffuseAreaLight::sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf,
                                         Vector2F uv, Interaction *target) {
         assert(!_shape.nullable());
-        // 从 eye 出发采样一条射线，返回与 shape 的交点
         SurfaceInteraction si = _shape.sample(eye.p, pdf, uv);
         (*wi) = NORMALIZE(si.p - eye.p);
         if (target != nullptr) {

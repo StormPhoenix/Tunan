@@ -5,8 +5,8 @@
 #ifndef TUNAN_SAMPLERS_H
 #define TUNAN_SAMPLERS_H
 
-#include <tunan/math.h>
 #include <tunan/common.h>
+#include <tunan/math.h>
 #include <tunan/utils/TaggedPointer.h>
 #include <tunan/sampler/rng.h>
 
@@ -71,10 +71,33 @@ namespace RENDER_NAMESPACE {
         };
 
         RENDER_CPU_GPU
-        inline Vector2F diskUniformSampling(const Point2F &uv, Float radius = 1.);
+        inline Vector2F diskUniformSampling(const Point2F &uv, Float radius = 1.) {
+            // sampleY = r / Radius
+            // sampleX = theta / (2 * PI)
+            Float sampleY = uv[0];
+            Float sampleX = uv[1];
+
+            Float theta = 2 * Pi * sampleX;
+            Float r = sampleY * radius;
+
+            return Vector2F(r * std::cos(theta), r * std::sin(theta));
+        }
 
         RENDER_CPU_GPU
-        inline Vector3F hemiCosineSampling(const Vector2F &uv);
+        inline Vector3F hemiCosineSampling(const Vector2F &uv) {
+            Vector2F sample = uv;
+            // fi = 2 * Pi * sampleU
+            Float sampleU = sample.x;
+            // sampleV = sin^2(theta)
+            Float sampleV = sample.y;
+            // x = sin(theta) * cos(fi)
+            Float x = std::sqrt(sampleV) * std::cos(2 * Pi * sampleU);
+            // y = cos(theta)
+            Float y = std::sqrt(1 - sampleV);
+            // z = sin(theta) * sin(fi)
+            Float z = std::sqrt(sampleV) * std::sin(2 * Pi * sampleU);
+            return NORMALIZE(Vector3F(x, y, z));
+        }
 
         RENDER_CPU_GPU
         inline Vector2F triangleUniformSampling(Vector2F uv) {

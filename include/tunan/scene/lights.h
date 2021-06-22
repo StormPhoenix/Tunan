@@ -7,7 +7,7 @@
 
 #include <tunan/common.h>
 #include <tunan/scene/shapes.h>
-#include <tunan/base/mediums.h>
+#include <tunan/medium/mediums.h>
 #include <tunan/base/spectrum.h>
 #include <tunan/base/transform.h>
 #include <tunan/base/interactions.h>
