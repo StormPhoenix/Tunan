@@ -624,7 +624,7 @@ namespace RENDER_NAMESPACE {
             return allocator->newObject<Mirror>();
         }
 
-        Material createGlassMaterial(XmlParseInfo &info, ResourceManager *allocator) {
+        static Material createGlassMaterial(XmlParseInfo &info, ResourceManager *allocator) {
             Float extIOR = 1.;
             Float intIOR = 1.5;
             SpectrumTexture texR = allocator->newObject<ConstantSpectrumTexture>(Spectrum(1.0f));
@@ -632,7 +632,7 @@ namespace RENDER_NAMESPACE {
             return allocator->newObject<Dielectric>(texR, texT, extIOR, intIOR);
         }
 
-        Material createRoughConductorMaterial(XmlParseInfo &info, ResourceManager *allocator) {
+        static Material createRoughConductorMaterial(XmlParseInfo &info, ResourceManager *allocator) {
             // Roughness
             Float alpha = 0.01;
             if (info.attrExists("alpha")) {
@@ -643,7 +643,7 @@ namespace RENDER_NAMESPACE {
                 alpha = info.getFloatValue("alpha", 0.01);
             }
 
-            std::string distributionTypeString = info.getStringValue("distribution", "beckmann");
+            std::string distributionTypeString = info.getStringValue("distribution", "ggx");
             MicrofacetDistribType distribType = GGX;
             if (distributionTypeString == "ggx") {
                 distribType = GGX;
@@ -662,6 +662,44 @@ namespace RENDER_NAMESPACE {
             return allocator->newObject<Metal>(Alpha, Eta, Ks, K, distribType);
         }
 
+        // Rename method
+        static Material createCoatingMaterial(XmlParseInfo &info, ResourceManager *allocator) {
+            Material material;
+            ASSERT(info.attrExists("diffuseReflectance") &&
+                   info.attrExists("specularReflectance") && info.attrExists("alpha"),
+                   "CoatingMaterial parameter error: type not supported");
+
+            // Kd
+            SpectrumTexture Kd;
+            XmlAttrVal::AttrType kdType = info.getType("diffuseReflectance");
+            if (kdType == XmlAttrVal::Attr_Spectrum) {
+                Spectrum diffuseReflectance = info.getSpectrumValue("diffuseReflectance", Spectrum(1.0));
+                Kd = allocator->newObject<ConstantSpectrumTexture>(diffuseReflectance);
+            } else if (kdType == XmlAttrVal::Attr_SpectrumTexture) {
+                Kd = info.getSpectrumTextureValue("diffuseReflectance", SpectrumTexture());
+            } else {
+                ASSERT(false, "Unsupported Kd type. ");
+            }
+
+            // Ks
+            SpectrumTexture Ks;
+            XmlAttrVal::AttrType ksType = info.getType("specularReflectance");
+            if (ksType == XmlAttrVal::Attr_Spectrum) {
+                Spectrum specularReflectance = info.getSpectrumValue("specularReflectance", Spectrum(1.0));
+                Ks = allocator->newObject<ConstantSpectrumTexture>(specularReflectance);
+            } else if (ksType == XmlAttrVal::Attr_SpectrumTexture) {
+                Ks = info.getSpectrumTextureValue("specularReflectance", SpectrumTexture());
+            } else {
+                ASSERT(false, "Unsupported Ks type. ");
+            }
+
+            auto alpha = info.getFloatValue("alpha", 0.1);
+
+            FloatTexture roughness = allocator->newObject<ConstantFloatTexture>(alpha);
+            material = allocator->newObject<Patina>(Kd, Ks, roughness, GGX);
+            return material;
+        }
+
         void handleTagBSDF(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parent,
                            SceneData &sceneData, ResourceManager *allocator) {
             std::string type = node.attribute("type").value();
@@ -678,15 +716,11 @@ namespace RENDER_NAMESPACE {
                 material = createGlassMaterial(parseInfo, allocator);
             } else if (type == "roughconductor" || type == "conductor") {
                 material = createRoughConductorMaterial(parseInfo, allocator);
-                /*
             } else if (type == "twosided") {
-                ASSERT(!parseInfo.currentMaterial.nullable(),
-                       "BSDF twosided should have {currentMaterial} attribute. ");
-                material = (const Material) (parseInfo.currentMaterial);
-                material.setTwoSided(true);
+                material = parseInfo.currentMaterial;
             } else if (type == "coating") {
-            } else if (type == "coating") {
-                material = createCoatingMaterial(parseInfo);
+                material = createCoatingMaterial(parseInfo, allocator);
+                /*
             } else if (type == "plastic") {
                 material = createPlasticMaterial(parseInfo);
                  */
@@ -861,7 +895,7 @@ namespace RENDER_NAMESPACE {
         }
 
         static void handleTagTexture(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parentInfo,
-                                     ResourceManager *allocator) {
+                                     SceneData &sceneData, ResourceManager *allocator) {
             const std::string type = node.attribute("type").value();
             const std::string name = node.attribute("name").value();
             if (type == "checkerboard") {
@@ -874,16 +908,14 @@ namespace RENDER_NAMESPACE {
                 SpectrumTexture texture = allocator->newObject<ChessboardSpectrumTexture>(color0, color1,
                                                                                           uScale, vScale);
                 parentInfo.setSpectrumTextureValue(name, texture);
-                /*
             } else if (type == "bitmap") {
                 ASSERT(parseInfo.attrExists("filename"), "Bitmap path not exists. ");
                 std::string filename = parseInfo.getStringValue("filename", "");
-                TextureMapping2D::Ptr mapping = std::shared_ptr<UVMapping2D>();
-                Texture<Spectrum>::Ptr texture =
-                        std::make_shared<ImageTexture < Spectrum>>
-                (_inputSceneDir + filename, mapping);
+                TextureMapping2D mapping = allocator->newObject<UVMapping2D>();
+                SpectrumTexture texture = allocator->newObject<ImageSpectrumTexture>(sceneData.sceneDirectory +
+                                                                                     filename, mapping, allocator);
+
                 parentInfo.setSpectrumTextureValue(name, texture);
-                 */
             } else {
                 ASSERT(false, "Texture type not supported: " + type);
             }
@@ -953,7 +985,7 @@ namespace RENDER_NAMESPACE {
                     handleTagSensor(node, parseInfo, sceneData);
                     break;
                 case Tag_Texture:
-                    handleTagTexture(node, parseInfo, parentParseInfo, allocator);
+                    handleTagTexture(node, parseInfo, parentParseInfo, sceneData, allocator);
                     break;
                 case Tag_BSDF:
                     handleTagBSDF(node, parseInfo, parentParseInfo, sceneData, allocator);

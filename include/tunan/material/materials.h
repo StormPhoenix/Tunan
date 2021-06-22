@@ -82,8 +82,24 @@ namespace RENDER_NAMESPACE {
             MicrofacetDistribType _distribType;
         };
 
+        class Patina {
+        public:
+            using MaterialBxDF = GlossyDiffuseBxDF;
 
-        class Material : public TaggedPointer<Lambertian, Dielectric, Mirror, Metal> {
+            // Layered material: Glossy + Diffuse
+            Patina(SpectrumTexture Kd, SpectrumTexture Ks, FloatTexture alpha, MicrofacetDistribType distribType = GGX);
+
+            RENDER_CPU_GPU BSDF evaluateBSDF(SurfaceInteraction &si, GlossyDiffuseBxDF *bxdf,
+                                             TransportMode mode = TransportMode::RADIANCE);
+
+        private:
+            SpectrumTexture _Kd;
+            SpectrumTexture _Ks;
+            FloatTexture _alpha;
+            MicrofacetDistribType _distribType;
+        };
+
+        class Material : public TaggedPointer<Lambertian, Dielectric, Mirror, Metal, Patina> {
         public:
             using TaggedPointer::TaggedPointer;
         };

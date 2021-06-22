@@ -24,7 +24,7 @@ namespace RENDER_NAMESPACE {
             int nIterations = 100;
             int maxBounce = 12;
             int filmWidth, filmHeight;
-            int writeFrequency = 50;
+            int writeFrequency = 1000;
         } PTParameters;
 
         class PathTracer {

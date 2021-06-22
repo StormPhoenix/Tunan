@@ -71,6 +71,12 @@ namespace RENDER_NAMESPACE {
                                  (item3 + item4);
             return 0.5 * (perpendicularR + parallelR);
         }
+
+        RENDER_CPU_GPU
+        inline Spectrum fresnelSchlick(Float cosTheta, const Spectrum &R) {
+            auto pow5Func = [](Float x) -> Float { return x * x * x * x * x; };
+            return R + (Spectrum(1.) - R) * pow5Func(1 - cosTheta);
+        }
     }
 }
 

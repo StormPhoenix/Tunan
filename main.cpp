@@ -40,7 +40,8 @@ int main() {
 //    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/cbox-bunny/";
 //    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/dragon/";
 //    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/cbox-bunny-material/";
-    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/teapot-full/";
+    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/classroom/";
+//    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/teapot-full/";
 //    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/material-testball/";
 //    std::string sceneDirectory = fs::current_path().generic_string() + "/resource/scenes/dragon/";
 //    std::string sceneDirectory =  "/resource/scenes/cornel-box/";

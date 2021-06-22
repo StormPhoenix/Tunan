@@ -231,8 +231,41 @@ namespace RENDER_NAMESPACE {
             BxDFType _type;
         };
 
+        class GlossyDiffuseBxDF {
+        public:
+            RENDER_CPU_GPU
+            GlossyDiffuseBxDF();
+
+            RENDER_CPU_GPU
+            GlossyDiffuseBxDF(const Spectrum &Kd, const Spectrum &Ks,
+                              Float alpha, const MicrofacetDistribType distribType = GGX);
+
+            RENDER_CPU_GPU
+            Spectrum f(const Vector3F &wo, const Vector3F &wi) const;
+
+            RENDER_CPU_GPU
+            Spectrum sampleF(const Vector3F &wo, Vector3F *wi, Float *pdf,
+                             BSDFSample &bsdfSample, BxDFType *sampleType);
+
+            RENDER_CPU_GPU
+            Float samplePdf(const Vector3F &wo, const Vector3F &wi) const;
+
+            RENDER_CPU_GPU
+            inline BxDFType type() const {
+                return _type;
+            }
+
+        private:
+            using __MicrofacetDistribType__ = Variant<GGXDistribution>;
+            const Spectrum _Kd, _Ks;
+            __MicrofacetDistribType__ _distribStorage;
+            MicrofacetDistribution _distribution;
+            BxDFType _type;
+        };
+
+
         class BxDF : public TaggedPointer<LambertianBxDF, FresnelSpecularBxDF, SpecularReflectionBxDF,
-                MicrofacetBxDF, ConductorBxDF, DielectricBxDF> {
+                MicrofacetBxDF, ConductorBxDF, DielectricBxDF, GlossyDiffuseBxDF> {
         public:
             using TaggedPointer::TaggedPointer;
 

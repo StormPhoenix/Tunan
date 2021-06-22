@@ -480,6 +480,83 @@ namespace RENDER_NAMESPACE {
         }
 
         RENDER_CPU_GPU
+        GlossyDiffuseBxDF::GlossyDiffuseBxDF() : _type(BxDFType(BSDF_Reflection | BSDF_Glossy)) {}
+
+        RENDER_CPU_GPU
+        GlossyDiffuseBxDF::GlossyDiffuseBxDF(const Spectrum &Kd, const Spectrum &Ks, Float alpha,
+                                             const MicrofacetDistribType distribType) :
+                _type(BxDFType(BSDF_Reflection | BSDF_Glossy)), _Kd(Kd), _Ks(Ks) {
+            if (distribType == GGX) {
+                _distribStorage.set(GGXDistribution(alpha));
+                _distribution = (_distribStorage.ptr<GGXDistribution>());
+            } else {
+                assert(false);
+            }
+        }
+
+        RENDER_CPU_GPU
+        Spectrum GlossyDiffuseBxDF::f(const Vector3F &wo, const Vector3F &wi) const {
+            Float absCosThetaWo = math::local_coord::vectorAbsCosTheta(wo);
+            Float absCosThetaWi = math::local_coord::vectorAbsCosTheta(wi);
+            auto pow5Func = [](Float x) -> Float { return x * x * x * x * x; };
+
+            // Diffuse
+            Spectrum diffuse = (28.f * _Kd / (23.f * Pi)) * (Spectrum(1.0) - _Ks) *
+                               (1 - pow5Func(1 - (absCosThetaWi * 0.5))) *
+                               (1 - pow5Func(1 - (absCosThetaWo * 0.5)));
+
+            Vector3F wh = (wo + wi) * 0.5f;
+            if (wh.x == 0. || wh.y == 0. || wh.z == 0.) {
+                return Spectrum(0.f);
+            }
+            wh = NORMALIZE(wh);
+
+            // Microfacet specular reflection
+            Spectrum specular = (_distribution.D(wh) * fresnel::fresnelSchlick(DOT(wo, wh), _Ks)) /
+                                (4 * (ABS_DOT(wh, wi)) * std::max(absCosThetaWi, absCosThetaWo));
+            return diffuse + specular;
+        }
+
+        RENDER_CPU_GPU
+        Spectrum GlossyDiffuseBxDF::sampleF(const Vector3F &wo, Vector3F *wi, Float *pdf, BSDFSample &bsdfSample,
+                                            BxDFType *sampleType) {
+            Float u = bsdfSample.u;
+            if (u < 0.5f) {
+                // Sample diffuse
+                (*wi) = sampler::hemiCosineSampling(bsdfSample.uv);
+                if (wo.y < 0) {
+                    wi->y *= -1;
+                }
+            } else {
+                // Sample specular
+                Vector3F wh = _distribution.sampleWh(wo, bsdfSample.uv);
+                (*wi) = math::reflect(wo, wh);
+                if (wo.y * wi->y < 0) {
+                    return Spectrum(0.f);
+                }
+            }
+            if (pdf != nullptr) {
+                (*pdf) = samplePdf(wo, *wi);
+            }
+            return f(wo, *wi);
+        }
+
+        RENDER_CPU_GPU
+        Float GlossyDiffuseBxDF::samplePdf(const Vector3F &wo, const Vector3F &wi) const {
+            if (wo.y * wi.y < 0) {
+                return 0;
+            }
+
+            // Diffuse reflection pdf
+            Float pdfDiffuse = 0.5 * math::local_coord::vectorAbsCosTheta(wi) * Inv_Pi;
+
+            // Specular reflection pdf
+            Vector3F wh = NORMALIZE(wo + wi);
+            Float pdfSpecular = _distribution.samplePdf(wo, wh) / (4 * DOT(wo, wh));
+            return pdfDiffuse + pdfSpecular;
+        }
+
+        RENDER_CPU_GPU
         inline Spectrum BxDF::f(const Vector3F &wo, const Vector3F &wi) const {
             auto func = [&](auto ptr) { return ptr->f(wo, wi); };
             return proxyCall(func);

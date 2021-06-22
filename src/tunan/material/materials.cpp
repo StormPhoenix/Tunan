@@ -74,7 +74,23 @@ namespace RENDER_NAMESPACE {
             Spectrum K = _K.evaluate(si);
 
             BSDF bsdf = BSDF(si.ng, si.ns, si.wo);
-            new (bxdf) ConductorBxDF(Ks, Spectrum(1.f), etaT, K, alpha, _distribType);
+            new(bxdf) ConductorBxDF(Ks, Spectrum(1.f), etaT, K, alpha, _distribType);
+
+            bsdf.setBxDF(bxdf);
+            return bsdf;
+        }
+
+        Patina::Patina(SpectrumTexture Kd, SpectrumTexture Ks, FloatTexture alpha, MicrofacetDistribType distribType) :
+                _Kd(Kd), _Ks(Ks), _alpha(alpha), _distribType(distribType) {}
+
+        RENDER_CPU_GPU
+        BSDF Patina::evaluateBSDF(SurfaceInteraction &si, GlossyDiffuseBxDF *bxdf, TransportMode mode) {
+            Float alpha = _alpha.evaluate(si);
+            Spectrum Kd = _Kd.evaluate(si);
+            Spectrum Ks = _Ks.evaluate(si);
+
+            BSDF bsdf = BSDF(si.ng, si.ns, si.wo);
+            new(bxdf) GlossyDiffuseBxDF(Kd, Ks, alpha, _distribType);
 
             bsdf.setBxDF(bxdf);
             return bsdf;
