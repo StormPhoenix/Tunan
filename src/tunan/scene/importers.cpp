@@ -133,7 +133,7 @@ namespace RENDER_NAMESPACE {
             GET_PARSE_INFO_VALUE_FUNC_DECLARE(Vector3F, Vector)
 
         private:
-            std::map <std::string, XmlAttrVal> container;
+            std::map<std::string, XmlAttrVal> container;
         } XmlParseInfo;
 
         GET_PARSE_INFO_VALUE_FUNC_DEFINE(bool, Bool, bool);
@@ -196,7 +196,7 @@ namespace RENDER_NAMESPACE {
             Tag_RGB,
         } TagType;
 
-        static std::map <std::string, TagType> nodeTypeMap;
+        static std::map<std::string, TagType> nodeTypeMap;
 
         inline Vector3F toVector(const std::string &val) {
             Vector3F ret;
@@ -876,8 +876,8 @@ namespace RENDER_NAMESPACE {
                                                                                     toWorld, allocator);
                 sceneData.lights->push_back(envLight);
                 sceneData.envLights->push_back(envLight);
+                sceneData.infiniteLights->push_back(static_cast<InfiniteLightImpl *>(envLight));
                 std::cout << "\tCreate environment light. " << std::endl;
-                /*
             } else if (type == "sunsky") {
                 ASSERT(info.attrExists("sunDirection") && info.attrExists("intensity"),
                        "Sunsky parameter incomplete. ");
@@ -885,10 +885,10 @@ namespace RENDER_NAMESPACE {
                        "<emitter> Only support spectrum intensity. ");
                 Spectrum intensity = info.getSpectrumValue("intensity", Spectrum(0.0));
                 Vector3F sunDirection = -info.getVectorValue("sunDirection", Vector3F(0, 1, 0));
-                SunLight::Ptr sunLight = std::make_shared<SunLight>(intensity, sunDirection);
-                _scene->addLight(sunLight);
+                SunLight *sunLight = allocator->newObject<SunLight>(intensity, sunDirection);
+                sceneData.lights->push_back(sunLight);
+                sceneData.infiniteLights->push_back(static_cast<InfiniteLightImpl *>(sunLight));
                 std::cout << "\tCreate sun light. " << std::endl;
-                 */
             } else {
                 ASSERT(false, "Emitter type not supported: <" + type + ">. ");
             }
@@ -945,6 +945,20 @@ namespace RENDER_NAMESPACE {
             }
         }
 
+        static void handleTagVector(pugi::xml_node &node, XmlParseInfo &parent) {
+            std::string name = node.attribute("name").value();
+            std::string x_str = node.attribute("x").value();
+            std::string y_str = node.attribute("y").value();
+            std::string z_str = node.attribute("z").value();
+
+            Float x = toFloat(x_str);
+            Float y = toFloat(y_str);
+            Float z = toFloat(z_str);
+
+            Vector3F v(x, y, z);
+            parent.setVectorValue(name, v);
+        }
+
         static void handleXmlNode(pugi::xml_node &node, XmlParseInfo &parseInfo, XmlParseInfo &parentParseInfo,
                                   SceneData &sceneData, ResourceManager *allocator) {
             TagType tagType = nodeTypeMap[node.name()];
@@ -964,9 +978,9 @@ namespace RENDER_NAMESPACE {
                 case Tag_Matrix:
                     handleTagMatrix(node, parentParseInfo);
                     break;
-//                case Tag_Vector:
-//                    handleTagVector(node, parentParseInfo);
-//                    break;
+                case Tag_Vector:
+                    handleTagVector(node, parentParseInfo);
+                    break;
                 case Tag_Transform:
                     handleTagTransform(node, parseInfo, parentParseInfo);
                     break;
@@ -1018,7 +1032,7 @@ namespace RENDER_NAMESPACE {
 
         void parseXml(pugi::xml_node &node, XmlParseInfo &parent, SceneData &scene, ResourceManager *allocator) {
             XmlParseInfo info;
-            std::map <std::string, XmlAttrVal> attrContainer;
+            std::map<std::string, XmlAttrVal> attrContainer;
             for (pugi::xml_node &child : node.children()) {
                 parseXml(child, info, scene, allocator);
             }
@@ -1028,8 +1042,9 @@ namespace RENDER_NAMESPACE {
         void MitsubaSceneImporter::importScene(std::string sceneDirectory, SceneData &sceneData,
                                                ResourceManager *allocator) {
             sceneData.sceneDirectory = sceneDirectory;
-            sceneData.lights = allocator->newObject < base::Vector < Light >> (allocator);
-            sceneData.envLights = allocator->newObject < base::Vector < EnvironmentLight * >> (allocator);
+            sceneData.lights = allocator->newObject<base::Vector<Light >>(allocator);
+            sceneData.envLights = allocator->newObject<base::Vector<EnvironmentLight * >>(allocator);
+            sceneData.infiniteLights = allocator->newObject<base::Vector<InfiniteLightImpl * >>(allocator);
 
             std::string xml_file = sceneDirectory + "scene.xml";
             std::cout << "Loading scene file: " << xml_file << std::endl;

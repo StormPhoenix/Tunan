@@ -81,9 +81,9 @@ namespace RENDER_NAMESPACE {
 
     void SceneData::postprocess() {
         computeWorldBound();
-        if (envLights != nullptr) {
-            for (int i = 0; i < envLights->size(); i ++) {
-                (*envLights)[i]->worldBound(worldMin, worldMax);
+        if (infiniteLights != nullptr) {
+            for (int i = 0; i < infiniteLights->size(); i ++) {
+                (*infiniteLights)[i]->worldBound(worldMin, worldMax);
             }
         }
     }

@@ -201,10 +201,6 @@ namespace RENDER_NAMESPACE {
             target->mediumInterface = _mediumInterface;
             target->error = Vector3F(0);
         }
-        // TODO delete
-//        *visibilityTester = VisibilityTester(eye, Interaction(
-//                eye.point + (*wi) * Float(2. * _worldRadius),
-//                (*wi), -(*wi), _mediumInterface));
         return sampleTexture(sample);
     }
 
@@ -241,7 +237,6 @@ namespace RENDER_NAMESPACE {
         return sampleTexture(uv);
     }
 
-    RENDER_CPU_GPU
     void EnvironmentLight::worldBound(Point3F &worldMin, Point3F &worldMax) {
         _worldRadius = 0.5 * LENGTH(worldMax - worldMin);
         _worldCenter = (worldMax + worldMin) / Float(2.0);
@@ -274,6 +269,44 @@ namespace RENDER_NAMESPACE {
     RENDER_CPU_GPU
     LightSourceType EnvironmentLight::getType() const {
         return _type;
+    }
+
+    SunLight::SunLight(const Spectrum &intensity, const Vector3F &direction) :
+            _type(Delta_Direction), L(intensity), _direction(direction), _mediumInterface(MediumInterface()) {}
+
+    RENDER_CPU_GPU
+    Spectrum SunLight::sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv, Interaction *target) {
+        if (wi != nullptr) {
+            (*wi) = -_direction;
+        }
+
+        if (pdf != nullptr) {
+            (*pdf) = 1.0;
+        }
+
+        if (target != nullptr) {
+            target->p = eye.p + (-_direction * Float(2.0 * _worldRadius));
+            target->ng = -(*wi);
+            target->wo = -(*wi);
+            target->mediumInterface = _mediumInterface;
+            target->error = Vector3F(0);
+        }
+        return L;
+    }
+
+    RENDER_CPU_GPU
+    Float SunLight::pdfLi(const Interaction &eye, const Vector3F &dir) {
+        return 0.0f;
+    }
+
+    RENDER_CPU_GPU
+    LightSourceType SunLight::getType() const {
+        return _type;
+    }
+
+    void SunLight::worldBound(Point3F &worldMin, Point3F &worldMax) {
+        _worldRadius = 0.5 * LENGTH(worldMax - worldMin);
+        _worldCenter = (worldMax + worldMin) / Float(2.0);
     }
 
     RENDER_CPU_GPU

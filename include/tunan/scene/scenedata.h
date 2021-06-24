@@ -97,6 +97,7 @@ namespace RENDER_NAMESPACE {
         // Lights
         base::Vector<Light> *lights = nullptr;
         base::Vector<EnvironmentLight *> *envLights = nullptr;
+        base::Vector<InfiniteLightImpl *> *infiniteLights = nullptr;
 
         Point3F worldMin = Point3F(0);
         Point3F worldMax = Point3F(0);

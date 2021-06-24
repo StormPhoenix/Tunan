@@ -32,7 +32,42 @@ namespace RENDER_NAMESPACE {
         Environment = 1 << 3
     } LightSourceType;
 
-    class EnvironmentLight {
+    class InfiniteLightImpl {
+    public:
+        virtual void worldBound(Point3F &worldMin, Point3F &worldMax) = 0;
+    };
+
+    class SunLight : public InfiniteLightImpl {
+    public:
+        SunLight(const Spectrum &intensity, const Vector3F &direction);
+
+        RENDER_CPU_GPU
+        Spectrum sampleLi(const Interaction &eye, Vector3F *wi, Float *pdf, Vector2F uv, Interaction *target);
+
+        RENDER_CPU_GPU
+        Float pdfLi(const Interaction &eye, const Vector3F &dir);
+
+        RENDER_CPU_GPU
+        Spectrum Le(const Ray &ray) const {
+            return Spectrum(0.f);
+        }
+
+        RENDER_CPU_GPU
+        LightSourceType getType() const;
+
+        virtual void worldBound(Point3F &worldMin, Point3F &worldMax);
+
+    private:
+        LightSourceType _type;
+        const Spectrum L;
+        const Vector3F _direction;
+        Float _worldRadius = 20000.0;
+        Point3F _worldCenter;
+        MediumInterface _mediumInterface;
+    };
+
+
+    class EnvironmentLight : public InfiniteLightImpl {
     public:
         EnvironmentLight(Float intensity, std::string texturePath, MediumInterface mediumInterface,
                          Transform lightToWorld, utils::ResourceManager *allocator);
@@ -46,11 +81,11 @@ namespace RENDER_NAMESPACE {
         RENDER_CPU_GPU
         Spectrum Le(const Ray &ray) const;
 
-        RENDER_CPU_GPU
-        void worldBound(Point3F &worldMin, Point3F &worldMax);
+        virtual void worldBound(Point3F &worldMin, Point3F &worldMax) override;
 
         RENDER_CPU_GPU
         LightSourceType getType() const;
+
     private:
         RENDER_CPU_GPU
         Spectrum sampleTexture(Point2F uv) const;
@@ -168,7 +203,8 @@ namespace RENDER_NAMESPACE {
 
     };
 
-    class Light : public utils::TaggedPointer<DiffuseAreaLight, PointLight, SpotLight, EnvironmentLight> {
+    class Light : public utils::TaggedPointer<DiffuseAreaLight, PointLight, SpotLight, EnvironmentLight,
+            SunLight> {
     public:
         using TaggedPointer::TaggedPointer;
 
