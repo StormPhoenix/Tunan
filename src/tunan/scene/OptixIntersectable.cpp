@@ -174,9 +174,9 @@ namespace RENDER_NAMESPACE {
             OptixProgramGroupDesc desc = {};
             desc.kind = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
             desc.hitgroup.moduleCH = state.optixModule;
-            desc.hitgroup.entryFunctionNameCH = "__closesthit__scene";
+            desc.hitgroup.entryFunctionNameCH = "__closesthit__findClosestHit";
             desc.hitgroup.moduleAH = state.optixModule;
-            desc.hitgroup.entryFunctionNameAH = "__anyhit__scene";
+            desc.hitgroup.entryFunctionNameAH = "__anyhit__findClosestHit";
             OPTIX_CHECK_LOG(optixProgramGroupCreate(
                     state.optixContext, &desc, 1, &pgOptions,
                     log, &logSize, &closeHitPG), log);

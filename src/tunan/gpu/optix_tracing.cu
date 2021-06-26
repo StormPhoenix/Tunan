@@ -36,7 +36,7 @@ extern "C" __global__ void __raygen__findClosestHit() {
     }
 }
 
-extern "C" __global__ void __closesthit__scene() {
+extern "C" __global__ void __closesthit__findClosestHit() {
     unsigned int triangleIndex = optixGetPrimitiveIndex();
     float2 barycentric = optixGetTriangleBarycentrics();
     RayDetails &r = (*params.rayQueue)[optixGetLaunchIndex().x];
@@ -88,7 +88,7 @@ extern "C" __global__ void __miss__findClosestHit() {
     optixSetPayload_0(1);
 }
 
-extern "C" __global__ void __anyhit__scene() {
+extern "C" __global__ void __anyhit__findClosestHit() {
     uint3 launch_index = optixGetLaunchIndex();
 }
 
