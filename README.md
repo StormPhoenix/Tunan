@@ -1,6 +1,8 @@
-# TuNan Render
+# Tunan render (Early Version)
 
-A GPU physically based render.
+![Glass dragon](images/glass-dragon.jpg)
+
+This is a physically based render, running on gpu.
 
 ## Development
 

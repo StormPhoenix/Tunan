@@ -1,7 +1,5 @@
 #include <iostream>
 
-// TODO for testing
-#include <tunan/common.h>
 #include <tunan/scene/importers.h>
 #include <tunan/utils/memory/CudaAllocator.h>
 #include <tunan/utils/ResourceManager.h>
@@ -21,9 +19,7 @@ namespace fs = std::filesystem;
 namespace fs = ghc::filesystem;
 #endif
 
-// TODO delete for testing
 #include <tunan/tracer/path.h>
-#include <tunan/sampler/SamplerFactory.h>
 
 int main() {
     // TODO delete for testing
@@ -54,6 +50,5 @@ int main() {
     tracer.render();
      // TODO think about resource deallocation
 //    delete resource;
-    std::cout << "Hello, World!" << std::endl;
     return 0;
 }
